@@ -1,0 +1,61 @@
+<link rel="stylesheet" href="/css/post.css">
+<link rel="stylesheet" href="/css/text-editor.css">
+<link rel="stylesheet" href="/css/social-preview.css">
+
+<div class="main-body mt-0" ng-controller="PostEditController as vm">
+    <div class="page-header mb-0">
+        <div class="page-block">
+            <div class="row align-items-center">
+                <div class="col-md-12">
+                    <div class="page-header-title">
+                        <h4 class="m-b-5 text-theme-primary">
+                            Create Post<% if (currentProject) { %> - <%= currentProject.name %><% } %>
+                        </h4>
+                    </div>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                        <li class="breadcrumb-item"><a href="/dashboard/posts">Posts</a></li>
+                        <li class="breadcrumb-item active">Create</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-wrapper" ng-init='vm.init(null, <%- JSON.stringify(accounts || []) %>, <%- JSON.stringify(tags || []) %>, <%- JSON.stringify(typeof schedule_at !== "undefined" ? schedule_at : null) %>, <%- JSON.stringify(typeof prefill !== "undefined" ? prefill : null) %>, <%- JSON.stringify(currentProject || null) %>)'>
+        <div ng-if="vm.currentProject" class="h-100 d-flex flex-column post-create-edit-container">
+            <div class="row flex-grow-1 g-0 post-create-edit-row">
+                <%- include('./_post-editor-create', { accounts: accounts || [] }) %>
+                <%- include('./_preview') %>
+            </div>
+        </div>
+
+        <%- include('./_action-buttons', { text: 'CREATE' }) %>
+    </div>
+
+    <!-- Mobile Preview Toggle Button -->
+<button type="button" 
+class="btn btn-primary position-fixed bottom-0 end-0 m-3 d-md-none mobile-preview-toggle"
+ng-click="vm.togglePreview()">
+<i class="bi" ng-class="vm.showPreview ? 'bi-x-lg' : 'bi-eye'"></i>
+</button>
+
+<!-- Modals -->
+<%- include('./_tags-modal') %>
+<%- include('./_calendar-modal') %>
+<%- include('./_media-selection') %>
+</div>
+
+
+<script src="/scripts/app/rich-text-editor.directive.js"></script>
+<script src="/scripts/app/datepicker.directive.js"></script>
+<script src="/scripts/app/media-upload-library.directive.js"></script>
+<script src="/scripts/app/media-preview.directive.js"></script>
+<script src="/scripts/app/twitter-preview.directive.js"></script>
+<script src="/scripts/app/facebook-preview.directive.js"></script>
+<script src="/scripts/app/instagram-preview.directive.js"></script>
+<script src="/scripts/app/linkedin-preview.directive.js"></script>
+<script src="/scripts/app/tiktok-preview.directive.js"></script>
+<script src="/scripts/app/mastodon-preview.directive.js"></script>
+<script src="/scripts/app/post-create.client.controller.js"></script>
+

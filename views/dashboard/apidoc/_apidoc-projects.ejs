@@ -1,0 +1,167 @@
+<!-- List Projects Section -->
+<div ng-if="apiDocCtrl.activeSection === 'list-projects'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-info">GET</span>
+        <h2 class="api-doc-title">List Projects</h2>
+    </div>
+    <p class="api-doc-description">
+        Retrieves a list of all projects for the authenticated user. Each project includes its connected accounts.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('list-projects-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="list-projects-url">
+                <pre><code>GET /api/v1/projects</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Authentication</h3>
+        <p>Required. Uses Bearer Token Authentication.</p>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (200):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('list-projects-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="list-projects-success">
+                <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "uuid": "project-uuid",
+      "name": "My Project",
+      "description": "Project description",
+      "image_url": "/uploads/projects/image.jpg",
+      "accounts": [
+        {
+          "uuid": "account-uuid",
+          "name": "Twitter Account",
+          "username": "twitter_user",
+          "provider": "twitter",
+          "provider_id": "1234567890",
+          "authorized": true,
+          "image": "https://...",
+          "created_at": "2024-01-15T10:00:00Z"
+        }
+      ],
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    }
+  ]
+}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Notes</h3>
+        <ul class="api-doc-list">
+            <li>Projects are returned in descending order by creation date</li>
+            <li>Each project includes all connected accounts with their metadata</li>
+            <li>Only projects belonging to the authenticated user are returned</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Get Project Section -->
+<div ng-if="apiDocCtrl.activeSection === 'get-project'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-info">GET</span>
+        <h2 class="api-doc-title">Get Project</h2>
+    </div>
+    <p class="api-doc-description">
+        Retrieves detailed information about a specific project, including all connected accounts.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('get-project-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="get-project-url">
+                <pre><code>GET /api/v1/projects/:projectUuid</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Path Parameters</h3>
+        <ul class="api-doc-list">
+            <li><code>projectUuid</code> (required) - The UUID of the project to retrieve</li>
+        </ul>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (200):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('get-project-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="get-project-success">
+                <pre><code>{
+  "success": true,
+  "data": {
+    "uuid": "project-uuid",
+    "name": "My Project",
+    "description": "Project description",
+    "image_url": "/uploads/projects/image.jpg",
+    "accounts": [
+      {
+        "uuid": "account-uuid",
+        "name": "Twitter Account",
+        "username": "twitter_user",
+        "provider": "twitter",
+        "provider_id": "1234567890",
+        "authorized": true,
+        "image": "https://...",
+        "created_at": "2024-01-15T10:00:00Z"
+      }
+    ],
+    "created_at": "2024-01-15T10:00:00Z",
+    "updated_at": "2024-01-15T10:00:00Z"
+  }
+}</code></pre>
+            </div>
+        </div>
+        <p class="mt-3"><strong>Error (404):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Error Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('get-project-error')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="get-project-error">
+                <pre><code>{
+  "success": false,
+  "error": "Not Found",
+  "message": "Project not found"
+}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Notes</h3>
+        <ul class="api-doc-list">
+            <li>Returns 404 if the project does not exist or does not belong to the authenticated user</li>
+            <li>The response includes all accounts connected to the project</li>
+        </ul>
+    </div>
+</div>
+

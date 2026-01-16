@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title><%= typeof title !== 'undefined' ? title : 'Mixpost' %> - Social Media Management</title>
+    <!-- HTML5 Shim and Respond.js IE9 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+      <![endif]-->
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="description" content="Mixpost - Social Media Management Platform">
+    <meta name="keywords" content="Mixpost, Social Media, Management, Automation">
+    <meta name="author" content="Mixpost">
+    <!-- Google font-->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" type="text/css" href="/bootstrap-5.3.8/css/bootstrap.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Sweet Alert -->
+    <link rel="stylesheet" type="text/css" href="/vendor/sweetalert/sweetalert2.min.css">
+    <!-- Quill CSS -->
+    <link rel="stylesheet" type="text/css" href="/vendor/quill/quill.snow.css">
+    <!-- Datepicker CSS -->
+    <link rel="stylesheet" type="text/css" href="/vendor/datepicker/css/datepicker-bs5.css">
+    <!-- Choices CSS -->
+    <link rel="stylesheet" type="text/css" href="/vendor/choices/css/choices.min.css">
+    <!-- Theme CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/theme.css">
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/dashboard.css">
+    <link rel="stylesheet" type="text/css" href="/vendor/spinjs/spin.css">
+    <%- typeof style !== 'undefined' ? style : '' %>
+</head>
+
+<body>
+    <div id="spinnerContainer" class="myspinner"></div>
+    <!-- Pre-loader start -->
+    <input type="hidden" id="___applicationbaseUrl" value="/">
+    <div class="theme-loader">
+        <div class="ball-scale">
+            <div></div>
+        </div>
+    </div>
+    <!-- Pre-loader end -->
+    <div id="pcoded" class="pcoded" data-ng-app="app">
+        <!-- Sidebar -->
+        <%- include('./_sidebar') %>
+
+        <!-- Header -->
+        <%- include('./_header') %>
+
+        <!-- Main Content -->
+        <div class="pcoded-main-container">
+            <div class="pcoded-content" id="app">
+                <div class="pcoded-inner-content">
+                    <!-- Main-body start -->
+                    <div class="main-body">
+                        <%- body %>
+                    </div>
+                    <!-- Main-body end -->
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <%- include('./_footer') %>
+        </div>
+    </div>
+
+    <!-- Force HTTP protocol for localhost (CSP compliant) -->
+    <script type="text/javascript" src="/scripts/http-redirect.js"></script>
+    <!-- jQuery -->
+    <script type="text/javascript" src="/scripts/jquery-3.6.4.min.js"></script>
+    <!-- Bootstrap 5 JS Bundle -->
+    <script type="text/javascript" src="/bootstrap-5.3.8/js/bootstrap.bundle.min.js"></script>
+    <!-- Quill JS -->
+    <script type="text/javascript" src="/vendor/quill/quill.js"></script>
+    <!-- Datepicker JS -->
+    <script type="text/javascript" src="/vendor/datepicker/js/datepicker.min.js"></script>
+    <!-- Choices JS -->
+    <script type="text/javascript" src="/vendor/choices/js/choices.min.js"></script>
+    <!-- Chart.js -->
+    <script type="text/javascript" src="/vendor/chartjs/chart.umd.min.js"></script>
+    <!-- AngularJS -->
+    <script src="/scripts/angular.min.js"></script>
+    <script src="/scripts/angular-animate.min.js"></script>
+    <script src="/scripts/validator.min.js"></script>
+    <script src="/vendor/sweetalert/sweetalert2.all.min.js"></script>
+    <script src="/vendor/dropzone/dropzone.min.js"></script>
+    <script src="/vendor/spinjs/spin.js"></script>
+    <script src="/vendor/sortable/sortable.min.js"></script>
+    <script src="/scripts/app/app.module.js"></script>
+    <script src="/scripts/app/services.factory.js"></script>
+    <script src="/scripts/app/utils.factory.js"></script>
+    <script src="/scripts/app/upload.factory.js"></script>
+    <%- script %>
+
+</body>
+
+</html>

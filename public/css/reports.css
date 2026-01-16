@@ -1,0 +1,599 @@
+/* Reports & Metrics Styles */
+
+/* Metrics Overview Cards */
+.metric-overview-card {
+    background: linear-gradient(135deg, #1F1F23 0%, #0B0B0D 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.metric-overview-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 239, 255, 0.2);
+    border-color: rgba(0, 239, 255, 0.3);
+}
+
+.metric-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.metric-icon-wrapper.likes-icon {
+    background: rgba(239, 68, 68, 0.2);
+    color: #EF4444;
+}
+
+.metric-icon-wrapper.retweets-icon {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3B82F6;
+}
+
+.metric-icon-wrapper.replies-icon {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22C55E;
+}
+
+.metric-icon-wrapper.impressions-icon {
+    background: rgba(0, 239, 255, 0.2);
+    color: #00EFFF;
+}
+
+/* Metrics Table - Specific to metrics table only */
+table.metrics-table {
+    background: #1F1F23;
+    color: #FFFFFF;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 0;
+}
+
+table.metrics-table thead {
+    background: #2A2A2E;
+    border-bottom: 2px solid rgba(0, 239, 255, 0.2);
+}
+
+table.metrics-table thead th {
+    background: #2A2A2E;
+    border-bottom: 2px solid rgba(0, 239, 255, 0.2);
+    color: #E5E5E5;
+    font-weight: 600;
+    padding: 14px 16px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+table.metrics-table tbody {
+    background: #1F1F23;
+}
+
+table.metrics-table tbody tr {
+    background: #1F1F23;
+    border-bottom: 1px solid #2F2F33;
+    transition: all 0.3s ease;
+}
+
+table.metrics-table tbody tr:hover {
+    background-color: rgba(0, 239, 255, 0.08);
+    border-left: 2px solid #00EFFF;
+    box-shadow: inset 0 0 20px rgba(0, 239, 255, 0.1);
+}
+
+table.metrics-table tbody tr.expanded {
+    background-color: rgba(0, 239, 255, 0.12);
+    border-left: 2px solid #00EFFF;
+}
+
+table.metrics-table tbody td {
+    color: #E5E5E5;
+    padding: 16px;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    background: inherit;
+}
+
+table.metrics-table tbody td .text-muted {
+    color: #6B7280 !important;
+    font-style: italic;
+}
+
+table.metrics-table tbody td:first-child {
+    padding-left: 16px;
+}
+
+table.metrics-table .expand-toggle {
+    color: rgba(0, 239, 255, 0.6);
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent;
+    border: none;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+}
+
+table.metrics-table .expand-toggle:hover {
+    color: #00EFFF;
+    background: rgba(0, 239, 255, 0.1);
+    transform: scale(1.15);
+    box-shadow: 0 0 8px rgba(0, 239, 255, 0.3);
+}
+
+table.metrics-table .expand-toggle:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 239, 255, 0.3);
+}
+
+/* Metric Badges - Only within metrics table */
+table.metrics-table .metric-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+table.metrics-table .metric-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: linear-gradient(135deg, rgba(31, 31, 35, 0.8) 0%, rgba(11, 11, 13, 0.9) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #E5E5E5;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+table.metrics-table .metric-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: rgba(0, 239, 255, 0.3);
+    background: linear-gradient(135deg, rgba(31, 31, 35, 0.95) 0%, rgba(11, 11, 13, 0.95) 100%);
+}
+
+table.metrics-table .metric-badge i {
+    font-size: 0.9rem;
+    filter: drop-shadow(0 0 2px currentColor);
+}
+
+table.metrics-table .metric-badge i.bi-heart-fill {
+    color: #EF4444;
+}
+
+table.metrics-table .metric-badge:hover i.bi-heart-fill {
+    filter: drop-shadow(0 0 4px #EF4444);
+}
+
+table.metrics-table .metric-badge i.bi-arrow-repeat {
+    color: #3B82F6;
+}
+
+table.metrics-table .metric-badge:hover i.bi-arrow-repeat {
+    filter: drop-shadow(0 0 4px #3B82F6);
+}
+
+table.metrics-table .metric-badge i.bi-chat-dots-fill {
+    color: #22C55E;
+}
+
+table.metrics-table .metric-badge:hover i.bi-chat-dots-fill {
+    filter: drop-shadow(0 0 4px #22C55E);
+}
+
+table.metrics-table .metric-badge i.bi-star-fill {
+    color: #FBBF24;
+}
+
+table.metrics-table .metric-badge:hover i.bi-star-fill {
+    filter: drop-shadow(0 0 4px #FBBF24);
+}
+
+table.metrics-table .metric-badge i.bi-eye-fill {
+    color: #00EFFF;
+}
+
+table.metrics-table .metric-badge:hover i.bi-eye-fill {
+    filter: drop-shadow(0 0 4px #00EFFF);
+}
+
+/* Provider Badge - Only within metrics and audience tables */
+table.metrics-table .provider-badge,
+table.audience-table .provider-badge {
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    letter-spacing: 0.3px;
+    background: linear-gradient(135deg, rgba(31, 31, 35, 0.8) 0%, rgba(11, 11, 13, 0.9) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #E5E5E5;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    display: inline-block;
+}
+
+table.metrics-table .provider-badge.provider-twitter,
+table.audience-table .provider-badge.provider-twitter {
+    background: linear-gradient(135deg, rgba(29, 161, 242, 0.25) 0%, rgba(29, 161, 242, 0.15) 100%);
+    border-color: rgba(29, 161, 242, 0.4);
+    color: #1DA1F2;
+    box-shadow: 0 2px 8px rgba(29, 161, 242, 0.2);
+}
+
+table.metrics-table .provider-badge.provider-facebook,
+table.metrics-table .provider-badge.provider-facebook_page,
+table.metrics-table .provider-badge.provider-facebook_group,
+table.audience-table .provider-badge.provider-facebook,
+table.audience-table .provider-badge.provider-facebook_page,
+table.audience-table .provider-badge.provider-facebook_group {
+    background: linear-gradient(135deg, rgba(24, 119, 242, 0.25) 0%, rgba(24, 119, 242, 0.15) 100%);
+    border-color: rgba(24, 119, 242, 0.4);
+    color: #1877F2;
+    box-shadow: 0 2px 8px rgba(24, 119, 242, 0.2);
+}
+
+table.metrics-table .provider-badge.provider-instagram,
+table.audience-table .provider-badge.provider-instagram {
+    background: linear-gradient(135deg, rgba(225, 48, 108, 0.25) 0%, rgba(225, 48, 108, 0.15) 100%);
+    border-color: rgba(225, 48, 108, 0.4);
+    color: #E1306C;
+    box-shadow: 0 2px 8px rgba(225, 48, 108, 0.2);
+}
+
+table.metrics-table .provider-badge.provider-linkedin,
+table.audience-table .provider-badge.provider-linkedin {
+    background: linear-gradient(135deg, rgba(0, 119, 181, 0.25) 0%, rgba(0, 119, 181, 0.15) 100%);
+    border-color: rgba(0, 119, 181, 0.4);
+    color: #0077B5;
+    box-shadow: 0 2px 8px rgba(0, 119, 181, 0.2);
+}
+
+table.metrics-table .provider-badge.provider-mastodon,
+table.audience-table .provider-badge.provider-mastodon {
+    background: linear-gradient(135deg, rgba(99, 100, 255, 0.25) 0%, rgba(99, 100, 255, 0.15) 100%);
+    border-color: rgba(99, 100, 255, 0.4);
+    color: #6364FF;
+    box-shadow: 0 2px 8px rgba(99, 100, 255, 0.2);
+}
+
+table.metrics-table .provider-badge.provider-tiktok,
+table.audience-table .provider-badge.provider-tiktok {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 100%);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Metric Detail Row - Only within metrics table */
+table.metrics-table .metric-detail-row {
+    background: #0B0B0D !important;
+    border-top: 2px solid rgba(0, 239, 255, 0.3);
+}
+
+table.metrics-table .metric-detail-row td {
+    padding: 24px !important;
+    background: #0B0B0D !important;
+}
+
+table.metrics-table .metric-details {
+    padding: 0;
+}
+
+table.metrics-table .metric-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: rgba(31, 31, 35, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+table.metrics-table .metric-detail-item:hover {
+    background: rgba(31, 31, 35, 0.8);
+    border-color: rgba(0, 239, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+table.metrics-table .metric-detail-item i {
+    font-size: 1.75rem;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 4px currentColor);
+}
+
+table.metrics-table .metric-detail-item strong {
+    display: block;
+    color: #E5E5E5;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+table.metrics-table .metric-value {
+    color: #00EFFF;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-shadow: 0 0 8px rgba(0, 239, 255, 0.5);
+}
+
+/* Reports Tabs */
+.reports-tabs {
+    border-bottom: none;
+    margin-bottom: 0;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.reports-tab {
+    background: rgba(31, 31, 35, 0.6);
+    border: 2px solid #2F2F33;
+    border-radius: 8px;
+    color: #B0B0B0;
+    padding: 10px 20px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Facebook Insights tab - wider to prevent text wrapping */
+.reports-tab-facebook {
+    min-width: 180px;
+    justify-content: center;
+}
+
+.reports-tab:hover {
+    border-color: rgba(0, 239, 255, 0.4);
+    background: rgba(0, 239, 255, 0.05);
+    color: #00EFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 239, 255, 0.2);
+}
+
+.reports-tab.active {
+    border-color: #00EFFF;
+    background: rgba(0, 239, 255, 0.15);
+    color: #0B0B0D;
+    font-weight: 600;
+    box-shadow: 0 0 12px rgba(0, 239, 255, 0.3),
+                0 2px 8px rgba(0, 239, 255, 0.2);
+}
+
+.reports-tab.active i {
+    color: #0B0B0D;
+}
+
+.reports-tab.active:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(0, 239, 255, 0.1) 50%, 
+        transparent 100%);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.reports-tab .badge {
+    background: rgba(0, 239, 255, 0.2);
+    color: #00EFFF;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.reports-tab.active .badge {
+    background: #00EFFF;
+    color: #0B0B0D;
+    box-shadow: 0 0 6px rgba(0, 239, 255, 0.6);
+    font-weight: 700;
+}
+
+.reports-tab i {
+    font-size: 1rem;
+    margin-right: 8px;
+}
+
+/* Tab Content */
+.tab-content {
+    padding-top: 20px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+/* Audience Filter Button Group */
+.btn-group[role="group"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.btn-group[role="group"] .btn {
+    border-radius: 8px !important;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+/* Override Bootstrap btn-group border-radius for uniform rounded edges */
+.btn-group[role="group"] .btn:first-child,
+.btn-group[role="group"] .btn:last-child,
+.btn-group[role="group"] .btn:not(:first-child):not(:last-child) {
+    border-radius: 8px !important;
+}
+
+.btn-group[role="group"] .btn-outline-secondary {
+    background: rgba(31, 31, 35, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    color: #B0B0B0;
+}
+
+.btn-group[role="group"] .btn-outline-secondary:hover {
+    background: rgba(0, 239, 255, 0.1);
+    border-color: rgba(0, 239, 255, 0.4);
+    color: #00EFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 239, 255, 0.2);
+}
+
+.btn-group[role="group"] .btn-primary {
+    background: rgba(0, 239, 255, 0.2);
+    border: 2px solid #00EFFF;
+    color: #00EFFF;
+    box-shadow: 0 0 12px rgba(0, 239, 255, 0.3),
+                0 2px 8px rgba(0, 239, 255, 0.2);
+}
+
+.btn-group[role="group"] .btn-primary:hover {
+    background: rgba(0, 239, 255, 0.3);
+    border-color: #00EFFF;
+    color: #00EFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 0 16px rgba(0, 239, 255, 0.4),
+                0 4px 12px rgba(0, 239, 255, 0.3);
+}
+
+/* Audience Table Styling - Specific to audience table only */
+table.audience-table {
+    background: #1F1F23;
+    color: #FFFFFF;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 0;
+}
+
+table.audience-table thead {
+    background: #2A2A2E;
+    border-bottom: 2px solid rgba(0, 239, 255, 0.2);
+}
+
+table.audience-table thead th {
+    background: #2A2A2E;
+    border-bottom: 2px solid rgba(0, 239, 255, 0.2);
+    color: #E5E5E5;
+    font-weight: 600;
+    padding: 14px 16px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+table.audience-table tbody {
+    background: #1F1F23;
+}
+
+table.audience-table tbody tr {
+    background: #1F1F23;
+    border-bottom: 1px solid #2F2F33;
+    transition: all 0.3s ease;
+}
+
+table.audience-table tbody tr:hover {
+    background-color: rgba(0, 239, 255, 0.08);
+    border-left: 2px solid #00EFFF;
+    box-shadow: inset 0 0 20px rgba(0, 239, 255, 0.1);
+}
+
+table.audience-table tbody td {
+    color: #E5E5E5;
+    padding: 16px;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    background: inherit;
+}
+
+table.audience-table .audience-value {
+    color: #00EFFF;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Facebook Insights Styling */
+.insight-type-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: rgba(24, 119, 242, 0.2);
+    border: 1px solid rgba(24, 119, 242, 0.3);
+    color: #1877F2;
+}
+
+.insight-value {
+    color: #00EFFF;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Responsive adjustments - Only for metrics and audience tables */
+@media (max-width: 768px) {
+    table.metrics-table .metric-badges {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    table.metrics-table .metric-badge {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    table.metrics-table .metric-detail-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    table.metrics-table thead th,
+    table.audience-table thead th {
+        padding: 12px 8px;
+        font-size: 0.7rem;
+    }
+    
+    table.metrics-table tbody td,
+    table.audience-table tbody td {
+        padding: 12px 8px;
+        font-size: 0.85rem;
+    }
+}
+

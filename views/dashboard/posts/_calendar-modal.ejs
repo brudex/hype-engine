@@ -1,0 +1,40 @@
+<!-- Pick Time Modal -->
+<div class="modal fade" 
+     id="timePickerModal" 
+     tabindex="-1" 
+     aria-labelledby="timePickerModalLabel" 
+     aria-hidden="true"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="timePickerModalLabel">Pick Time</h5>
+                <button type="button" 
+                        class="btn-close btn-close-white" 
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <date-time-picker 
+                    ng-model="vm.form.date"
+                    ng-time="vm.form.time"
+                    min-date="today">
+                </date-time-picker>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" 
+                        class="btn btn-secondary" 
+                        data-bs-dismiss="modal">
+                    CANCEL
+                </button>
+                <button type="button" 
+                        class="btn btn-primary" 
+                        data-bs-dismiss="modal"
+                        ng-click="vm.onDateTimeSelect(vm.form.date, vm.form.time)">
+                    PICK TIME
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

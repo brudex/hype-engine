@@ -1,0 +1,86 @@
+<!-- Media Selection Modal -->
+<div class="modal fade" 
+     id="mediaSelectionModal" 
+     tabindex="-1" 
+     aria-labelledby="mediaSelectionModalLabel" 
+     aria-hidden="true"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="mediaSelectionModalLabel">Select Media</h5>
+                <button type="button" 
+                        class="btn-close btn-close-white" 
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Tabs -->
+                <ul class="nav nav-tabs media-modal-tabs mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" 
+                                id="upload-tab" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#upload-pane" 
+                                type="button" 
+                                role="tab"
+                                ng-click="vm.setMediaTab('upload')">
+                            Upload
+                        </button>
+                    </li>
+                    <!-- Stock Photos tab hidden until implemented -->
+                    <!-- <li class="nav-item" role="presentation">
+                        <button class="nav-link" 
+                                id="stock-tab" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#stock-pane" 
+                                type="button" 
+                                role="tab"
+                                ng-click="vm.setMediaTab('stock')">
+                            Stock Photos
+                        </button>
+                    </li> -->
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Upload Tab -->
+                    <div class="tab-pane fade show active" 
+                         id="upload-pane" 
+                         role="tabpanel">
+                        <media-upload-library 
+                            ng-model="vm.selectedMedia"
+                            on-media-uploaded="vm.onMediaUploaded(media)"
+                            on-media-selected="vm.onMediaSelected(media, selected)">
+                        </media-upload-library>
+                    </div>
+
+                    <!-- Stock Photos Tab -->
+                    <div class="tab-pane fade" 
+                         id="stock-pane" 
+                         role="tabpanel">
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-image fs-1 d-block mb-3"></i>
+                            <p>Stock Photos feature coming soon</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" 
+                        class="btn btn-secondary" 
+                        data-bs-dismiss="modal">
+                    CANCEL
+                </button>
+                <button type="button" 
+                        class="btn btn-primary" 
+                        ng-click="vm.addSelectedMediaToPost()"
+                        ng-disabled="vm.selectedMedia.length === 0">
+                    ADD TO POST
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+

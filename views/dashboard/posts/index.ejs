@@ -1,0 +1,328 @@
+<link rel="stylesheet" href="/css/post.css">
+<link rel="stylesheet" href="/css/social-preview.css">
+
+<div class="page-header mb-0">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary" ng-if="postsCtrl.selectedProject">Posts - {{ postsCtrl.selectedProject.name }}</h4>
+                    <h4 class="m-b-5 text-theme-primary" ng-if="!postsCtrl.selectedProject">Posts</h4>
+                    <p class="text-theme-secondary mb-0" ng-if="postsCtrl.selectedProject">Manage posts for {{ postsCtrl.selectedProject.name }}</p>
+                    <p class="text-theme-secondary mb-0" ng-if="!postsCtrl.selectedProject">Create, schedule, and manage your social media posts</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/projects">Projects</a></li>
+                    <li class="breadcrumb-item" ng-if="postsCtrl.selectedProject">
+                        <a href="/dashboard/projects/{{ postsCtrl.selectedProject.uuid }}">{{ postsCtrl.selectedProject.name }}</a>
+                    </li>
+                    <li class="breadcrumb-item active">Posts</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body mt-0" ng-controller="PostsController as postsCtrl" ng-init='postsCtrl.init(<%- JSON.stringify(projects || []) %>, <%- JSON.stringify(currentProject || null) %>, <%- JSON.stringify(typeof projectUuid !== "undefined" ? projectUuid : null) %>)'>
+    <div class="page-wrapper">
+        <!-- Project Selection -->
+        <%- include('../partials/_project-selection', { controllerName: 'postsCtrl', placeholder: '..Select Project..' }) %>
+
+        <div ng-if="postsCtrl.loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- No Project Selected Message -->
+        <div ng-if="!postsCtrl.loading && !postsCtrl.selectedProject" class="text-center py-5">
+            <div class="alert posts-alert-warning">
+                <i class="bi bi-exclamation-triangle posts-alert-icon"></i>
+                <h5 class="alert-heading posts-alert-heading">Select a Project</h5>
+                <p class="mb-0 posts-alert-text">Please select a project from the dropdown above to manage posts.</p>
+            </div>
+        </div>
+
+        <!-- Posts Content (only shown when project is selected) -->
+        <div ng-if="!postsCtrl.loading && postsCtrl.selectedProject">
+            <!-- Header with Filters -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2" style="flex: 1;">
+                            <div class="position-relative posts-search-wrapper">
+                                <i class="bi bi-search position-absolute posts-search-icon"></i>
+                            <input type="text" 
+                                       class="form-control ps-5 posts-search-input" 
+                                   ng-model="postsCtrl.filter.keyword" 
+                                   placeholder="Search by keyword..."
+                                       ng-change="postsCtrl.applyFiltersDebounced()">
+                            </div>
+                        </div>
+                        <div>
+                            <a ng-href="/dashboard/posts/create{{ postsCtrl.selectedProject ? '/' + postsCtrl.selectedProject.uuid : '' }}" 
+                               class="btn posts-create-btn"
+                               ng-disabled="!postsCtrl.selectedProject">
+                                <i class="bi bi-plus-circle"></i> Create Post
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs for Status Filter -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <ul class="nav nav-tabs border-0 posts-status-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link posts-status-tab" 
+                               ng-class="{'active': !postsCtrl.filter.status}"
+                               ng-click="postsCtrl.changeStatusFilter(null)"
+                               href="javascript:void(0)">
+                                All
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link posts-status-tab" 
+                               ng-class="{'active': postsCtrl.filter.status === '0'}"
+                               ng-click="postsCtrl.changeStatusFilter('0')"
+                               href="javascript:void(0)">
+                                Drafts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link posts-status-tab" 
+                               ng-class="{'active': postsCtrl.filter.status === '1'}"
+                               ng-click="postsCtrl.changeStatusFilter('1')"
+                               href="javascript:void(0)">
+                                Scheduled
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link posts-status-tab" 
+                               ng-class="{'active': postsCtrl.filter.status === '2'}"
+                               ng-click="postsCtrl.changeStatusFilter('2')"
+                               href="javascript:void(0)">
+                                Published
+                            </a>
+                        </li>
+                        <li class="nav-item" ng-if="postsCtrl.hasFailedPosts">
+                            <a class="nav-link posts-status-tab failed" 
+                               ng-class="{'active': postsCtrl.filter.status === '3'}"
+                               ng-click="postsCtrl.changeStatusFilter('3')"
+                               href="javascript:void(0)">
+                                Failed
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Selected Posts Bar -->
+            <div ng-if="postsCtrl.selectedPosts.length > 0" 
+                 class="d-flex justify-content-between align-items-center mb-3 posts-selected-bar">
+                <div class="d-flex align-items-center">
+                    <strong class="posts-selected-count">{{ postsCtrl.selectedPosts.length }}</strong>
+                    <span class="posts-selected-text">post(s) selected</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm posts-delete-selected-btn" 
+                            ng-click="postsCtrl.deleteSelectedPosts()">
+                        <i class="bi bi-trash"></i> Delete Selected
+                    </button>
+                    <button class="btn btn-sm posts-clear-selected-btn" 
+                            ng-click="postsCtrl.selectedPosts = []">
+                        <i class="bi bi-x"></i> Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Posts Table -->
+            <div class="card posts-table-card">
+                <div class="card-body p-0 posts-table-card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 posts-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" 
+                                               class="form-check-input"
+                                               ng-checked="postsCtrl.selectedPosts.length === postsCtrl.posts.length && postsCtrl.posts.length > 0"
+                                               ng-click="postsCtrl.toggleSelectAll()">
+                                    </th>
+                                    <th style="width: 200px;">Status</th>
+                                    <th>Content</th>
+                                    <th style="width: 200px;">Media</th>
+                                    <th style="width: 150px;">Labels</th>
+                                    <th style="width: 200px;">Accounts</th>
+                                    <th style="width: 100px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="post in postsCtrl.posts" 
+                                    class="posts-table-row"
+                                    ng-class="{'selected': postsCtrl.selectedPosts.indexOf(post.id) > -1}"
+                                    ng-click="postsCtrl.openPreview(post)">
+                                    <td ng-click="$event.stopPropagation()" class="posts-table-cell">
+                                        <input type="checkbox" 
+                                               class="form-check-input"
+                                               ng-checked="postsCtrl.selectedPosts.indexOf(post.id) > -1"
+                                               ng-click="postsCtrl.togglePostSelection(post.id); $event.stopPropagation()">
+                                    </td>
+                                    <td ng-click="$event.stopPropagation()" class="posts-table-cell">
+                                        <div>
+                                            <span class="badge posts-status-badge" 
+                                                  ng-style="postsCtrl.getStatusBadgeStyle(post.status)">
+                                                {{ postsCtrl.getStatusText(post.status) }}
+                                            </span>
+                                            <div ng-if="post.status === 1 && post.scheduledAt" class="small mt-1 posts-status-date">
+                                                {{ postsCtrl.formatDate(post.scheduledAt) }}
+                                            </div>
+                                            <div ng-if="post.status === 2 && post.publishedAt" class="small mt-1 posts-status-date">
+                                                {{ postsCtrl.formatDate(post.publishedAt) }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="posts-table-cell">
+                                        <div class="text-truncate posts-content-cell">
+                                            {{ post.content ? post.content.excerpt : postsCtrl.getPostContent(post) }}
+                                        </div>
+                                    </td>
+                                    <td ng-click="$event.stopPropagation()" class="posts-table-cell">
+                                        <div ng-if="post.content && post.content.media && post.content.media.length > 0" class="position-relative posts-media-wrapper">
+                                            <img ng-src="{{ post.content.media[0].url || post.content.media[0] }}" 
+                                                 alt="Media" 
+                                                 class="posts-media-thumb">
+                                            <span ng-if="post.content.media_count > 1" 
+                                                  class="badge position-absolute posts-media-count-badge">
+                                                +{{ post.content.media_count - 1 }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td ng-click="$event.stopPropagation()" class="posts-table-cell">
+                                        <div class="d-flex flex-wrap gap-1">
+                                            <span ng-repeat="tag in post.tags" 
+                                                  class="badge posts-tag-badge" 
+                                                  ng-style="{'background-color': '#' + (tag.hex_color || tag.hexColor || '2F2F33'), 'color': '#FFFFFF', 'border': '1px solid #' + (tag.hex_color || tag.hexColor || '2F2F33')}">
+                                                {{ tag.name }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td ng-click="$event.stopPropagation()" class="posts-table-cell">
+                                        <div class="d-flex align-items-center">
+                                            <div ng-repeat="account in post.accounts | limitTo: 3" 
+                                                 class="position-relative"
+                                                 ng-style="{'margin-left': ($index > 0 ? '-12px' : '0'), 'z-index': (3 - $index)}">
+                                                <!-- <img ng-if="account.image" 
+                                                     ng-src="{{ account.image }}" 
+                                                     alt="{{ account.name }}"
+                                                     class="rounded-circle posts-account-avatar"
+                                                     title="{{ account.name }}"> -->
+                                                <div 
+                                                     class="rounded-circle d-flex align-items-center justify-content-center posts-account-placeholder"
+                                                     title="{{ account.name }}"
+                                                     ng-style="{'color': account.provider === 'twitter' ? '#1DA1F2' : account.provider === 'facebook' ? '#1877F2' : account.provider === 'instagram' ? '#E4405F' : account.provider === 'linkedin' ? '#0077B5' : '#B0B0B0'}">
+                                                    <i class="bi" ng-class="{
+                                                        'bi-twitter': account.provider === 'twitter',
+                                                        'bi-facebook': account.provider === 'facebook',
+                                                        'bi-instagram': account.provider === 'instagram',
+                                                        'bi-linkedin': account.provider === 'linkedin'
+                                                    }"></i>
+                                                </div>
+                                            </div>
+                                            <span ng-if="post.accounts.length > 3" 
+                                                  class="badge ms-1 posts-account-more-badge">
+                                                +{{ post.accounts.length - 3 }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td ng-click="$event.stopPropagation()" class="posts-table-cell">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-link posts-dropdown-toggle" 
+                                                    type="button" 
+                                                    data-bs-toggle="dropdown">
+                                                <i class="bi bi-three-dots-vertical" style="font-size: 18px;"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end posts-dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item posts-dropdown-item" 
+                                                       href="/dashboard/posts/edit/{{ post.uuid }}">
+                                                        <i class="bi bi-pencil me-2"></i> Edit
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item posts-dropdown-item" 
+                                                       href="/dashboard/posts/duplicate/{{ post.uuid }}">
+                                                        <i class="bi bi-files me-2"></i> Duplicate
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item posts-dropdown-item delete" 
+                                                       href="javascript:void(0)"
+                                                       ng-click="postsCtrl.deletePost(post.uuid)">
+                                                        <i class="bi bi-trash me-2"></i> Delete
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr ng-if="postsCtrl.posts.length === 0">
+                                    <td colspan="7" class="text-center posts-empty-state">
+                                        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                                            <i class="bi bi-inbox posts-empty-icon"></i>
+                                            <span>No posts found.</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div ng-if="postsCtrl.pagination.totalPages > 1" class="mt-3">
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" ng-class="{'disabled': postsCtrl.pagination.currentPage === 1}">
+                            <a class="page-link" 
+                               href="javascript:void(0)"
+                               ng-click="postsCtrl.pagination.currentPage > 1 && (postsCtrl.pagination.currentPage--, postsCtrl.loadPosts())">
+                                Previous
+                            </a>
+                        </li>
+                        <li class="page-item" 
+                            ng-repeat="page in postsCtrl.getPages()"
+                            ng-class="{'active': page === postsCtrl.pagination.currentPage}">
+                            <a class="page-link" 
+                               href="javascript:void(0)"
+                               ng-click="postsCtrl.pagination.currentPage = page; postsCtrl.loadPosts()">
+                                {{ page }}
+                            </a>
+                        </li>
+                        <li class="page-item" ng-class="{'disabled': postsCtrl.pagination.currentPage === postsCtrl.pagination.totalPages}">
+                            <a class="page-link" 
+                               href="javascript:void(0)"
+                               ng-click="postsCtrl.pagination.currentPage < postsCtrl.pagination.totalPages && (postsCtrl.pagination.currentPage++, postsCtrl.loadPosts())">
+                                Next
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Preview Modal -->
+    <%- include('./_preview-modal') %>
+</div>
+
+<script src="/scripts/app/twitter-preview.directive.js"></script>
+<script src="/scripts/app/facebook-preview.directive.js"></script>
+<script src="/scripts/app/instagram-preview.directive.js"></script>
+<script src="/scripts/app/linkedin-preview.directive.js"></script>
+<script src="/scripts/app/tiktok-preview.directive.js"></script>
+<script src="/scripts/app/mastodon-preview.directive.js"></script>
+<script src="/scripts/app/posts.client.controller.js"></script>

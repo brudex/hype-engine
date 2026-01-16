@@ -1,0 +1,25 @@
+<!-- Form Fields -->
+<div class="mb-3">
+    <label for="client_id" class="form-label">Client ID <span class="text-danger">*</span></label>
+    <input type="text" class="form-control" id="client_id" name="configuration[client_id]" required>
+    <small class="form-text text-muted">Your Instagram Client ID</small>
+</div>
+
+<div class="mb-3">
+    <label for="client_secret" class="form-label">Client Secret <span class="text-danger">*</span></label>
+    <input type="password" class="form-control" id="client_secret" name="configuration[client_secret]" required>
+    <small class="form-text text-muted">Your Instagram Client Secret</small>
+</div>
+
+<!-- Help Section -->
+<div class="card mt-3">
+    <div class="card-body">
+        <h6 class="card-title">How to get API credentials</h6>
+        <ul class="small">
+            <li>Go to <a href="https://developers.facebook.com" target="_blank">Facebook Developers</a></li>
+            <li>Create a new app or use an existing one</li>
+            <li>Add Instagram Basic Display product</li>
+            <li>Go to Settings → Basic and copy your Client ID and Client Secret</li>
+        </ul>
+    </div>
+</div>

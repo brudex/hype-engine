@@ -1,0 +1,214 @@
+<div class="page-header mb-0">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary">Projects</h4>
+                    <p class="text-theme-secondary mb-0">Organize your social media accounts into projects</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item active">Projects</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body mt-0" ng-controller="ProjectListController as projectCtrl" ng-init="projectCtrl.init()">
+    <div class="page-wrapper">
+        <!-- Header with Create Button -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div></div>
+                    <div>
+                        <a href="/dashboard/projects/create" class="btn posts-create-btn">
+                            <i class="bi bi-plus-circle"></i> New Project
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div ng-if="projectCtrl.loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Projects Cards (matching dropdown item design) -->
+        <div ng-if="!projectCtrl.loading && projectCtrl.projects.length > 0">
+            <div class="row">
+                <div class="col-md-12 mb-3" ng-repeat="project in projectCtrl.projects">
+                    <div class="card project-selection-card project-list-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <!-- Project Image or Initials -->
+                                <div class="flex-shrink-0 me-3">
+                                    <div ng-if="project.imageUrl" class="project-dropdown-image">
+                                        <img ng-src="{{ project.imageUrl }}" 
+                                             alt="{{ project.name }}" 
+                                             class="project-dropdown-img">
+                                    </div>
+                                    <div ng-if="!project.imageUrl" class="project-dropdown-initials">
+                                        {{ projectCtrl.getProjectInitials(project.name) }}
+                                    </div>
+                                </div>
+                                
+                                <!-- Project Info -->
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold text-theme-primary mb-1">{{ project.name }}</div>
+                                    <small class="project-dropdown-description text-theme-secondary" ng-if="project.description">
+                                        {{ project.description }}
+                                    </small>
+                                    <small class="project-dropdown-description text-theme-secondary" ng-if="!project.description">
+                                        No description
+                                    </small>
+                                    
+                                    <!-- Stats Row -->
+                                    <div class="d-flex align-items-center gap-4 mt-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-person-circle text-theme-secondary" style="font-size: 14px;"></i>
+                                            <span class="text-theme-secondary small">{{ project.accountCount || 0 }} Accounts</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-file-post text-theme-secondary" style="font-size: 14px;"></i>
+                                            <span class="text-theme-secondary small">{{ project.postCount || 0 }} Posts</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                    <!-- Edit Button -->
+                                    <button class="btn btn-sm btn-link project-action-btn" 
+                                            type="button"
+                                            ng-click="projectCtrl.openEditModal(project)"
+                                            title="Edit Project">
+                                        <i class="bi bi-pencil" style="font-size: 16px;"></i>
+                                    </button>
+                                    
+                                    <!-- Delete Button -->
+                                    <button class="btn btn-sm btn-link project-action-btn project-action-btn-delete" 
+                                            type="button"
+                                            ng-click="projectCtrl.deleteProject(project)"
+                                            title="Delete Project">
+                                        <i class="bi bi-trash" style="font-size: 16px;"></i>
+                                    </button>
+                                    
+                                    <!-- Dropdown Menu -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-link project-action-btn posts-dropdown-toggle" 
+                                                type="button" 
+                                                data-bs-toggle="dropdown"
+                                                title="More Options">
+                                            <i class="bi bi-three-dots-vertical" style="font-size: 18px;"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end posts-dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item posts-dropdown-item" 
+                                                   href="/dashboard/posts/{{ project.uuid }}">
+                                                    <i class="bi bi-file-post me-2"></i> Posts
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item posts-dropdown-item" 
+                                                   href="/dashboard/calendar/project/{{ project.uuid }}">
+                                                    <i class="bi bi-calendar me-2"></i> Calendar
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item posts-dropdown-item" 
+                                                   href="/dashboard/reports/{{ project.uuid }}">
+                                                    <i class="bi bi-graph-up me-2"></i> Reports
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item posts-dropdown-item" 
+                                                   href="/dashboard/services/project/{{ project.uuid }}">
+                                                    <i class="bi bi-gear me-2"></i> Configure Services
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item posts-dropdown-item" 
+                                                   href="/dashboard/projects/{{ project.uuid }}/accounts">
+                                                    <i class="bi bi-link-45deg me-2"></i> Connect Social Accounts
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item posts-dropdown-item" 
+                                                   href="/dashboard/projects/{{ project.uuid }}">
+                                                    <i class="bi bi-eye me-2"></i> View
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div ng-if="!projectCtrl.loading && projectCtrl.projects.length === 0">
+            <div class="card posts-table-card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-folder-x text-muted" style="font-size: 4rem;"></i>
+                    <h5 class="mt-3 text-theme-primary">No Projects Yet</h5>
+                    <p class="text-muted">Create your first project to organize your social media accounts</p>
+                    <a href="/dashboard/projects/create" class="btn posts-create-btn mt-3">
+                        <i class="bi bi-plus-circle"></i> New Project
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Project Modal -->
+    <div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProjectModalLabel">Edit Project</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editProjectForm">
+                        <div class="mb-3">
+                            <label for="editProjectName" class="form-label">Project Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editProjectName" ng-model="projectCtrl.editForm.name" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editProjectDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editProjectDescription" ng-model="projectCtrl.editForm.description" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editProjectImage" class="form-label">Project Image</label>
+                            <input type="file" class="form-control" id="editProjectImage" accept="image/*">
+                            <small class="form-text text-muted">Upload a new image to replace the current one (optional)</small>
+                            <div ng-if="projectCtrl.editForm.imagePreview" class="mt-2">
+                                <img ng-src="{{ projectCtrl.editForm.imagePreview }}" alt="Preview" class="img-thumbnail" style="max-height: 200px;">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" ng-click="projectCtrl.updateProject()">
+                        <i class="bi bi-check-circle"></i> Update Project
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="/css/post.css">
+<link rel="stylesheet" href="/css/dashboard.css">
+<script src="/scripts/app/project-list.client.controller.js"></script>

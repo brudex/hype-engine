@@ -1,0 +1,86 @@
+<!-- Project Selection Card Dropdown -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card project-selection-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-12">
+                        <div class="d-flex align-items-center gap-3">
+                            <label class="form-label mb-0">
+                                <i class="bi bi-folder"></i> Select Project
+                            </label>
+                            <div class="dropdown flex-grow-1">
+                            <button class="btn btn-outline-primary dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center project-dropdown-toggle" 
+                                    type="button" 
+                                    data-bs-toggle="dropdown" 
+                                    aria-expanded="false"
+                                    ng-disabled="<%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.loading">
+                                <div class="d-flex align-items-center flex-grow-1">
+                                    <div ng-if="<%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectedProject" class="d-flex align-items-center flex-grow-1">
+                                        <!-- Project Image or Initials -->
+                                        <div class="flex-shrink-0 me-3">
+                                            <div ng-if="<%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectedProject.imageUrl" class="project-dropdown-image">
+                                                <img ng-src="{{ <%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectedProject.imageUrl }}" 
+                                                     alt="{{ <%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectedProject.name }}" 
+                                                     class="project-dropdown-img">
+                                            </div>
+                                            <div ng-if="!<%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectedProject.imageUrl" class="project-dropdown-initials">
+                                                {{ <%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.getProjectInitials(<%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectedProject.name) }}
+                                            </div>
+                                        </div>
+                                        <!-- Project Name -->
+                                        <div class="flex-grow-1">
+                                            <div class="fw-semibold">{{ <%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectedProject.name }}</div>
+                                            <small class="project-dropdown-description" ng-if="<%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectedProject.description">
+                                                {{ <%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectedProject.description }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <span ng-if="!<%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectedProject" class="project-dropdown-placeholder">
+                                        <%= typeof placeholder !== 'undefined' ? placeholder : '..Select Project..' %>
+                                    </span>
+                                </div>
+                                 
+                            </button>
+                            <ul class="dropdown-menu w-100 project-dropdown-menu">
+                                <li ng-if="<%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.projects.length === 0">
+                                    <span class="dropdown-item-text text-muted p-3">
+                                        <i class="bi bi-inbox"></i> No projects available
+                                    </span>
+                                </li>
+                                <li ng-repeat="project in <%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.projects">
+                                    <a class="dropdown-item project-dropdown-item" 
+                                       href="#" 
+                                       ng-click="<%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectProject(project, $event)">
+                                        <div class="d-flex align-items-center">
+                                            <!-- Project Image or Initials -->
+                                            <div class="flex-shrink-0 me-3">
+                                                <div ng-if="project.imageUrl" class="project-dropdown-image">
+                                                    <img ng-src="{{ project.imageUrl }}" 
+                                                         alt="{{ project.name }}" 
+                                                         class="project-dropdown-img">
+                                                </div>
+                                                <div ng-if="!project.imageUrl" class="project-dropdown-initials">
+                                                    {{ <%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.getProjectInitials(project.name) }}
+                                                </div>
+                                            </div>
+                                            <!-- Project Info -->
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold">{{ project.name }}</div>
+                                                <small class="project-dropdown-description" ng-if="project.description">{{ project.description }}</small>
+                                            </div>
+                                            <!-- Checkmark for selected -->
+                                            <i class="bi bi-check-circle-fill text-success ms-2" 
+                                               ng-if="<%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectedProject && <%= typeof controllerName !== 'undefined' ? controllerName : 'ctrl' %>.selectedProject.uuid === project.uuid"></i>
+                                        </div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

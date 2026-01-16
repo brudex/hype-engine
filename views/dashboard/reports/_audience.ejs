@@ -1,0 +1,45 @@
+<!-- Audience Chart -->
+<div class="card" ng-if="reportsCtrl.reportData && reportsCtrl.reportData.audience.length > 0">
+    <div class="card-header">
+        <h5>Audience</h5>
+    </div>
+    <div class="card-body">
+        <!-- Account Filter Buttons -->
+        <div class="mb-4" ng-if="reportsCtrl.audienceAccounts.length > 0">
+            <div class="btn-group" role="group" aria-label="Filter by account">
+                <button 
+                    type="button" 
+                    class="btn btn-sm"
+                    ng-class="reportsCtrl.selectedAudienceAccount === null ? 'btn-primary' : 'btn-outline-secondary'"
+                    ng-click="reportsCtrl.selectAudienceAccount(null)">
+                    All Accounts
+                </button>
+                <button 
+                    type="button" 
+                    class="btn btn-sm"
+                    ng-class="reportsCtrl.selectedAudienceAccount === account.uuid ? 'btn-primary' : 'btn-outline-secondary'"
+                    ng-repeat="account in reportsCtrl.audienceAccounts track by account.uuid"
+                    ng-click="reportsCtrl.selectAudienceAccount(account.uuid)">
+                    {{ account.name }}
+                </button>
+            </div>
+        </div>
+        
+        <!-- Audience Chart -->
+        <div ng-if="reportsCtrl.reportData.audience.length > 0">
+            <div style="position: relative; height: 400px;">
+                <canvas id="audienceChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Empty State for Audience -->
+<div ng-if="reportsCtrl.reportData && reportsCtrl.reportData.audience.length === 0" class="text-center py-5">
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        <h5 class="alert-heading">No Audience Data</h5>
+        <p class="mb-0">No audience data found for the selected period. Try adjusting the date range.</p>
+    </div>
+</div>
+

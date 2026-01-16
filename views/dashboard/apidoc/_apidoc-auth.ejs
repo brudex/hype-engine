@@ -1,0 +1,100 @@
+<!-- API Key Generation Section -->
+<div ng-if="apiDocCtrl.activeSection === 'api-key-generation'" class="api-doc-section">
+    <h2 class="api-doc-title">API Key Generation</h2>
+    <p class="api-doc-description">
+        API keys are used to authenticate your requests to the HypeEngine API. Each API key is associated with your user account 
+        and can be scoped to specific projects or all projects.
+    </p>
+    <h3 class="api-doc-subtitle">Creating an API Key</h3>
+    <ol class="api-doc-list">
+        <li>Navigate to <a href="/dashboard/access-tokens" class="api-doc-link">Access Tokens</a> in your dashboard</li>
+        <li>Click "Create API Key"</li>
+        <li>Provide a name and optional description for your key</li>
+        <li>Select the scope: "All Projects" or "Selected Projects"</li>
+        <li>If selecting specific projects, choose which projects the key can access</li>
+        <li>Click "Create" and immediately copy your API key</li>
+    </ol>
+</div>
+
+<!-- Authentication Method Section -->
+<div ng-if="apiDocCtrl.activeSection === 'auth-method'" class="api-doc-section">
+    <h2 class="api-doc-title">Authentication Method</h2>
+    <p class="api-doc-description">
+        The HypeEngine API uses <strong>Bearer Token Authentication</strong>. Include your API key in the <code>Authorization</code> header 
+        of every request using the format <code>Bearer &lt;your-api-key&gt;</code>.
+    </p>
+    
+    <h3 class="api-doc-subtitle">Required Headers</h3>
+    <div class="api-endpoint-detail">
+        <h4 class="api-doc-subtitle-small">Authorization Header</h4>
+        <p>Required for all requests. Include your API key as a Bearer token.</p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Header Format</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('auth-header-format')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="auth-header-format">
+                <pre><code>Authorization: Bearer &lt;your-api-key&gt;
+Content-Type: application/json</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h4 class="api-doc-subtitle-small">Content-Type Header</h4>
+        <p>Required for POST and PUT requests.</p>
+        <ul class="api-doc-list">
+            <li><code>Content-Type: application/json</code> - For JSON payloads (posts, tags, metadata)</li>
+            <li><code>Content-Type: multipart/form-data</code> - For file uploads (media)</li>
+        </ul>
+    </div>
+    <div class="api-endpoint-detail">
+        <h4 class="api-doc-subtitle-small">Accept Header</h4>
+        <p>Optional but recommended.</p>
+        <ul class="api-doc-list">
+            <li><code>Accept: application/json</code> - Request JSON response format</li>
+        </ul>
+    </div>
+    
+    <h3 class="api-doc-subtitle">Authentication Errors</h3>
+    <div class="api-endpoint-detail">
+        <h4 class="api-doc-subtitle-small">401 Unauthorized</h4>
+        <p>Returned when the API key is missing, invalid, or expired.</p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Error Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('auth-error-401')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="auth-error-401">
+                <pre><code>{
+  "success": false,
+  "error": "Unauthorized",
+  "message": "Invalid or missing API key"
+}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h4 class="api-doc-subtitle-small">403 Forbidden</h4>
+        <p>Returned when the API key does not have permission to access the requested resource (e.g., project-scoped key accessing a different project).</p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Error Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('auth-error-403')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="auth-error-403">
+                <pre><code>{
+  "success": false,
+  "error": "Forbidden",
+  "message": "API key does not have access to this resource"
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+

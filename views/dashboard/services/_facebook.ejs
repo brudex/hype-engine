@@ -1,0 +1,49 @@
+<!-- Form Fields -->
+<div class="mb-3">
+    <label for="app_id" class="form-label">App ID <span class="text-danger">*</span></label>
+    <input type="text" class="form-control" id="app_id" name="configuration[app_id]" required>
+    <small class="form-text text-muted">Your Facebook App ID</small>
+</div>
+
+<div class="mb-3">
+    <label for="app_secret" class="form-label">App Secret <span class="text-danger">*</span></label>
+    <input type="password" class="form-control" id="app_secret" name="configuration[app_secret]" required>
+    <small class="form-text text-muted">Your Facebook App Secret</small>
+</div>
+
+<div class="mb-3">
+    <label for="api_version" class="form-label">API Version <span class="text-danger">*</span></label>
+    <select class="form-control" id="api_version" name="configuration[api_version]" required>
+        <option value="v24.0">v24.0</option>
+        <option value="v23.0">v23.0</option>
+        <option value="v22.0">v22.0</option>
+        <option value="v21.0">v21.0</option>
+        <option value="v20.0">v20.0</option>
+        <option value="v19.0">v19.0</option>
+        <option value="v18.0">v18.0</option>
+        <option value="v17.0">v17.0</option>
+        <option value="v16.0">v16.0</option>
+    </select>
+    <small class="form-text text-muted">Facebook Graph API version</small>
+</div>
+
+<div class="mb-3">
+    <button type="button" class="btn btn-outline-info" ng-click="configCtrl.testCredentials()" ng-disabled="configCtrl.testing">
+        <i class="bi" ng-class="configCtrl.testing ? 'bi-hourglass-split' : 'bi-check-circle'"></i>
+        {{ configCtrl.testing ? 'Testing...' : 'Test Credentials' }}
+    </button>
+    <small class="form-text text-muted d-block mt-1">Test if your API credentials are valid</small>
+</div>
+
+<!-- Help Section -->
+<div class="card mt-3">
+    <div class="card-body">
+        <h6 class="card-title">How to get API credentials</h6>
+        <ul class="small">
+            <li>Go to <a href="https://developers.facebook.com" target="_blank">Facebook Developers</a></li>
+            <li>Create a new app or use an existing one</li>
+            <li>Go to Settings → Basic</li>
+            <li>Copy your App ID and App Secret</li>
+        </ul>
+    </div>
+</div>

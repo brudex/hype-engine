@@ -1,0 +1,87 @@
+<!-- Labels Modal -->
+<div class="modal fade" 
+     id="labelsModal" 
+     tabindex="-1" 
+     aria-labelledby="labelsModalLabel" 
+     aria-hidden="true"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="labelsModalLabel">Labels</h5>
+                <button type="button" 
+                        class="btn-close btn-close-white" 
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="relative" ng-if="!vm.loadingTags">
+                    <!-- Selected Tags (on top) -->
+                    <div ng-if="vm.form.tags.length > 0" class="mb-3">
+                        <div class="d-flex flex-wrap gap-2">
+                            <span ng-repeat="tag in vm.form.tags" 
+                                  class="badge tag-badge" 
+                                  ng-style="{'background-color': '#' + vm.getTagColor(tag), 'color': '#fff'}"
+                                  ng-click="vm.toggleTag(tag)"
+                                  style="cursor: pointer;">
+                                {{ vm.getTagName(tag) }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Search/Create Input -->
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <input type="text" 
+                                   class="form-control" 
+                                   ng-model="vm.searchTagQuery"
+                                   placeholder="Search or Create New"
+                                   ng-keyup="$event.keyCode === 13 && vm.createNewTag()"
+                                   autofocus>
+                            <button type="button" 
+                                    class="btn btn-primary" 
+                                    ng-click="vm.createNewTag()"
+                                    ng-disabled="!vm.searchTagQuery || vm.searchTagQuery.trim() === ''">
+                                Add
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Available Tags List -->
+                    <div ng-if="vm.getFilteredTags().length > 0" class="border rounded">
+                        <div ng-repeat="tag in vm.getFilteredTags()" 
+                             ng-click="vm.toggleTag(tag)"
+                             class="d-flex align-items-center justify-content-between p-2 border-bottom cursor-pointer hover-bg-light"
+                             ng-class="{'border-bottom-0': $last}">
+                            <span class="badge tag-badge" 
+                                  ng-style="{'background-color': '#' + (tag.hex_color || tag.hexColor || '6c757d'), 'color': '#fff'}">
+                                {{ tag.name }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Create New Tag Hint -->
+                    <div ng-if="vm.searchTagQuery" class="mt-3 text-muted fst-italic">
+                        Press Enter or click Add to create a new label
+                    </div>
+                </div>
+                
+                <!-- Loading State -->
+                <div ng-if="vm.loadingTags" class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" 
+                        class="btn btn-primary" 
+                        data-bs-dismiss="modal">
+                    DONE
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+

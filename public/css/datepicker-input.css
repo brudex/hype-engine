@@ -1,0 +1,81 @@
+/* Datepicker Input Directive Styles */
+/* Specific styles for datepicker-input directive used in reports and other pages */
+/* This ensures the datepicker popup is properly sized and aligned without affecting the post page datepicker */
+
+/* Target datepicker dropdowns that are associated with datepicker-input elements */
+/* The datepicker library appends the dropdown to body, so we target by the input's class */
+.datepicker-input-wrapper input.datepicker-input ~ .datepicker-dropdown,
+.datepicker-input-wrapper .datepicker-dropdown {
+  width: min-content !important;
+  min-width: 280px !important;
+  max-width: 320px !important;
+}
+
+.datepicker-input-wrapper input.datepicker-input ~ .datepicker-dropdown .datepicker,
+.datepicker-input-wrapper .datepicker-dropdown .datepicker {
+  width: min-content !important;
+  min-width: 280px !important;
+  max-width: 320px !important;
+}
+
+.datepicker-input-wrapper input.datepicker-input ~ .datepicker-dropdown .datepicker-picker,
+.datepicker-input-wrapper .datepicker-dropdown .datepicker-picker {
+  width: 100% !important;
+  min-width: 280px !important;
+  max-width: 320px !important;
+}
+
+/* Target datepicker dropdown when input has datepicker-input class and is inside wrapper */
+/* DO NOT override left/right positioning - let the library calculate it based on input position */
+/* The library uses inputField.getBoundingClientRect() to position the popup correctly */
+
+/* More general approach: Target any datepicker dropdown that follows an input with datepicker-input class */
+/* This works because the datepicker library positions relative to the input */
+input.datepicker-input[readonly] ~ .datepicker-dropdown,
+input.datepicker-input[readonly] + .datepicker-dropdown {
+  width: min-content !important;
+  min-width: 280px !important;
+  max-width: 320px !important;
+}
+
+input.datepicker-input[readonly] ~ .datepicker-dropdown .datepicker,
+input.datepicker-input[readonly] + .datepicker-dropdown .datepicker {
+  width: min-content !important;
+  min-width: 280px !important;
+  max-width: 320px !important;
+}
+
+input.datepicker-input[readonly] ~ .datepicker-dropdown .datepicker-picker,
+input.datepicker-input[readonly] + .datepicker-dropdown .datepicker-picker {
+  width: 100% !important;
+  min-width: 280px !important;
+  max-width: 320px !important;
+}
+
+/* Since datepicker appends to body, we need to use a different approach */
+/* We'll add a data attribute in the directive and target that */
+.datepicker-dropdown[data-datepicker-input] {
+  width: min-content !important;
+  min-width: 280px !important;
+  max-width: 320px !important;
+}
+
+.datepicker-dropdown[data-datepicker-input] .datepicker {
+  width: min-content !important;
+  min-width: 280px !important;
+  max-width: 320px !important;
+}
+
+.datepicker-dropdown[data-datepicker-input] .datepicker-picker {
+  width: 100% !important;
+  min-width: 280px !important;
+  max-width: 320px !important;
+}
+
+/* Ensure the dropdown is positioned absolutely relative to viewport */
+/* DO NOT override left/right positioning - the library calculates it based on inputField.getBoundingClientRect() */
+.datepicker-dropdown[data-datepicker-input] {
+  position: absolute !important;
+  z-index: 1000 !important;
+}
+

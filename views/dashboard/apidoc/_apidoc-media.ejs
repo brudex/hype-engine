@@ -1,0 +1,267 @@
+<!-- List Media Section -->
+<div ng-if="apiDocCtrl.activeSection === 'list-media'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-info">GET</span>
+        <h2 class="api-doc-title">List Media</h2>
+    </div>
+    <p class="api-doc-description">
+        Retrieves a paginated list of media files in your library.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('list-media-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="list-media-url">
+                <pre><code>GET /api/v1/media?page={page}&limit={limit}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Query Parameters</h3>
+        <ul class="api-doc-list">
+            <li><code>page</code> (optional) - Page number (default: 1)</li>
+            <li><code>limit</code> (optional) - Items per page (default: 20, max: 100)</li>
+        </ul>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (200):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('list-media-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="list-media-success">
+                <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "uuid": "media-uuid",
+      "name": "image.jpg",
+      "mime_type": "image/jpeg",
+      "url": "/uploads/...",
+      "thumb_url": "/uploads/...",
+      "size": 1024000,
+      "created_at": "2024-01-15T10:00:00Z"
+    }
+  ],
+  "meta": {
+    "total": 150,
+    "page": 1,
+    "per_page": 20,
+    "last_page": 8
+  }
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Get Media Section -->
+<div ng-if="apiDocCtrl.activeSection === 'get-media'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-info">GET</span>
+        <h2 class="api-doc-title">Get Media</h2>
+    </div>
+    <p class="api-doc-description">
+        Retrieves detailed metadata for a specific media file.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('get-media-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="get-media-url">
+                <pre><code>GET /api/v1/media/:mediaUuid</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (200):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('get-media-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="get-media-success">
+                <pre><code>{
+  "success": true,
+  "data": {
+    "uuid": "media-uuid",
+    "name": "image.jpg",
+    "mime_type": "image/jpeg",
+    "url": "/uploads/...",
+    "thumb_url": "/uploads/...",
+    "size": 1024000,
+    "created_at": "2024-01-15T10:00:00Z"
+  }
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Media Section -->
+<div ng-if="apiDocCtrl.activeSection === 'upload-media'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-success">POST</span>
+        <h2 class="api-doc-title">Upload Media</h2>
+    </div>
+    <p class="api-doc-description">
+        Uploads a media file (image or video) to your media library. The file can then be attached to posts.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('upload-media-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="upload-media-url">
+                <pre><code>POST /api/v1/media</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Request</h3>
+        <p><strong>Body (multipart/form-data):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Form Data</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('upload-media-body')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="upload-media-body">
+                <pre><code>file: [File] (required)
+name: "string" (optional)</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (200):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('upload-media-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="upload-media-success">
+                <pre><code>{
+  "success": true,
+  "data": {
+    "uuid": "media-uuid",
+    "name": "image.jpg",
+    "mime_type": "image/jpeg",
+    "url": "/uploads/...",
+    "size": 1024000,
+    "created_at": "2024-01-15T10:00:00Z"
+  }
+}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Notes</h3>
+        <ul class="api-doc-list">
+            <li>Supported file types: JPEG, PNG, GIF, MP4, MOV</li>
+            <li>Maximum file size: 50MB</li>
+            <li>The <code>name</code> field is optional; if not provided, the original filename is used</li>
+            <li>Media files are stored securely and accessible via the returned URL</li>
+        </ul>
+    </div>
+    <button class="btn btn-outline-primary mt-3" ng-click="apiDocCtrl.testSidebarCollapsed = false">
+        <i class="bi bi-play-circle me-1"></i>Test in Console
+    </button>
+</div>
+
+<!-- Update Media Section -->
+<div ng-if="apiDocCtrl.activeSection === 'update-media'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-warning">PUT</span>
+        <h2 class="api-doc-title">Update Media</h2>
+    </div>
+    <p class="api-doc-description">
+        Updates metadata for a media file (e.g., name).
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('update-media-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="update-media-url">
+                <pre><code>PUT /api/v1/media/:mediaUuid</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Request Body</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Request Body</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('update-media-body')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="update-media-body">
+                <pre><code>{
+  "name": "Updated Media Name"
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Media Section -->
+<div ng-if="apiDocCtrl.activeSection === 'delete-media'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-warning">DELETE</span>
+        <h2 class="api-doc-title">Delete Media</h2>
+    </div>
+    <p class="api-doc-description">
+        Permanently deletes a media file from your library. This action cannot be undone.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('delete-media-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="delete-media-url">
+                <pre><code>DELETE /api/v1/media/:mediaUuid</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="callout-box callout-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        <div>
+            <strong>Warning:</strong> This action is irreversible. Make sure you want to delete the media file before making this request.
+        </div>
+    </div>
+</div>
+

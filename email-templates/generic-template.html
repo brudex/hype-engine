@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{subject}}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #FFE873 0%, #FFF5A5 100%);">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #FFE873 0%, #FFF5A5 100%);">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 20px; box-shadow: 0 10px 40px rgba(29, 47, 111, 0.25);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #1d2f6f 0%, #3a4f8a 100%); padding: 50px 30px; text-align: center; border-radius: 20px 20px 0 0;">
+                            {{#icon}}
+                            <div style="margin-bottom: 15px;">
+                                <span style="font-size: 48px;">{{icon}}</span>
+                            </div>
+                            {{/icon}}
+                            <h1 style="margin: 0; color: #FFE873; font-size: 32px; font-weight: 700; font-family: 'Bricolage Grotesque', sans-serif; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">{{title}}</h1>
+                            {{#subtitle}}
+                            <p style="margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 16px; font-family: 'Bricolage Grotesque', sans-serif;">{{subtitle}}</p>
+                            {{/subtitle}}
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <p style="margin: 0 0 20px 0; color: #2c3e50; font-size: 16px; line-height: 1.6; font-family: 'Bricolage Grotesque', sans-serif;">
+                                {{#greeting}}
+                                    {{greeting}}
+                                {{/greeting}}
+                                {{^greeting}}
+                                    Hi {{name}},
+                                {{/greeting}}
+                            </p>
+                            
+                            {{#content}}
+                            <!-- Main Content -->
+                            {{#isArray}}
+                                {{#content}}
+                                <p style="margin: 0 0 20px 0; color: #2c3e50; font-size: 16px; line-height: 1.6; font-family: 'Bricolage Grotesque', sans-serif;">
+                                    {{.}}
+                                </p>
+                                {{/content}}
+                            {{/isArray}}
+                            {{^isArray}}
+                            <div style="color: #2c3e50; font-size: 16px; line-height: 1.6; margin-bottom: 20px; font-family: 'Bricolage Grotesque', sans-serif;">
+                                {{content}}
+                            </div>
+                            {{/isArray}}
+                            {{/content}}
+                            
+                            {{#htmlContent}}
+                            <!-- Custom HTML Content -->
+                            <div style="color: #2c3e50; font-size: 16px; line-height: 1.6; margin: 20px 0; font-family: 'Bricolage Grotesque', sans-serif;">
+                                {{{htmlContent}}}
+                            </div>
+                            {{/htmlContent}}
+                            
+                            {{#infoBoxes}}
+                            <!-- Information Boxes -->
+                            {{#infoBoxes}}
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 20px 0;">
+                                <tr>
+                                    <td style="padding: 20px; background-color: {{bgColor}}; border-left: 4px solid {{borderColor}}; border-radius: 8px;">
+                                        {{#title}}
+                                        <p style="margin: 0 0 8px 0; color: #2c3e50; font-size: 15px; font-weight: 600; font-family: 'Bricolage Grotesque', sans-serif;">{{title}}</p>
+                                        {{/title}}
+                                        <p style="margin: 0; color: #2c3e50; font-size: 14px; line-height: 1.6; font-family: 'Bricolage Grotesque', sans-serif;">{{content}}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            {{/infoBoxes}}
+                            {{/infoBoxes}}
+                            
+                            {{#listItems}}
+                            <!-- List Items -->
+                            <ul style="margin: 20px 0; padding-left: 20px; color: #2c3e50; font-size: 15px; line-height: 1.8; font-family: 'Bricolage Grotesque', sans-serif;">
+                                {{#listItems}}
+                                <li style="margin-bottom: 10px;">{{.}}</li>
+                                {{/listItems}}
+                            </ul>
+                            {{/listItems}}
+                            
+                            {{#hasKeyValuePairs}}
+                            <!-- Key-Value Pairs -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 30px 0; border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden;">
+                                <tr>
+                                    <td style="padding: 20px; background-color: #f8f9fa;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                            {{#keyValuePairs}}
+                                            <tr>
+                                                <td style="padding: 8px 0; color: #6c757d; font-size: 14px; font-family: 'Bricolage Grotesque', sans-serif;">{{key}}:</td>
+                                                <td align="right" style="padding: 8px 0; color: #2c3e50; font-size: 14px; font-weight: 600; font-family: 'Bricolage Grotesque', sans-serif;">{{value}}</td>
+                                            </tr>
+                                            {{/keyValuePairs}}
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            {{/hasKeyValuePairs}}
+                            
+                            {{#ctaText}}
+                            {{#ctaUrl}}
+                            <!-- CTA Button -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td align="center" style="padding: 20px 0;">
+                                        <a href="{{ctaUrl}}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #1d2f6f 0%, #3a4f8a 100%); color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 16px; font-family: 'Bricolage Grotesque', sans-serif; box-shadow: 0 4px 15px rgba(29, 47, 111, 0.25);">{{ctaText}}</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            {{/ctaUrl}}
+                            {{/ctaText}}
+                            
+                            {{#closingMessage}}
+                            <!-- Closing Message -->
+                            <p style="margin: 30px 0 0 0; color: #6c757d; font-size: 14px; line-height: 1.6; font-family: 'Bricolage Grotesque', sans-serif;">
+                                {{closingMessage}}
+                            </p>
+                            {{/closingMessage}}
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px; background: linear-gradient(135deg, rgba(248, 249, 250, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%); border-radius: 0 0 20px 20px; text-align: center;">
+                            <p style="margin: 0 0 10px 0; color: #6c757d; font-size: 14px; font-family: 'Bricolage Grotesque', sans-serif;">
+                                {{#footerMessage}}
+                                    {{footerMessage}}<br>
+                                {{/footerMessage}}
+                                <strong style="color: #1d2f6f; font-weight: 600;">The QuizFactor Team</strong>
+                            </p>
+                            <p style="margin: 20px 0 0 0; color: #999999; font-size: 12px; font-family: 'Bricolage Grotesque', sans-serif;">
+                                © {{year}} QuizFactor. All rights reserved.
+                            </p>
+                            {{#unsubscribeUrl}}
+                            <p style="margin: 15px 0 0 0;">
+                                <a href="{{unsubscribeUrl}}" style="color: #999999; font-size: 12px; text-decoration: underline; font-family: 'Bricolage Grotesque', sans-serif;">Unsubscribe</a>
+                            </p>
+                            {{/unsubscribeUrl}}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

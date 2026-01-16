@@ -1,0 +1,50 @@
+Your Performance Report - QuizFactor
+
+Hi {{name}},
+
+Here's how you've been performing on QuizFactor. Keep up the great work!
+
+Overall Stats:
+- Quizzes Completed: {{totalQuizzes}}
+
+Performance Metrics:
+{{#averageScore}}
+- Average Score: {{averageScore}}%
+{{/averageScore}}
+- Total Questions Answered: {{totalQuestions}}
+- Correct Answers: {{correctAnswers}}
+{{#accuracyRate}}
+- Accuracy Rate: {{accuracyRate}}%
+{{/accuracyRate}}
+- Time Spent: {{timeSpent}}
+
+{{#categoryPerformance}}
+Performance by Category:
+{{#categoryPerformance}}
+- {{name}}: Score {{score}}% | {{quizCount}} quizzes
+{{/categoryPerformance}}
+{{/categoryPerformance}}
+
+{{#improvementAreas}}
+Areas for Improvement:
+{{#improvementAreas}}
+- {{.}}
+{{/improvementAreas}}
+{{/improvementAreas}}
+
+{{#achievements}}
+Recent Achievements:
+{{#achievements}}
+- {{.}}
+{{/achievements}}
+{{/achievements}}
+
+Keep practicing to improve your scores and unlock new achievements!
+
+View Full Analytics: {{appUrl}}
+
+Keep learning and improving!
+The QuizFactor Team
+
+© {{year}} QuizFactor. All rights reserved.
+

@@ -1,0 +1,136 @@
+<!-- Right Panel - Preview -->
+<div class="col-md-4 border-start d-flex flex-column post-preview-panel" 
+     ng-class="{'d-none d-md-flex': !vm.showPreview}">
+    <!-- Preview Tabs - Outside Card -->
+    <div class="preview-tabs-container">
+        <ul class="preview-tabs">
+            <li class="preview-tab-item">
+                <a class="preview-tab-link" 
+                   ng-class="{'active': vm.activeTab === 'preview'}"
+                   ng-click="vm.setTab('preview'); $event.preventDefault()"
+                   href="#">
+                    <i class="bi bi-eye"></i> Preview
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Preview Content -->
+    <div class="preview-content-wrapper">
+        <div ng-if="vm.activeTab === 'preview'" 
+             class="preview-content-inner"
+             ng-class="{'ng-enter': vm.activeTab === 'preview'}">
+            <!-- Empty State -->
+            <div ng-if="vm.getPostAccounts().length === 0" class="preview-empty-state">
+                <div class="preview-empty-icon">
+                    <i class="bi bi-info-circle"></i>
+                </div>
+                <p class="preview-empty-text">Select a social account to see the preview</p>
+            </div>
+            
+            <!-- Account Previews -->
+            <div ng-repeat="account in vm.getPostAccounts()" 
+                 class="preview-account-wrapper"
+                 ng-class="{'ng-enter': true}">
+                <!-- Get version content for this account -->
+                <div ng-init="accountVersion = vm.getAccountVersionForPreview(account)">
+                    <!-- Platform-specific previews using ng-switch -->
+                    <div ng-switch="account.provider">
+                        <!-- Twitter Preview -->
+                        <div ng-switch-when="twitter">
+                            <twitter-preview 
+                                account="account" 
+                                content="accountVersion"
+                                get-plain-text="vm.getPlainText(html)">
+                            </twitter-preview>
+                        </div>
+                        
+                        <!-- Facebook Preview -->
+                        <div ng-switch-when="facebook">
+                            <facebook-preview 
+                                account="account" 
+                                content="accountVersion"
+                                get-plain-text="vm.getPlainText(html)">
+                            </facebook-preview>
+                        </div>
+                        
+                        <!-- Instagram Preview -->
+                        <div ng-switch-when="instagram">
+                            <instagram-preview 
+                                account="account" 
+                                content="accountVersion"
+                                get-plain-text="vm.getPlainText(html)">
+                            </instagram-preview>
+                        </div>
+                        
+                        <!-- LinkedIn Preview -->
+                        <div ng-switch-when="linkedin">
+                            <linkedin-preview 
+                                account="account" 
+                                content="accountVersion"
+                                get-plain-text="vm.getPlainText(html)">
+                            </linkedin-preview>
+                        </div>
+                        
+                        <!-- TikTok Preview -->
+                        <div ng-switch-when="tiktok">
+                            <tiktok-preview 
+                                account="account" 
+                                content="accountVersion"
+                                get-plain-text="vm.getPlainText(html)">
+                            </tiktok-preview>
+                        </div>
+                        
+                        <!-- Mastodon Preview -->
+                        <div ng-switch-when="mastodon">
+                            <mastodon-preview 
+                                account="account" 
+                                content="accountVersion"
+                                get-plain-text="vm.getPlainText(html)">
+                            </mastodon-preview>
+                        </div>
+                        
+                        <!-- Default Preview (fallback for unknown providers) -->
+                        <div ng-switch-default>
+                            <div class="preview-post-card">
+                                <div class="preview-account-header">
+                                    <div class="preview-account-avatar-wrapper">
+                                        <img ng-if="account.image" 
+                                             ng-src="{{ account.image }}" 
+                                             alt="{{ account.name }}"
+                                             class="preview-account-avatar">
+                                        <div ng-if="!account.image" 
+                                             class="preview-account-avatar preview-account-avatar-placeholder">
+                                            <i class="bi bi-person"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-account-info">
+                                        <div class="preview-account-name">{{ account.name }}</div>
+                                        <div class="preview-account-username" ng-if="account.username">@{{ account.username }}</div>
+                                        <div class="preview-account-timestamp">now</div>
+                                    </div>
+                                </div>
+                                <div ng-if="accountVersion" class="preview-post-body">
+                                    <div class="preview-post-text" ng-if="accountVersion.body">
+                                        {{ vm.getPlainText(accountVersion.body) }}
+                                    </div>
+                                    <div ng-if="!accountVersion.body" class="preview-post-text-placeholder">
+                                        Start typing your post...
+                                    </div>
+                                    <div ng-if="accountVersion.media && accountVersion.media.length > 0" class="preview-media-container">
+                                        <div class="preview-media-grid preview-media-single">
+                                            <img ng-src="{{ accountVersion.media[0].url }}" 
+                                                 alt="Media"
+                                                 class="preview-media-image">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

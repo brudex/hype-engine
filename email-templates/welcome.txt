@@ -1,0 +1,26 @@
+Welcome to QuizFactor!
+
+Hi {{name}},
+
+Welcome to QuizFactor! We're thrilled to have you join our community of learners.
+
+QuizFactor is your ultimate platform for exam preparation. Whether you're studying for professional certifications, academic exams, or skill assessments, we've got you covered with thousands of practice questions and comprehensive analytics.
+
+Features:
+- 📚 Extensive Question Bank: Access thousands of practice questions across multiple categories
+- 📊 Performance Analytics: Track your progress and identify areas for improvement
+- 🎯 Custom Quizzes: Create personalized quizzes tailored to your learning needs
+
+📱 Download Our Mobile App
+Study on the go with our mobile app
+
+Get it on Google Play: https://quizfactor.app/android
+Download on the App Store: https://quizfactor.app/ios
+
+If you have any questions or need assistance, don't hesitate to reach out to our support team.
+
+Best regards,
+The QuizFactor Team
+
+© {{year}} QuizFactor. All rights reserved.
+

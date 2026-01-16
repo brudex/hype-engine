@@ -1,0 +1,287 @@
+<link rel="stylesheet" href="/css/reports.css">
+<link rel="stylesheet" href="/css/datepicker-input.css">
+<div ng-controller="ReportsController as reportsCtrl" ng-init='reportsCtrl.init(<%- JSON.stringify(typeof projectUuid !== 'undefined' ? projectUuid : '') %>)'>
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary" ng-if="reportsCtrl.selectedProject">Reports - {{ reportsCtrl.selectedProject.name }}</h4>
+                    <h4 class="m-b-5 text-theme-primary" ng-if="!reportsCtrl.selectedProject">Reports</h4>
+                    <p class="text-theme-secondary mb-0" ng-if="reportsCtrl.selectedProject">View analytics and insights for {{ reportsCtrl.selectedProject.name }}</p>
+                    <p class="text-theme-secondary mb-0" ng-if="!reportsCtrl.selectedProject">View analytics and insights for your social media accounts</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/projects">Projects</a></li>
+                    <li class="breadcrumb-item" ng-if="reportsCtrl.selectedProject">
+                        <a href="/dashboard/projects/{{ reportsCtrl.selectedProject.uuid }}">{{ reportsCtrl.selectedProject.name }}</a>
+                    </li>
+                    <li class="breadcrumb-item active">Reports</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body mt-0" >
+    <div class="page-wrapper">
+        <!-- Project Selection -->
+        <%- include('../partials/_project-selection', { controllerName: 'reportsCtrl', placeholder: '..Select Project..' }) %>
+
+        <div ng-if="reportsCtrl.loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- No Project Selected Message -->
+        <div ng-if="!reportsCtrl.loading && !reportsCtrl.selectedProject" class="text-center py-5">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                <h5 class="alert-heading">Select a Project</h5>
+                <p class="mb-0">Please select a project from the dropdown above to view reports.</p>
+            </div>
+        </div>
+
+        <!-- Reports Content (only shown when project is selected) -->
+        <div ng-if="!reportsCtrl.loading && reportsCtrl.selectedProject">
+            <!-- Date Range Filter -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Start Date</label>
+                            <datepicker-input 
+                                ng-model="reportsCtrl.startDate"
+                                format="yyyy-mm-dd"
+                                placeholder="Select start date..."
+                                autohide="true"
+                                today-highlight="true"
+                                onChange="reportsCtrl.loadReports()">
+                            </datepicker-input>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">End Date</label>
+                            <datepicker-input 
+                                ng-model="reportsCtrl.endDate"
+                                format="yyyy-mm-dd"
+                                placeholder="Select end date..."
+                                autohide="true"
+                                today-highlight="true"
+                                onChange="reportsCtrl.loadReports()">
+                            </datepicker-input>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Accounts (Optional)</label>
+                            <multi-select 
+                                ng-model="reportsCtrl.selected.accounts"
+                                options="reportsCtrl.accounts"
+                                option-value="uuid"
+                                option-label="name"
+                                placeholder="Select accounts..."
+                                search-enabled="true"
+                                remove-item-button="true">
+                            </multi-select>
+                            
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary" ng-click="reportsCtrl.loadReports()">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Overview Cards -->
+            <div class="row mb-4" ng-if="reportsCtrl.reportData && reportsCtrl.reportData.metrics.length > 0">
+                <div class="col-md-3">
+                    <div class="card metric-overview-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="metric-icon-wrapper likes-icon">
+                                    <i class="bi bi-heart-fill"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="text-theme-secondary mb-1">Total Likes</h6>
+                                    <h3 class="mb-0 text-theme-primary" ng-bind="reportsCtrl.getTotalLikes() | number"></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card metric-overview-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="metric-icon-wrapper retweets-icon">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="text-theme-secondary mb-1">Total Retweets</h6>
+                                    <h3 class="mb-0 text-theme-primary" ng-bind="reportsCtrl.getTotalRetweets() | number"></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card metric-overview-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="metric-icon-wrapper replies-icon">
+                                    <i class="bi bi-chat-dots-fill"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="text-theme-secondary mb-1">Total Replies</h6>
+                                    <h3 class="mb-0 text-theme-primary" ng-bind="reportsCtrl.getTotalReplies() | number"></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card metric-overview-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="metric-icon-wrapper impressions-icon">
+                                    <i class="bi bi-eye-fill"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="text-theme-secondary mb-1">Total Impressions</h6>
+                                    <h3 class="mb-0 text-theme-primary" ng-bind="reportsCtrl.getTotalImpressions() | number"></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Summary Cards -->
+            <div class="row mb-4" ng-if="reportsCtrl.reportData">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-theme-secondary mb-2">Total Accounts</h6>
+                            <h3 class="mb-0 text-theme-primary">{{ reportsCtrl.reportData.accounts.length }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-theme-secondary mb-2">Total Metrics</h6>
+                            <h3 class="mb-0 text-theme-primary">{{ reportsCtrl.reportData.metrics.length }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-theme-secondary mb-2">Audience Records</h6>
+                            <h3 class="mb-0 text-theme-primary">{{ reportsCtrl.reportData.audience.length }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="text-theme-secondary mb-2">Facebook Insights</h6>
+                            <h3 class="mb-0 text-theme-primary">{{ reportsCtrl.reportData.facebook_insights.length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Tabs -->
+            <div class="card mb-4" ng-if="reportsCtrl.reportData">
+                <div class="card-header border-0 pb-0">
+                    <ul class="nav nav-tabs reports-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link reports-tab" 
+                                    ng-class="{'active': reportsCtrl.activeTab === 'metrics'}"
+                                    ng-click="reportsCtrl.setActiveTab('metrics')"
+                                    type="button"
+                                    role="tab">
+                                <i class="bi bi-bar-chart-fill me-2"></i>
+                                Metrics
+                                <span class="badge ms-2" ng-if="reportsCtrl.reportData.metrics.length > 0">
+                                    {{ reportsCtrl.reportData.metrics.length }}
+                                </span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link reports-tab" 
+                                    ng-class="{'active': reportsCtrl.activeTab === 'audience'}"
+                                    ng-click="reportsCtrl.setActiveTab('audience')"
+                                    type="button"
+                                    role="tab">
+                                <i class="bi bi-people-fill me-2"></i>
+                                Audience
+                                <span class="badge ms-2" ng-if="reportsCtrl.reportData.audience.length > 0">
+                                    {{ reportsCtrl.reportData.audience.length }}
+                                </span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link reports-tab reports-tab-facebook" 
+                                    ng-class="{'active': reportsCtrl.activeTab === 'facebook-insights'}"
+                                    ng-click="reportsCtrl.setActiveTab('facebook-insights')"
+                                    type="button"
+                                    role="tab">
+                                <i class="bi bi-facebook me-2"></i>
+                                Facebook Insights
+                                <span class="badge ms-2" ng-if="reportsCtrl.reportData.facebook_insights.length > 0">
+                                    {{ reportsCtrl.reportData.facebook_insights.length }}
+                                </span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- Metrics Tab -->
+                        <div class="tab-pane" 
+                             ng-class="{'active': reportsCtrl.activeTab === 'metrics'}"
+                             ng-if="reportsCtrl.activeTab === 'metrics'"
+                             role="tabpanel">
+                            <%- include('./_metrics') %>
+                        </div>
+
+                        <!-- Audience Tab -->
+                        <div class="tab-pane" 
+                             ng-class="{'active': reportsCtrl.activeTab === 'audience'}"
+                             ng-if="reportsCtrl.activeTab === 'audience'"
+                             role="tabpanel">
+                            <%- include('./_audience') %>
+                        </div>
+
+                        <!-- Facebook Insights Tab -->
+                        <div class="tab-pane" 
+                             ng-class="{'active': reportsCtrl.activeTab === 'facebook-insights'}"
+                             ng-if="reportsCtrl.activeTab === 'facebook-insights'"
+                             role="tabpanel">
+                            <%- include('./_facebook-insights') %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State (when no data at all) -->
+            <div ng-if="reportsCtrl.reportData && reportsCtrl.reportData.metrics.length === 0 && reportsCtrl.reportData.audience.length === 0 && reportsCtrl.reportData.facebook_insights.length === 0" class="text-center py-5">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <h5 class="alert-heading">No Data Available</h5>
+                    <p class="mb-0">No reports data found for the selected period. Try adjusting the date range.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<script src="/scripts/app/multi-select.directive.js"></script>
+<script src="/scripts/app/datepicker-input.directive.js"></script>
+<script src="/scripts/app/reports.client.controller.js"></script>
+

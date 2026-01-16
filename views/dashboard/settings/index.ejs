@@ -1,0 +1,187 @@
+<div class="page-header mb-0">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary" ng-if="settingsCtrl.selectedProject">Settings - {{ settingsCtrl.selectedProject.name }}</h4>
+                    <h4 class="m-b-5 text-theme-primary" ng-if="!settingsCtrl.selectedProject">Settings</h4>
+                    <p class="text-theme-secondary mb-0" ng-if="settingsCtrl.selectedProject">Configure application preferences for {{ settingsCtrl.selectedProject.name }}</p>
+                    <p class="text-theme-secondary mb-0" ng-if="!settingsCtrl.selectedProject">Configure application preferences</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/projects">Projects</a></li>
+                    <li class="breadcrumb-item" ng-if="settingsCtrl.selectedProject">
+                        <a href="/dashboard/projects/{{ settingsCtrl.selectedProject.uuid }}">{{ settingsCtrl.selectedProject.name }}</a>
+                    </li>
+                    <li class="breadcrumb-item active">Settings</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body mt-0" ng-controller="SettingsController as settingsCtrl" ng-init='settingsCtrl.init("<%= typeof project !== "undefined" && project !== null ? project.uuid : "" %>", <%- JSON.stringify(settings) %>, <%- JSON.stringify(timezoneList) %>)'>
+    <div class="page-wrapper">
+        <!-- Project Selection -->
+        <%- include('../partials/_project-selection', { controllerName: 'settingsCtrl', placeholder: '..Select Project..' }) %>
+
+        <div ng-if="settingsCtrl.loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- No Project Selected Message -->
+        <div ng-if="!settingsCtrl.loading && !settingsCtrl.selectedProject" class="text-center py-5">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                <h5 class="alert-heading">Select a Project</h5>
+                <p class="mb-0">Please select a project from the dropdown above to configure settings.</p>
+            </div>
+        </div>
+
+        <!-- Settings Form -->
+        <div ng-if="!settingsCtrl.loading && settingsCtrl.selectedProject" class="row">
+            <div class="col-md-8 mx-auto">
+                <!-- Notifications Panel -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Notifications</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">This email will receive notifications of lost account connections.</p>
+                        
+                        <div class="mb-3">
+                            <label for="admin_email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="admin_email" 
+                                   name="admin_email" 
+                                   ng-model="settingsCtrl.settings.admin_email"
+                                   required>
+                            <small class="form-text text-muted">Email address for system notifications</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Time Settings Panel -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Time Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">The app will use these settings to display your calendar & analytics.</p>
+                        
+                        <!-- Timezone -->
+                        <div class="mb-3">
+                            <label for="timezone" class="form-label">Timezone <span class="text-danger">*</span></label>
+                            <select class="form-control" 
+                                    id="timezone" 
+                                    name="timezone" 
+                                    ng-model="settingsCtrl.settings.timezone"
+                                    required>
+                                <% Object.keys(timezoneList).forEach(function(groupName) { %>
+                                    <optgroup label="<%= groupName %>">
+                                        <% Object.keys(timezoneList[groupName]).forEach(function(timezoneCode) { %>
+                                            <option value="<%= timezoneCode %>">
+                                                <%= timezoneList[groupName][timezoneCode] %>
+                                            </option>
+                                        <% }); %>
+                                    </optgroup>
+                                <% }); %>
+                            </select>
+                            <small class="form-text text-muted">Timezone for displaying dates and times</small>
+                        </div>
+
+                        <!-- Time Format -->
+                        <div class="mb-3">
+                            <label class="form-label">Time Format <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="radio" 
+                                           name="time_format" 
+                                           id="time_format_12" 
+                                           value="12"
+                                           ng-model="settingsCtrl.settings.time_format"
+                                           ng-value="12"
+                                           ng-checked="settingsCtrl.settings.time_format == 12"
+                                           required>
+                                    <label class="form-check-label" for="time_format_12">
+                                        12 hour
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="radio" 
+                                           name="time_format" 
+                                           id="time_format_24" 
+                                           value="24"
+                                           ng-model="settingsCtrl.settings.time_format"
+                                           ng-value="24"
+                                           ng-checked="settingsCtrl.settings.time_format == 24"
+                                           required>
+                                    <label class="form-check-label" for="time_format_24">
+                                        24 hour
+                                    </label>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted d-block mt-1">Time display format</small>
+                        </div>
+
+                        <!-- Week Starts On -->
+                        <div class="mb-3">
+                            <label class="form-label">First Day of Week <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="radio" 
+                                           name="week_starts_on" 
+                                           id="week_starts_sunday" 
+                                           value="0"
+                                           ng-model="settingsCtrl.settings.week_starts_on"
+                                           ng-value="0"
+                                           ng-checked="settingsCtrl.settings.week_starts_on == 0"
+                                           required>
+                                    <label class="form-check-label" for="week_starts_sunday">
+                                        Sunday
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="radio" 
+                                           name="week_starts_on" 
+                                           id="week_starts_monday" 
+                                           value="1"
+                                           ng-model="settingsCtrl.settings.week_starts_on"
+                                           ng-value="1"
+                                           ng-checked="settingsCtrl.settings.week_starts_on == 1"
+                                           required>
+                                    <label class="form-check-label" for="week_starts_monday">
+                                        Monday
+                                    </label>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted d-block mt-1">First day of the week in calendar</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="d-flex justify-content-end mb-4">
+                    <button type="button" 
+                            class="btn btn-primary" 
+                            ng-click="settingsCtrl.saveSettings()" 
+                            ng-disabled="settingsCtrl.saving">
+                        <i class="bi" ng-class="settingsCtrl.saving ? 'bi-hourglass-split' : 'bi-check-circle'"></i>
+                        {{ settingsCtrl.saving ? 'Saving...' : 'Save Settings' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/scripts/app/settings.client.controller.js"></script>
+

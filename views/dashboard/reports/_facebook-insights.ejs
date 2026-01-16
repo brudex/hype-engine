@@ -1,0 +1,45 @@
+<!-- Facebook Insights Chart -->
+<div class="card" ng-if="reportsCtrl.reportData && reportsCtrl.reportData.facebook_insights.length > 0">
+    <div class="card-header">
+        <h5>Facebook Insights</h5>
+    </div>
+    <div class="card-body">
+        <!-- Account Filter Buttons -->
+        <div class="mb-4" ng-if="reportsCtrl.facebookInsightAccounts.length > 0">
+            <div class="btn-group" role="group" aria-label="Filter by account">
+                <button 
+                    type="button" 
+                    class="btn btn-sm"
+                    ng-class="reportsCtrl.selectedFacebookInsightAccount === null ? 'btn-primary' : 'btn-outline-secondary'"
+                    ng-click="reportsCtrl.selectFacebookInsightAccount(null)">
+                    All Accounts
+                </button>
+                <button 
+                    type="button" 
+                    class="btn btn-sm"
+                    ng-class="reportsCtrl.selectedFacebookInsightAccount === account.uuid ? 'btn-primary' : 'btn-outline-secondary'"
+                    ng-repeat="account in reportsCtrl.facebookInsightAccounts track by account.uuid"
+                    ng-click="reportsCtrl.selectFacebookInsightAccount(account.uuid)">
+                    {{ account.name }}
+                </button>
+            </div>
+        </div>
+        
+        <!-- Facebook Insights Chart -->
+        <div ng-if="reportsCtrl.reportData.facebook_insights.length > 0">
+            <div style="position: relative; height: 400px;">
+                <canvas id="facebookInsightsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Empty State for Facebook Insights -->
+<div ng-if="reportsCtrl.reportData && reportsCtrl.reportData.facebook_insights.length === 0" class="text-center py-5">
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        <h5 class="alert-heading">No Facebook Insights</h5>
+        <p class="mb-0">No Facebook insights data found for the selected period. Try adjusting the date range.</p>
+    </div>
+</div>
+

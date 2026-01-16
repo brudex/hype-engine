@@ -1,0 +1,344 @@
+
+<div ng-controller="CalendarController as vm" ng-init='vm.init(<%- JSON.stringify(projects || []) %>, <%- JSON.stringify(currentProject || null) %>)'> 
+
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary" ng-if="vm.selectedProject">Calendar - {{ vm.selectedProject.name }}</h4>
+                    <h4 class="m-b-5 text-theme-primary" ng-if="!vm.selectedProject">Calendar</h4>
+                    <p class="text-theme-secondary mb-0" ng-if="vm.selectedProject">View scheduled posts for {{ vm.selectedProject.name }}</p>
+                    <p class="text-theme-secondary mb-0" ng-if="!vm.selectedProject">View and manage your scheduled posts</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/projects">Projects</a></li>
+                    <li class="breadcrumb-item" ng-if="vm.selectedProject">
+                        <a href="/dashboard/projects/{{ vm.selectedProject.uuid }}">{{ vm.selectedProject.name }}</a>
+                    </li>
+                    <li class="breadcrumb-item active">Calendar</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body mt-0" >
+    <div class="page-wrapper">
+        <!-- Project Selection -->
+        <%- include('../partials/_project-selection', { controllerName: 'vm', placeholder: '..Select Project..' }) %>
+
+        <div ng-if="vm.loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- No Project Selected Message -->
+        <div ng-if="!vm.loading && !vm.selectedProject" class="text-center py-5">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                <h5 class="alert-heading">Select a Project</h5>
+                <p class="mb-0">Please select a project from the dropdown above to view the calendar.</p>
+            </div>
+        </div>
+
+        <!-- Calendar Content (only shown when project is selected) -->
+        <div ng-if="!vm.loading && vm.selectedProject">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <h5 class="mb-0">Calendar - {{ vm.selectedProject.name }}</h5>
+                                <!-- Calendar Type Switcher -->
+                                <div class="btn-group" role="group">
+                                    <button type="button" 
+                                            class="btn btn-sm" 
+                                            ng-class="{'btn-primary': vm.calendarType === 'month', 'btn-outline-primary': vm.calendarType !== 'month'}"
+                                            ng-click="vm.changeCalendarType('month')">
+                                        <i class="bi bi-calendar-month"></i> Month
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-sm" 
+                                            ng-class="{'btn-primary': vm.calendarType === 'week', 'btn-outline-primary': vm.calendarType !== 'week'}"
+                                            ng-click="vm.changeCalendarType('week')">
+                                        <i class="bi bi-calendar-week"></i> Week
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <a ng-href="/dashboard/posts/create{{ vm.selectedProject ? '/' + vm.selectedProject.uuid : '' }}" 
+                                   class="btn btn-primary"
+                                   ng-disabled="!vm.selectedProject">
+                                    <i class="bi bi-plus-circle"></i> Create Post
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Filters -->
+                            <div class="row mb-3">
+                                <div class="col-md-2">
+                                    <select class="form-control" ng-model="vm.filter.status">
+                                        <option value="">All Status</option>
+                                        <option value="1">Scheduled</option>
+                                        <option value="2">Published</option>
+                                        <option value="3">Failed</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <multi-select 
+                                        ng-model="vm.filter.accounts"
+                                        options="vm.accounts"
+                                        option-value="id"
+                                        placeholder="Select accounts..."
+                                        search-enabled="true"
+                                        remove-item-button="true">
+                                    </multi-select>
+                                </div>
+                                <div class="col-md-3">
+                                    <multi-select 
+                                        ng-model="vm.filter.tags"
+                                        options="vm.tags"
+                                        option-value="uuid"
+                                        placeholder="Select tags..."
+                                        search-enabled="true"
+                                        remove-item-button="true">
+                                    </multi-select>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" 
+                                           class="form-control calendar-keyword-input" 
+                                           ng-model="vm.filter.keyword" 
+                                           placeholder="Search posts..."
+                                           ng-keydown="$event.keyCode === 13 && vm.applyFilters($event)">
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-primary calendar-search-btn w-100" ng-click="vm.applyFilters($event)" title="Search">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-outline-secondary calendar-filter-clear-btn w-100" ng-click="vm.clearFilters($event)" title="Clear Filters">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Calendar View -->
+                            <div>
+                                <%- include('./_month-view') %>
+                                <%- include('./_week-view') %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Post Preview Modal -->
+<div class="modal fade" 
+     id="postPreviewModal" 
+     tabindex="-1" 
+     aria-labelledby="postPreviewModalLabel" 
+     aria-hidden="true"
+     ng-class="{'show': vm.showPostPreview, 'd-block': vm.showPostPreview}"
+     ng-style="{'display': vm.showPostPreview ? 'block' : 'none'}"
+     style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="postPreviewModalLabel">
+                    <span class="badge" ng-class="vm.getPostStatusClass(vm.previewPost.status)" ng-if="vm.previewPost">
+                        {{ vm.getPostStatusText(vm.previewPost.status) }}
+                    </span>
+                </h5>
+                <button type="button" 
+                        class="btn-close" 
+                        ng-click="vm.closePostPreview()"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body" ng-if="vm.previewPost">
+                <!-- Post Preview Content - Using Platform-Specific Previews -->
+                <div ng-repeat="account in vm.previewPost.accounts" class="mb-4">
+                    <div ng-init="accountVersion = vm.getAccountVersion(vm.previewPost, account)">
+                        <!-- Platform-specific previews using ng-switch -->
+                        <div ng-switch="account.provider">
+                            <!-- Twitter Preview -->
+                            <div ng-switch-when="twitter">
+                                <twitter-preview 
+                                    account="account" 
+                                    content="accountVersion"
+                                    get-plain-text="vm.getPlainText(html)">
+                                </twitter-preview>
+                            </div>
+                            
+                            <!-- Facebook Preview -->
+                            <div ng-switch-when="facebook">
+                                <facebook-preview 
+                                    account="account" 
+                                    content="accountVersion"
+                                    get-plain-text="vm.getPlainText(html)">
+                                </facebook-preview>
+                            </div>
+                            
+                            <!-- Instagram Preview -->
+                            <div ng-switch-when="instagram">
+                                <instagram-preview 
+                                    account="account" 
+                                    content="accountVersion"
+                                    get-plain-text="vm.getPlainText(html)">
+                                </instagram-preview>
+                            </div>
+                            
+                            <!-- LinkedIn Preview -->
+                            <div ng-switch-when="linkedin">
+                                <linkedin-preview 
+                                    account="account" 
+                                    content="accountVersion"
+                                    get-plain-text="vm.getPlainText(html)">
+                                </linkedin-preview>
+                            </div>
+                            
+                            <!-- TikTok Preview -->
+                            <div ng-switch-when="tiktok">
+                                <tiktok-preview 
+                                    account="account" 
+                                    content="accountVersion"
+                                    get-plain-text="vm.getPlainText(html)">
+                                </tiktok-preview>
+                            </div>
+                            
+                            <!-- Mastodon Preview -->
+                            <div ng-switch-when="mastodon">
+                                <mastodon-preview 
+                                    account="account" 
+                                    content="accountVersion"
+                                    get-plain-text="vm.getPlainText(html)">
+                                </mastodon-preview>
+                            </div>
+                            
+                            <!-- Default Preview (fallback for unknown providers) -->
+                            <div ng-switch-default>
+                                <div class="preview-post-card">
+                                    <div class="preview-account-header">
+                                        <div class="preview-account-avatar-wrapper">
+                                            <img ng-if="account.image" 
+                                                 ng-src="{{ account.image }}" 
+                                                 alt="{{ account.name }}"
+                                                 class="preview-account-avatar">
+                                            <div ng-if="!account.image" 
+                                                 class="preview-account-avatar preview-account-avatar-placeholder">
+                                                <i class="bi bi-person"></i>
+                                            </div>
+                                        </div>
+                                        <div class="preview-account-info">
+                                            <div class="preview-account-name">{{ account.name }}</div>
+                                            <div class="preview-account-username" ng-if="account.username">@{{ account.username }}</div>
+                                            <div class="preview-account-timestamp">now</div>
+                                        </div>
+                                    </div>
+                                    <div ng-if="accountVersion" class="preview-post-body">
+                                        <div class="preview-post-text" ng-if="accountVersion.body">
+                                            {{ vm.getPlainText(accountVersion.body) }}
+                                        </div>
+                                        <div ng-if="!accountVersion.body" class="preview-post-text-placeholder">
+                                            Start typing your post...
+                                        </div>
+                                        <div ng-if="accountVersion.media && accountVersion.media.length > 0" class="preview-media-container">
+                                            <div class="preview-media-grid preview-media-single">
+                                                <img ng-src="{{ accountVersion.media[0].url }}" 
+                                                     alt="Media"
+                                                     class="preview-media-image">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" 
+                        class="btn btn-secondary" 
+                        ng-click="vm.closePostPreview()">
+                    Close
+                </button>
+                <button type="button" 
+                        class="btn btn-primary" 
+                        ng-click="window.location.href = '/dashboard/posts/edit/' + vm.previewPost.uuid"
+                        ng-if="vm.previewPost">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Time Picker Modal -->
+<div class="modal fade" 
+     id="timePickerModal" 
+     tabindex="-1" 
+     aria-labelledby="timePickerModalLabel" 
+     aria-hidden="true"
+     ng-class="{'show': vm.showTimePicker, 'd-block': vm.showTimePicker}"
+     ng-style="{'display': vm.showTimePicker ? 'block' : 'none'}"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="timePickerModalLabel">Pick Time</h5>
+                <button type="button" 
+                        class="btn-close btn-close-white" 
+                        ng-click="vm.closeTimePicker()"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Date Display (read-only) -->
+                <div class="mb-3">
+                    <label class="form-label mb-2">Date</label>
+                    <div class="form-control" style="background-color: #1F1F23; border-color: rgba(255, 255, 255, 0.1); color: #E5E5E5;">
+                        {{ vm.formatDateForDisplay(vm.timePickerDate) }}
+                    </div>
+                </div>
+                <!-- Time Picker Only -->
+                <time-picker 
+                    ng-if="vm.showTimePicker"
+                    ng-model="vm.timePickerTime">
+                </time-picker>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" 
+                        class="btn btn-secondary" 
+                        ng-click="vm.closeTimePicker()">
+                    CANCEL
+                </button>
+                <button type="button" 
+                        class="btn btn-primary" 
+                        ng-click="vm.onDateTimeSelect(vm.timePickerDate, vm.timePickerTime)">
+                    PICK TIME
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<link rel="stylesheet" href="/css/calendar.css">
+<link rel="stylesheet" href="/css/social-preview.css">
+<script src="/scripts/app/time-picker.directive.js"></script>
+<script src="/scripts/app/multi-select.directive.js"></script>
+<script src="/scripts/app/calendar.client.controller.js"></script>
+<script src="/scripts/app/calendar-month-view.directive.js"></script>
+<script src="/scripts/app/calendar-week-view.directive.js"></script>
+<script src="/scripts/app/twitter-preview.directive.js"></script>
+<script src="/scripts/app/facebook-preview.directive.js"></script>
+<script src="/scripts/app/instagram-preview.directive.js"></script>
+<script src="/scripts/app/linkedin-preview.directive.js"></script>
+<script src="/scripts/app/tiktok-preview.directive.js"></script>
+<script src="/scripts/app/mastodon-preview.directive.js"></script>

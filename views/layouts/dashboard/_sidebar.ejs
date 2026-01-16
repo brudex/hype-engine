@@ -1,0 +1,143 @@
+<nav class="pcoded-navbar" pcoded-header-position="relative">
+    <div class="sidebar_toggle"><a href="#"><i class="bi bi-x-lg"></i></a></div>
+    <div class="pcoded-inner-navbar main-menu">
+
+        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.navigation" menu-title-theme="theme5">Dashboard</div>
+        <ul class="pcoded-item pcoded-left-item">
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active' : '' %>">
+                <a href="/dashboard">
+                    <span class="pcoded-micon"><i class="bi bi-house-door"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.dash.main">Dashboard</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.ui-element" menu-title-theme="theme5">Content</div>
+        <ul class="pcoded-item pcoded-left-item">
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'posts' ? 'active' : '' %>">
+                <a href="/dashboard/posts">
+                    <span class="pcoded-micon"><i class="bi bi-pencil-square"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">Posts</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'calendar' ? 'active' : '' %>">
+                <a href="/dashboard/calendar">
+                    <span class="pcoded-micon"><i class="bi bi-calendar"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">Calendar</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'media' ? 'active' : '' %>">
+                <a href="/dashboard/media">
+                    <span class="pcoded-micon"><i class="bi bi-image"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">Media Library</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.ui-element" menu-title-theme="theme5">Organization</div>
+        <ul class="pcoded-item pcoded-left-item">
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'projects' ? 'active' : '' %>">
+                <a href="/dashboard/projects">
+                    <span class="pcoded-micon"><i class="bi bi-folder"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">Projects</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'accounts' ? 'active' : '' %>">
+                <a href="/dashboard/accounts">
+                    <span class="pcoded-micon"><i class="bi bi-person-circle"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">Social Accounts</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.ui-element" menu-title-theme="theme5">Analytics</div>
+        <ul class="pcoded-item pcoded-left-item">
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'reports' ? 'active' : '' %>">
+                <a href="/dashboard/reports">
+                    <span class="pcoded-micon"><i class="bi bi-bar-chart"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">Reports</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.ui-element" menu-title-theme="theme5">Settings</div>
+        <ul class="pcoded-item pcoded-left-item">
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'settings' ? 'active' : '' %>">
+                <a href="/dashboard/settings">
+                    <span class="pcoded-micon"><i class="bi bi-gear"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">Settings</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'services' ? 'active' : '' %>">
+                <a href="/dashboard/services">
+                    <span class="pcoded-micon"><i class="bi bi-plug"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">Services</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+             
+        </ul>
+        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.ui-element" menu-title-theme="theme5">API</div>
+        <ul class="pcoded-item pcoded-left-item">
+
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'apidoc-keys' ? 'active' : '' %>">
+                <a href="/dashboard/access-tokens">
+                    <span class="pcoded-micon"><i class="bi bi-key"></i></span>
+                    <span class="pcoded-mtext">Access Tokens</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+            <li class="<%= typeof currentPage !== 'undefined' && (currentPage === 'apidoc') ? 'active pcoded-hasmenu' : 'pcoded-hasmenu' %>">
+                <a href="javascript:void(0)">
+                    <span class="pcoded-micon"><i class="bi bi-code-square"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">API Documentation</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+                <ul class="pcoded-submenu">
+                    <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'apidoc' ? 'active' : '' %>">
+                        <a href="/dashboard/apidoc">
+                            <span class="pcoded-micon"><i class="bi bi-file-text"></i></span>
+                            <span class="pcoded-mtext">Documentation</span>
+                            <span class="pcoded-mcaret"></span>
+                        </a>
+                    </li>
+                   
+                </ul>
+            </li>
+        </ul>
+
+        <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.ui-element" menu-title-theme="theme5">Admin</div>
+        <ul class="pcoded-item pcoded-left-item">
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'admin-logs' ? 'active' : '' %>">
+                <a href="/admin/logs">
+                    <span class="pcoded-micon"><i class="bi bi-file-text"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">System Logs</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'admin-jobs' ? 'active' : '' %>">
+                <a href="/admin/jobs">
+                    <span class="pcoded-micon"><i class="bi bi-briefcase"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">Job Batches</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+        </ul>
+        <% } %>
+
+    </div>
+</nav>

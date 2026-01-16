@@ -1,0 +1,182 @@
+<div class="page-header mb-0">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary">System Logs</h4>
+                    <p class="text-theme-secondary mb-0">View and manage application logs</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/admin">Admin</a></li>
+                    <li class="breadcrumb-item active">Logs</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body mt-0">
+    <div class="page-wrapper">
+        <div class="container-fluid">
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" action="/admin/logs" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Level</label>
+                            <select name="level" class="form-select">
+                                <option value="">All Levels</option>
+                                <% filters.levels.forEach(level => { %>
+                                    <option value="<%= level %>" <%= filters.level === level ? 'selected' : '' %>><%= level.toUpperCase() %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Service</label>
+                            <select name="service" class="form-select">
+                                <option value="">All Services</option>
+                                <% filters.services.forEach(service => { %>
+                                    <option value="<%= service %>" <%= filters.service === service ? 'selected' : '' %>><%= service %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Search</label>
+                            <input type="text" name="search" class="form-control" placeholder="Search messages..." value="<%= filters.search || '' %>">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Logs Table -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Logs (<%= pagination.totalItems %>)</h5>
+                    <button class="btn btn-sm btn-danger" onclick="cleanupLogs()">Cleanup Old Logs</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Level</th>
+                                    <th>Service</th>
+                                    <th>Message</th>
+                                    <th>Meta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (logs.length === 0) { %>
+                                    <tr>
+                                        <td colspan="5" class="text-center">No logs found</td>
+                                    </tr>
+                                <% } else { %>
+                                    <% logs.forEach(log => { %>
+                                        <tr>
+                                            <td><%= new Date(log.createdAt).toLocaleString() %></td>
+                                            <td>
+                                                <span class="badge bg-<%= log.level === 'error' ? 'danger' : log.level === 'warn' ? 'warning' : log.level === 'info' ? 'info' : 'secondary' %>">
+                                                    <%= log.level.toUpperCase() %>
+                                                </span>
+                                            </td>
+                                            <td><%= log.service || '-' %></td>
+                                            <td><%= log.message %></td>
+                                            <td>
+                                                <% if (log.meta) { %>
+                                                    <button class="btn btn-sm btn-outline-secondary" onclick="showMeta('<%= log.uuid %>')">View Meta</button>
+                                                    <div id="meta-<%= log.uuid %>" style="display:none;" class="mt-2">
+                                                        <pre class="bg-light p-2 rounded"><%= JSON.stringify(log.meta, null, 2) %></pre>
+                                                    </div>
+                                                <% } else { %>
+                                                    -
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <% if (pagination.totalPages > 1) { %>
+                        <nav aria-label="Logs pagination">
+                            <ul class="pagination justify-content-center mt-4">
+                                <% if (pagination.currentPage > 1) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= pagination.currentPage - 1 %><%= filters.level ? '&level=' + filters.level : '' %><%= filters.service ? '&service=' + filters.service : '' %><%= filters.search ? '&search=' + filters.search : '' %>">Previous</a>
+                                    </li>
+                                <% } %>
+                                
+                                <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+                                    <% if (i === pagination.currentPage) { %>
+                                        <li class="page-item active">
+                                            <span class="page-link"><%= i %></span>
+                                        </li>
+                                    <% } else if (i === 1 || i === pagination.totalPages || (i >= pagination.currentPage - 2 && i <= pagination.currentPage + 2)) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=<%= i %><%= filters.level ? '&level=' + filters.level : '' %><%= filters.service ? '&service=' + filters.service : '' %><%= filters.search ? '&search=' + filters.search : '' %>"><%= i %></a>
+                                        </li>
+                                    <% } else if (i === pagination.currentPage - 3 || i === pagination.currentPage + 3) { %>
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    <% } %>
+                                <% } %>
+                                
+                                <% if (pagination.currentPage < pagination.totalPages) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<%= pagination.currentPage + 1 %><%= filters.level ? '&level=' + filters.level : '' %><%= filters.service ? '&service=' + filters.service : '' %><%= filters.search ? '&search=' + filters.search : '' %>">Next</a>
+                                    </li>
+                                <% } %>
+                            </ul>
+                        </nav>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showMeta(uuid) {
+    const metaDiv = document.getElementById('meta-' + uuid);
+    if (metaDiv.style.display === 'none') {
+        metaDiv.style.display = 'block';
+    } else {
+        metaDiv.style.display = 'none';
+    }
+}
+
+function cleanupLogs() {
+    if (!confirm('Are you sure you want to cleanup logs older than 30 days?')) {
+        return;
+    }
+    
+    fetch('/admin/api/logs/cleanup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ daysToKeep: 30 })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Logs cleaned up successfully. ' + data.deletedCount + ' logs deleted.');
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error.message);
+    });
+}
+</script>

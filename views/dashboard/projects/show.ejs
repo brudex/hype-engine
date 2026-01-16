@@ -1,0 +1,348 @@
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary" ng-if="projectCtrl.project">{{ projectCtrl.project.name }}</h4>
+                    <p class="text-theme-secondary mb-0" ng-if="projectCtrl.project && projectCtrl.project.description">{{ projectCtrl.project.description }}</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/projects">Projects</a></li>
+                    <li class="breadcrumb-item active" ng-if="projectCtrl.project">{{ projectCtrl.project.name }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body" ng-controller="ProjectManageController as projectCtrl" ng-init="projectCtrl.init('<%= project.uuid %>')">
+    <div class="page-wrapper">
+        <div ng-if="projectCtrl.loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <div ng-if="!projectCtrl.loading && projectCtrl.project">
+            <!-- Back Button -->
+            <div class="row mb-3">
+                <div class="col-md-12 d-flex justify-content-end">
+                    <a href="/dashboard/projects" class="btn btn-outline-cyan">
+                        <i class="bi bi-arrow-left"></i> Back to Projects
+                    </a>
+                </div>
+            </div>
+
+            <!-- Project Header -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <!-- Circular Image/Initials -->
+                                <div class="flex-shrink-0 me-4">
+                                    <div ng-if="projectCtrl.project.imageUrl" class="project-image-circle">
+                                        <img ng-src="{{ projectCtrl.project.imageUrl }}" alt="{{ projectCtrl.project.name }}" class="project-circle-img">
+                                    </div>
+                                    <div ng-if="!projectCtrl.project.imageUrl" class="project-initials-circle-large">
+                                        {{ projectCtrl.getProjectInitials(projectCtrl.project.name) }}
+                                    </div>
+                                </div>
+                                
+                                <!-- Project Info -->
+                                <div class="flex-grow-1">
+                                    <h4 class="mb-2 text-theme-primary">{{ projectCtrl.project.name }}</h4>
+                                    <p class="text-muted mb-3" ng-if="projectCtrl.project.description">{{ projectCtrl.project.description }}</p>
+                                    <div class="d-flex gap-4">
+                                        <div>
+                                            <span class="text-muted">Accounts:</span>
+                                            <strong class="text-theme-primary ms-2">{{ projectCtrl.project.accounts ? projectCtrl.project.accounts.length : 0 }}</strong>
+                                        </div>
+                                        <div>
+                                            <span class="text-muted">Posts:</span>
+                                            <strong class="text-theme-primary ms-2">{{ projectCtrl.project.posts ? projectCtrl.project.posts.length : 0 }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <ul class="nav nav-tabs project-tabs mb-4" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" ng-class="{'active': projectCtrl.activeTab === 'accounts'}" ng-click="projectCtrl.activeTab = 'accounts'" type="button">
+                        <i class="bi bi-person-plus"></i> Connect Social Accounts
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" ng-class="{'active': projectCtrl.activeTab === 'services'}" ng-click="projectCtrl.activeTab = 'services'" type="button">
+                        <i class="bi bi-gear"></i> Configure Services
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Connect Accounts Tab -->
+                <div ng-if="projectCtrl.activeTab === 'accounts'" class="tab-pane fade show active">
+                    <div class="row">
+                        <!-- Vertical Tabs for Platforms -->
+                        <div class="col-md-3">
+                            <div class="list-group" role="tablist">
+                                <button class="list-group-item list-group-item-action" 
+                                        ng-class="{'active': projectCtrl.activePlatform === 'facebook'}"
+                                        ng-click="projectCtrl.activePlatform = 'facebook'"
+                                        type="button">
+                                    <i class="bi bi-facebook text-primary"></i> Facebook
+                                </button>
+                                <button class="list-group-item list-group-item-action"
+                                        ng-class="{'active': projectCtrl.activePlatform === 'linkedin'}"
+                                        ng-click="projectCtrl.activePlatform = 'linkedin'"
+                                        type="button">
+                                    <i class="bi bi-linkedin text-primary"></i> LinkedIn
+                                </button>
+                                <button class="list-group-item list-group-item-action"
+                                        ng-class="{'active': projectCtrl.activePlatform === 'twitter'}"
+                                        ng-click="projectCtrl.activePlatform = 'twitter'"
+                                        type="button">
+                                    <i class="bi bi-twitter text-primary"></i> Twitter
+                                </button>
+                                <button class="list-group-item list-group-item-action"
+                                        ng-class="{'active': projectCtrl.activePlatform === 'instagram'}"
+                                        ng-click="projectCtrl.activePlatform = 'instagram'"
+                                        type="button">
+                                    <i class="bi bi-instagram text-danger"></i> Instagram
+                                </button>
+                                <button class="list-group-item list-group-item-action"
+                                        ng-class="{'active': projectCtrl.activePlatform === 'tiktok'}"
+                                        ng-click="projectCtrl.activePlatform = 'tiktok'"
+                                        type="button">
+                                    <i class="bi bi-tiktok"></i> TikTok
+                                </button>
+                                <button class="list-group-item list-group-item-action"
+                                        ng-class="{'active': projectCtrl.activePlatform === 'mastodon'}"
+                                        ng-click="projectCtrl.activePlatform = 'mastodon'"
+                                        type="button">
+                                    <i class="bi bi-mastodon text-primary"></i> Mastodon
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Platform Content -->
+                        <div class="col-md-9">
+                            <div class="card">
+                                <div class="card-body">
+                                    <!-- Facebook -->
+                                    <div ng-if="projectCtrl.activePlatform === 'facebook'">
+                                        <h5 class="card-title">
+                                            <i class="bi bi-facebook text-primary"></i> Facebook
+                                        </h5>
+                                        <p class="text-muted">Connect your Facebook Pages to this project.</p>
+                                        <div ng-if="projectCtrl.getPlatformAccounts('facebook').length > 0">
+                                            <div class="list-group mb-3">
+                                                <div class="list-group-item" ng-repeat="account in projectCtrl.getPlatformAccounts('facebook')">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-0">{{ account.name }}</h6>
+                                                            <small class="text-muted">{{ account.username }}</small>
+                                                        </div>
+                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">
+                                                            {{ account.authorized ? 'Authorized' : 'Unauthorized' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary" ng-click="projectCtrl.connectAccount('facebook')">
+                                            <i class="bi bi-plus-circle"></i> Connect Facebook Page
+                                        </button>
+                                    </div>
+
+                                    <!-- LinkedIn -->
+                                    <div ng-if="projectCtrl.activePlatform === 'linkedin'">
+                                        <h5 class="card-title">
+                                            <i class="bi bi-linkedin text-primary"></i> LinkedIn
+                                        </h5>
+                                        <p class="text-muted">Connect your LinkedIn Company Pages to this project.</p>
+                                        <div ng-if="projectCtrl.getPlatformAccounts('linkedin').length > 0">
+                                            <div class="list-group mb-3">
+                                                <div class="list-group-item" ng-repeat="account in projectCtrl.getPlatformAccounts('linkedin')">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-0">{{ account.name }}</h6>
+                                                            <small class="text-muted">{{ account.username }}</small>
+                                                        </div>
+                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">
+                                                            {{ account.authorized ? 'Authorized' : 'Unauthorized' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary" ng-click="projectCtrl.connectAccount('linkedin')">
+                                            <i class="bi bi-plus-circle"></i> Connect LinkedIn Page
+                                        </button>
+                                    </div>
+
+                                    <!-- Twitter -->
+                                    <div ng-if="projectCtrl.activePlatform === 'twitter'">
+                                        <h5 class="card-title">
+                                            <i class="bi bi-twitter text-primary"></i> Twitter / X
+                                        </h5>
+                                        <p class="text-muted">Connect your Twitter/X accounts to this project.</p>
+                                        <div ng-if="projectCtrl.getPlatformAccounts('twitter').length > 0">
+                                            <div class="list-group mb-3">
+                                                <div class="list-group-item" ng-repeat="account in projectCtrl.getPlatformAccounts('twitter')">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-0">{{ account.name }}</h6>
+                                                            <small class="text-muted">{{ account.username }}</small>
+                                                        </div>
+                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">
+                                                            {{ account.authorized ? 'Authorized' : 'Unauthorized' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary" ng-click="projectCtrl.connectAccount('twitter')">
+                                            <i class="bi bi-plus-circle"></i> Connect Twitter Account
+                                        </button>
+                                    </div>
+
+                                    <!-- Instagram -->
+                                    <div ng-if="projectCtrl.activePlatform === 'instagram'">
+                                        <h5 class="card-title">
+                                            <i class="bi bi-instagram text-danger"></i> Instagram
+                                        </h5>
+                                        <p class="text-muted">Connect your Instagram Business accounts to this project.</p>
+                                        <div ng-if="projectCtrl.getPlatformAccounts('instagram').length > 0">
+                                            <div class="list-group mb-3">
+                                                <div class="list-group-item" ng-repeat="account in projectCtrl.getPlatformAccounts('instagram')">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-0">{{ account.name }}</h6>
+                                                            <small class="text-muted">{{ account.username }}</small>
+                                                        </div>
+                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">
+                                                            {{ account.authorized ? 'Authorized' : 'Unauthorized' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary" ng-click="projectCtrl.connectAccount('instagram')">
+                                            <i class="bi bi-plus-circle"></i> Connect Instagram Account
+                                        </button>
+                                    </div>
+
+                                    <!-- TikTok -->
+                                    <div ng-if="projectCtrl.activePlatform === 'tiktok'">
+                                        <h5 class="card-title">
+                                            <i class="bi bi-tiktok"></i> TikTok
+                                        </h5>
+                                        <p class="text-muted">Connect your TikTok accounts to this project.</p>
+                                        <div ng-if="projectCtrl.getPlatformAccounts('tiktok').length > 0">
+                                            <div class="list-group mb-3">
+                                                <div class="list-group-item" ng-repeat="account in projectCtrl.getPlatformAccounts('tiktok')">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-0">{{ account.name }}</h6>
+                                                            <small class="text-muted">{{ account.username }}</small>
+                                                        </div>
+                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">
+                                                            {{ account.authorized ? 'Authorized' : 'Unauthorized' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary" ng-click="projectCtrl.connectAccount('tiktok')">
+                                            <i class="bi bi-plus-circle"></i> Connect TikTok Account
+                                        </button>
+                                    </div>
+
+                                    <!-- Mastodon -->
+                                    <div ng-if="projectCtrl.activePlatform === 'mastodon'">
+                                        <h5 class="card-title">
+                                            <i class="bi bi-mastodon text-primary"></i> Mastodon
+                                        </h5>
+                                        <p class="text-muted">Connect your Mastodon accounts to this project.</p>
+                                        <div ng-if="projectCtrl.getPlatformAccounts('mastodon').length > 0">
+                                            <div class="list-group mb-3">
+                                                <div class="list-group-item" ng-repeat="account in projectCtrl.getPlatformAccounts('mastodon')">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-0">{{ account.name }}</h6>
+                                                            <small class="text-muted">{{ account.username }}</small>
+                                                        </div>
+                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">
+                                                            {{ account.authorized ? 'Authorized' : 'Unauthorized' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary" ng-click="projectCtrl.connectAccount('mastodon')">
+                                            <i class="bi bi-plus-circle"></i> Connect Mastodon Account
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Services Tab -->
+                <div ng-if="projectCtrl.activeTab === 'services'" class="tab-pane fade show active">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Important:</strong> Configure services before connecting social accounts. Services store API credentials needed to connect accounts.
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4" ng-repeat="service in projectCtrl.services">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h5 class="card-title mb-1">
+                                                <i class="bi" ng-class="{
+                                                    'bi-twitter text-primary': service.name === 'twitter',
+                                                    'bi-facebook text-primary': service.name === 'facebook',
+                                                    'bi-instagram text-danger': service.name === 'instagram',
+                                                    'bi-linkedin text-primary': service.name === 'linkedin',
+                                                    'bi-mastodon text-primary': service.name === 'mastodon',
+                                                    'bi-tiktok': service.name === 'tiktok',
+                                                    'bi-image': service.name === 'unsplash',
+                                                    'bi-file-play': service.name === 'tenor'
+                                                }"></i> 
+                                                {{ projectCtrl.capitalize(service.name) }}
+                                            </h5>
+                                            <p class="text-muted small mb-0">Configure {{ service.name }} API credentials</p>
+                                        </div>
+                                        <span class="badge" ng-class="service.configured ? 'bg-success' : 'bg-secondary'">
+                                            {{ service.configured ? 'Configured' : 'Not Configured' }}
+                                        </span>
+                                    </div>
+                                    <p class="text-muted small">
+                                        Required for connecting {{ service.name }} accounts.
+                                    </p>
+                                    <a href="/dashboard/services/configure/{{ service.name }}?project={{ projectCtrl.project.uuid }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-gear"></i> Configure
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/scripts/app/project-manage.client.controller.js"></script>

@@ -1,0 +1,39 @@
+Payment Successful - QuizFactor
+
+Hi {{name}},
+
+Thank you for your purchase! Your payment has been successfully processed and your subscription is now active.
+
+Payment Details:
+- Transaction ID: {{transactionId}}
+- Plan: {{planName}}
+- Amount: ${{amount}}
+- Payment Date: {{paymentDate}}
+{{#subscriptionEndDate}}
+- Valid Until: {{subscriptionEndDate}}
+{{/subscriptionEndDate}}
+
+Your subscription is now active and you have full access to all premium features, including:
+- Unlimited quiz attempts
+- Advanced performance analytics
+- Priority customer support
+- Access to all premium courses
+- Ad-free experience
+
+Important Instructions:
+Your subscription is now active! To update your access in the Quiz Factor app:
+1. Log out of the app
+2. Log back in to refresh your subscription
+Your premium features will now be available.
+
+Download Our Mobile App:
+- Get it on Google Play: https://quizfactor.app/android
+- Download on the App Store: https://quizfactor.app/ios
+
+If you have any questions about your subscription, please contact our support team.
+
+Thank you for choosing QuizFactor!
+The QuizFactor Team
+
+© {{year}} QuizFactor. All rights reserved.
+

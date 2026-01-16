@@ -1,0 +1,75 @@
+<div class="dashboard-sidebar">
+    <div class="sidebar-header">
+        <h5 class="sidebar-title">Projects</h5>
+    </div>
+    <div class="sidebar-content">
+        <!-- All Projects Option -->
+        <div class="sidebar-item" 
+             ng-class="{'active': vm.currentView === 'global'}"
+             ng-click="vm.selectGlobalView()">
+            <div class="sidebar-item-icon">
+                <i class="bi bi-grid-3x3-gap"></i>
+            </div>
+            <div class="sidebar-item-content">
+                <div class="sidebar-item-title">All Projects</div>
+                <div class="sidebar-item-subtitle" ng-if="vm.globalMetrics">
+                    {{ vm.globalMetrics.metrics.totalPosts }} posts
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects List -->
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section-title">Your Projects</div>
+        
+        <div ng-if="vm.loading && vm.projects.length === 0" class="sidebar-loading">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <div ng-if="!vm.loading && vm.projects.length === 0" class="sidebar-empty">
+            <p class="text-muted small">No projects yet</p>
+            <a href="/dashboard/projects/create" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-plus"></i> Create Project
+            </a>
+        </div>
+
+        <div class="sidebar-item" 
+             ng-repeat="project in vm.projects"
+             ng-class="{'active': vm.currentView === 'project' && vm.selectedProjectUuid === project.uuid}"
+             ng-click="vm.selectProject(project)">
+            <div class="sidebar-item-icon">
+                <div ng-if="project.imageUrl" class="project-icon-image">
+                    <img ng-src="{{ project.imageUrl }}" alt="{{ project.name }}">
+                </div>
+                <div ng-if="!project.imageUrl" class="project-icon-initials">
+                    {{ vm.getProjectInitials(project.name) }}
+                </div>
+            </div>
+            <div class="sidebar-item-content">
+                <div class="sidebar-item-title">
+                    {{ project.name }}
+                    <span ng-if="project.needsAttention" class="badge badge-sm badge-warning ms-1" title="Needs attention">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </span>
+                </div>
+                <div class="sidebar-item-subtitle">
+                    {{ project.accountCount }} accounts · {{ project.postCount }} posts
+                </div>
+            </div>
+        </div>
+
+        <!-- Add New Project Option -->
+        <div class="sidebar-divider"></div>
+        <a href="/dashboard/projects/create" class="sidebar-item sidebar-item-new-project">
+            <div class="sidebar-item-icon">
+                <i class="bi bi-plus-circle"></i>
+            </div>
+            <div class="sidebar-item-content">
+                <div class="sidebar-item-title">New Project</div>
+                <div class="sidebar-item-subtitle">Create a new project</div>
+            </div>
+        </a>
+    </div>
+</div>

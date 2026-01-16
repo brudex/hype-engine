@@ -1,0 +1,220 @@
+<!-- Left Sidebar Navigation -->
+<aside class="api-doc-sidebar">
+    <nav class="api-doc-nav">
+        <!-- Introduction Section -->
+        <div class="nav-section">
+            <div class="nav-section-header" ng-click="apiDocCtrl.toggleSection('intro')">
+                <i class="bi bi-chevron-down" ng-if="apiDocCtrl.sections.intro"></i>
+                <i class="bi bi-chevron-right" ng-if="!apiDocCtrl.sections.intro"></i>
+                <span class="nav-section-title">Introduction</span>
+            </div>
+            <ul class="nav-section-items" ng-if="apiDocCtrl.sections.intro">
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('getting-started'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'getting-started' }">
+                        Getting Started
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="nav-section">
+            <div class="nav-section-header" ng-click="apiDocCtrl.toggleSection('auth')">
+                <i class="bi bi-chevron-down" ng-if="apiDocCtrl.sections.auth"></i>
+                <i class="bi bi-chevron-right" ng-if="!apiDocCtrl.sections.auth"></i>
+                <span class="nav-section-title">Authentication</span>
+            </div>
+            <ul class="nav-section-items" ng-if="apiDocCtrl.sections.auth">
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('api-key-generation'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'api-key-generation' }">
+                        API Key Generation
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('auth-method'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'auth-method' }">
+                        Authentication Method
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Projects API Section -->
+        <div class="nav-section">
+            <div class="nav-section-header" ng-click="apiDocCtrl.toggleSection('projects')">
+                <i class="bi bi-chevron-down" ng-if="apiDocCtrl.sections.projects"></i>
+                <i class="bi bi-chevron-right" ng-if="!apiDocCtrl.sections.projects"></i>
+                <span class="nav-section-title">Projects API</span>
+            </div>
+            <ul class="nav-section-items" ng-if="apiDocCtrl.sections.projects">
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('list-projects'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'list-projects' }">
+                        List Projects
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('get-project'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'get-project' }">
+                        Get Project
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Accounts API Section -->
+        <div class="nav-section">
+            <div class="nav-section-header" ng-click="apiDocCtrl.toggleSection('accounts')">
+                <i class="bi bi-chevron-down" ng-if="apiDocCtrl.sections.accounts"></i>
+                <i class="bi bi-chevron-right" ng-if="!apiDocCtrl.sections.accounts"></i>
+                <span class="nav-section-title">Accounts API</span>
+            </div>
+            <ul class="nav-section-items" ng-if="apiDocCtrl.sections.accounts">
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('list-accounts'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'list-accounts' }">
+                        List Accounts
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('get-account'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'get-account' }">
+                        Get Account
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Posts API Section -->
+        <div class="nav-section">
+            <div class="nav-section-header" ng-click="apiDocCtrl.toggleSection('posts')">
+                <i class="bi bi-chevron-down" ng-if="apiDocCtrl.sections.posts"></i>
+                <i class="bi bi-chevron-right" ng-if="!apiDocCtrl.sections.posts"></i>
+                <span class="nav-section-title">Posts API</span>
+            </div>
+            <ul class="nav-section-items" ng-if="apiDocCtrl.sections.posts">
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('list-posts'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'list-posts' }">
+                        List Posts
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('get-post'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'get-post' }">
+                        Get Post
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('create-post'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'create-post' }">
+                        Create Post
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('update-post'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'update-post' }">
+                        Update Post
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('delete-post'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'delete-post' }">
+                        Delete Post
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('schedule-post'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'schedule-post' }">
+                        Schedule Post
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Media API Section -->
+        <div class="nav-section">
+            <div class="nav-section-header" ng-click="apiDocCtrl.toggleSection('media')">
+                <i class="bi bi-chevron-down" ng-if="apiDocCtrl.sections.media"></i>
+                <i class="bi bi-chevron-right" ng-if="!apiDocCtrl.sections.media"></i>
+                <span class="nav-section-title">Media API</span>
+            </div>
+            <ul class="nav-section-items" ng-if="apiDocCtrl.sections.media">
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('list-media'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'list-media' }">
+                        List Media
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('get-media'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'get-media' }">
+                        Get Media
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('upload-media'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'upload-media' }">
+                        Upload Media
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('update-media'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'update-media' }">
+                        Update Media
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('delete-media'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'delete-media' }">
+                        Delete Media
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Tags API Section -->
+        <div class="nav-section">
+            <div class="nav-section-header" ng-click="apiDocCtrl.toggleSection('tags')">
+                <i class="bi bi-chevron-down" ng-if="apiDocCtrl.sections.tags"></i>
+                <i class="bi bi-chevron-right" ng-if="!apiDocCtrl.sections.tags"></i>
+                <span class="nav-section-title">Tags API</span>
+            </div>
+            <ul class="nav-section-items" ng-if="apiDocCtrl.sections.tags">
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('list-tags'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'list-tags' }">
+                        List Tags
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('get-tag'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'get-tag' }">
+                        Get Tag
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('create-tag'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'create-tag' }">
+                        Create Tag
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('update-tag'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'update-tag' }">
+                        Update Tag
+                    </a>
+                </li>
+                <li>
+                    <a href="#" ng-click="apiDocCtrl.navigateTo('delete-tag'); $event.preventDefault();" 
+                       ng-class="{ active: apiDocCtrl.activeSection === 'delete-tag' }">
+                        Delete Tag
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</aside>
+

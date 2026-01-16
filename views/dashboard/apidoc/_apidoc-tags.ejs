@@ -1,0 +1,255 @@
+<!-- List Tags Section -->
+<div ng-if="apiDocCtrl.activeSection === 'list-tags'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-info">GET</span>
+        <h2 class="api-doc-title">List Tags</h2>
+    </div>
+    <p class="api-doc-description">
+        Retrieves a list of all tags for a specific project.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('list-tags-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="list-tags-url">
+                <pre><code>GET /api/v1/:projectUuid/tags</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (200):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('list-tags-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="list-tags-success">
+                <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "uuid": "tag-uuid",
+      "name": "Marketing",
+      "hex_color": "3B82F6",
+      "created_at": "2024-01-15T10:00:00Z"
+    }
+  ]
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Get Tag Section -->
+<div ng-if="apiDocCtrl.activeSection === 'get-tag'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-info">GET</span>
+        <h2 class="api-doc-title">Get Tag</h2>
+    </div>
+    <p class="api-doc-description">
+        Retrieves detailed information about a specific tag.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('get-tag-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="get-tag-url">
+                <pre><code>GET /api/v1/:projectUuid/tags/:tagUuid</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (200):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('get-tag-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="get-tag-success">
+                <pre><code>{
+  "success": true,
+  "data": {
+    "uuid": "tag-uuid",
+    "name": "Marketing",
+    "hex_color": "3B82F6",
+    "created_at": "2024-01-15T10:00:00Z"
+  }
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Tag Section -->
+<div ng-if="apiDocCtrl.activeSection === 'create-tag'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-success">POST</span>
+        <h2 class="api-doc-title">Create Tag</h2>
+    </div>
+    <p class="api-doc-description">
+        Creates a new tag for organizing posts. The name must be unique within the project.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('create-tag-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="create-tag-url">
+                <pre><code>POST /api/v1/:projectUuid/tags</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Request Body</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Request Body</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('create-tag-body')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="create-tag-body">
+                <pre><code>{
+  "name": "Tag Name",
+  "hex_color": "3B82F6"
+}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Request Fields</h3>
+        <ul class="api-doc-list">
+            <li><code>name</code> (required) - The tag name (must be unique within the project)</li>
+            <li><code>hex_color</code> (optional) - Hex color code for the tag (e.g., "3B82F6")</li>
+        </ul>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (201):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('create-tag-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="create-tag-success">
+                <pre><code>{
+  "success": true,
+  "data": {
+    "uuid": "tag-uuid",
+    "name": "Tag Name",
+    "hex_color": "3B82F6",
+    "created_at": "2024-01-15T10:00:00Z"
+  }
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Tag Section -->
+<div ng-if="apiDocCtrl.activeSection === 'update-tag'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-warning">PUT</span>
+        <h2 class="api-doc-title">Update Tag</h2>
+    </div>
+    <p class="api-doc-description">
+        Updates a tag's name and/or color.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('update-tag-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="update-tag-url">
+                <pre><code>PUT /api/v1/:projectUuid/tags/:tagUuid</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Request Body</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Request Body</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('update-tag-body')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="update-tag-body">
+                <pre><code>{
+  "name": "Updated Tag Name",
+  "hex_color": "FF5733"
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Tag Section -->
+<div ng-if="apiDocCtrl.activeSection === 'delete-tag'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-warning">DELETE</span>
+        <h2 class="api-doc-title">Delete Tag</h2>
+    </div>
+    <p class="api-doc-description">
+        Deletes a tag from the project. This will remove the tag from all associated posts.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('delete-tag-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="delete-tag-url">
+                <pre><code>DELETE /api/v1/:projectUuid/tags/:tagUuid</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (200):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('delete-tag-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="delete-tag-success">
+                <pre><code>{
+  "success": true,
+  "message": "Tag deleted successfully"
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+

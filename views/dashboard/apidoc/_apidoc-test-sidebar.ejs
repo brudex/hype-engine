@@ -1,0 +1,255 @@
+<!-- Right Sidebar Test Console -->
+<aside class="api-doc-test-sidebar" ng-class="{'collapsed': apiDocCtrl.testSidebarCollapsed}" style="position: relative;">
+    <div id="testSidebarSpinnerContainer" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; pointer-events: none; display: flex; align-items: center; justify-content: center;"></div>
+    <div class="test-sidebar-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-terminal me-2"></i>Test Console
+            </h5>
+            <button class="btn btn-sm btn-link text-theme-secondary" 
+                    ng-click="apiDocCtrl.toggleTestSidebar()"
+                    title="{{ apiDocCtrl.testSidebarCollapsed ? 'Expand' : 'Collapse' }}">
+                <i class="bi" ng-class="apiDocCtrl.testSidebarCollapsed ? 'bi-chevron-left' : 'bi-chevron-right'"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="test-sidebar-content" ng-if="!apiDocCtrl.testSidebarCollapsed">
+        <!-- Endpoint Info -->
+        <div class="test-endpoint-info" ng-if="apiDocCtrl.currentEndpoint">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="badge" 
+                      ng-class="{
+                          'badge-info': apiDocCtrl.currentEndpoint.method === 'GET',
+                          'badge-success': apiDocCtrl.currentEndpoint.method === 'POST',
+                          'badge-warning': apiDocCtrl.currentEndpoint.method === 'PUT',
+                          'badge-danger': apiDocCtrl.currentEndpoint.method === 'DELETE'
+                      }">
+                    {{ apiDocCtrl.currentEndpoint.method }}
+                </span>
+                <span class="text-theme-secondary small">{{ apiDocCtrl.currentEndpoint.name }}</span>
+            </div>
+            <div class="test-endpoint-url">
+                <code class="small">{{ apiDocCtrl.currentEndpoint.url }}</code>
+            </div>
+        </div>
+
+        <div class="test-endpoint-info" ng-if="!apiDocCtrl.currentEndpoint">
+            <p class="text-theme-secondary small mb-0">
+                <i class="bi bi-info-circle me-1"></i>Select an endpoint to test
+            </p>
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="test-section">
+            <h6 class="test-section-title">
+                <i class="bi bi-shield-lock me-2"></i>Authentication
+            </h6>
+            <div class="mb-3">
+                <label class="form-label small">API Key</label>
+                <select class="form-select form-select-sm" 
+                        ng-model="apiDocCtrl.testAuth.selectedKeyUuid"
+                        ng-change="apiDocCtrl.onApiKeySelected()"
+                        ng-disabled="apiDocCtrl.loadingApiKeys">
+                    <option value="">-- Select API Key --</option>
+                    <option ng-repeat="key in apiDocCtrl.apiKeys" 
+                            value="{{ key.uuid }}"
+                            ng-selected="key.uuid === apiDocCtrl.testAuth.selectedKeyUuid">
+                        {{ key.name }} {{ key.description ? '(' + key.description + ')' : '' }}
+                    </option>
+                </select>
+                <div ng-if="apiDocCtrl.loadingApiKeys" class="text-theme-secondary small mt-1">
+                    <i class="bi bi-arrow-repeat spinner-border spinner-border-sm"></i> Loading API keys...
+                </div>
+                <div ng-if="!apiDocCtrl.loadingApiKeys && apiDocCtrl.apiKeys.length === 0" class="text-theme-secondary small mt-1">
+                    <i class="bi bi-info-circle"></i> No API keys found. <a href="/dashboard/access-tokens" target="_blank">Create one</a>
+                </div>
+            </div>
+            <div ng-if="apiDocCtrl.testAuth.apiKey" class="mb-3">
+                <div class="input-group input-group-sm">
+                    <input type="password" 
+                           class="form-control" 
+                           ng-model="apiDocCtrl.testAuth.apiKey"
+                           placeholder="hypengn-your-api-key"
+                           id="testApiKeyInput"
+                           readonly>
+                    <button class="btn btn-outline-secondary" 
+                            type="button"
+                            ng-click="apiDocCtrl.toggleApiKeyVisibility()"
+                            title="Toggle visibility">
+                        <i class="bi" ng-class="apiDocCtrl.testAuth.showKey ? 'bi-eye-slash' : 'bi-eye'"></i>
+                    </button>
+                </div>
+                <small class="text-theme-secondary">Format: Authorization: Bearer &lt;your-api-key&gt;</small>
+            </div>
+        </div>
+
+        <!-- cURL Command Display -->
+        <div class="test-section" ng-if="apiDocCtrl.currentEndpoint && apiDocCtrl.testAuth.apiKey">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="test-section-title mb-0">
+                    <i class="bi bi-terminal me-2"></i>cURL Command
+                </h6>
+                <button class="btn btn-sm btn-link p-0" 
+                        ng-click="apiDocCtrl.copyCurlCommand()"
+                        title="Copy cURL command">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="test-curl-display">
+                <pre><code>{{ apiDocCtrl.getCurlCommand() }}</code></pre>
+            </div>
+        </div>
+
+        <!-- Request Configuration -->
+        <div class="test-section" ng-if="apiDocCtrl.currentEndpoint">
+            <h6 class="test-section-title">
+                <i class="bi bi-gear me-2"></i>Request Configuration
+            </h6>
+
+            <!-- Query Parameters -->
+            <div class="mb-3" ng-if="apiDocCtrl.currentEndpoint.hasQueryParams">
+                <label class="form-label small">Query Parameters</label>
+                <div class="test-key-value-editor">
+                    <div class="test-kv-row" ng-repeat="param in apiDocCtrl.testQueryParams track by $index">
+                        <input type="text" 
+                               class="form-control form-control-sm" 
+                               ng-model="param.key"
+                               placeholder="Key">
+                        <input type="text" 
+                               class="form-control form-control-sm" 
+                               ng-model="param.value"
+                               placeholder="Value">
+                        <button class="btn btn-sm btn-link text-danger" 
+                                ng-click="apiDocCtrl.removeQueryParam($index)"
+                                ng-if="apiDocCtrl.testQueryParams.length > 1">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary w-100 mt-2" 
+                            ng-click="apiDocCtrl.addQueryParam()">
+                        <i class="bi bi-plus me-1"></i>Add Parameter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Path Parameters -->
+            <div class="mb-3" ng-if="apiDocCtrl.currentEndpoint.pathParams && apiDocCtrl.currentEndpoint.pathParams.length > 0">
+                <label class="form-label small">Path Parameters</label>
+                <div ng-repeat="param in apiDocCtrl.currentEndpoint.pathParams">
+                    <input type="text" 
+                           class="form-control form-control-sm mb-2" 
+                           ng-model="apiDocCtrl.testPathParams[param]"
+                           placeholder="{{ param }}"
+                           required>
+                </div>
+            </div>
+
+            <!-- Request Body -->
+            <div class="mb-3" ng-if="apiDocCtrl.currentEndpoint.hasBody">
+                <label class="form-label small">Request Body</label>
+                <textarea class="form-control form-control-sm test-code-editor" 
+                          ng-model="apiDocCtrl.testRequestBody"
+                          rows="8"
+                          placeholder='{"key": "value"}'
+                          spellcheck="false"></textarea>
+                <small class="text-theme-secondary">JSON format</small>
+            </div>
+
+            <!-- File Upload (for media upload) -->
+            <div class="mb-3" ng-if="apiDocCtrl.currentEndpoint.hasFileUpload">
+                <label class="form-label small">File</label>
+                <input type="file" 
+                       class="form-control form-control-sm" 
+                       onchange="angular.element(this).scope().vm.handleFileSelect(this.files)">
+                <small class="text-theme-secondary" ng-if="apiDocCtrl.testFile">
+                    Selected: {{ apiDocCtrl.testFile.name }}
+                </small>
+                <small class="text-theme-secondary" ng-if="!apiDocCtrl.testFile">
+                    Select a file to upload
+                </small>
+            </div>
+
+            <!-- Custom Headers -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label small mb-0">Custom Headers</label>
+                    <button class="btn btn-sm btn-link p-0" 
+                            ng-click="apiDocCtrl.addCustomHeader()">
+                        <i class="bi bi-plus small"></i>
+                    </button>
+                </div>
+                <div class="test-key-value-editor" ng-if="apiDocCtrl.testCustomHeaders.length > 0">
+                    <div class="test-kv-row" ng-repeat="header in apiDocCtrl.testCustomHeaders track by $index">
+                        <input type="text" 
+                               class="form-control form-control-sm" 
+                               ng-model="header.key"
+                               placeholder="Header name">
+                        <input type="text" 
+                               class="form-control form-control-sm" 
+                               ng-model="header.value"
+                               placeholder="Header value">
+                        <button class="btn btn-sm btn-link text-danger" 
+                                ng-click="apiDocCtrl.removeCustomHeader($index)">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Send Button -->
+        <div class="test-section" ng-if="apiDocCtrl.currentEndpoint">
+            <button class="btn btn-primary w-100" 
+                    ng-click="apiDocCtrl.sendTestRequest()"
+                    ng-disabled="apiDocCtrl.testing || !apiDocCtrl.canSendRequest()">
+                <span ng-if="!apiDocCtrl.testing">
+                    <i class="bi bi-send me-1"></i>Send Request
+                </span>
+                <span ng-if="apiDocCtrl.testing">
+                    <span class="spinner-border spinner-border-sm me-1"></span>Sending...
+                </span>
+            </button>
+            <div class="text-danger small mt-2" ng-if="apiDocCtrl.testError">
+                <i class="bi bi-exclamation-triangle me-1"></i>{{ apiDocCtrl.testError }}
+            </div>
+        </div>
+
+        <!-- Response Section -->
+        <div class="test-section" ng-if="apiDocCtrl.testResponse">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="test-section-title mb-0">
+                    <i class="bi bi-arrow-down-circle me-2"></i>Response
+                </h6>
+                <button class="btn btn-sm btn-link p-0" 
+                        ng-click="apiDocCtrl.copyTestResponse()"
+                        title="Copy response">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            
+            <div class="test-response-info mb-2">
+                <span class="badge" 
+                      ng-class="{
+                          'badge-success': apiDocCtrl.testResponse.status >= 200 && apiDocCtrl.testResponse.status < 300,
+                          'badge-danger': apiDocCtrl.testResponse.status >= 400,
+                          'badge-warning': apiDocCtrl.testResponse.status >= 300 && apiDocCtrl.testResponse.status < 400
+                      }">
+                    {{ apiDocCtrl.testResponse.status }}
+                </span>
+                <span class="text-theme-secondary small ms-2">
+                    {{ apiDocCtrl.testResponse.time }}ms
+                </span>
+            </div>
+
+            <div class="test-response-body" 
+                 ng-class="{
+                     'response-success': apiDocCtrl.testResponse.status >= 200 && apiDocCtrl.testResponse.status < 300,
+                     'response-error': apiDocCtrl.testResponse.status >= 400
+                 }">
+                <pre><code>{{ apiDocCtrl.testResponse.body }}</code></pre>
+            </div>
+        </div>
+    </div>
+</aside>
+

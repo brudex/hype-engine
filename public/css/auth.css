@@ -1,0 +1,233 @@
+/**
+ * Authentication Pages Styles
+ * Used for login, register, and other authentication pages
+ */
+
+body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0B0B0D 0%, #1F1F23 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(0, 239, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(188, 0, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.auth-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+}
+
+.auth-card {
+    background-color: var(--theme-secondary);
+    border: 1px solid var(--theme-border);
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5),
+                0 0 20px rgba(0, 239, 255, 0.1);
+}
+
+.auth-logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-logo h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, #00EFFF 0%, #BC00FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.auth-title {
+    text-align: center;
+    margin-bottom: 10px;
+    color: var(--theme-text-primary);
+    font-weight: 600;
+    font-size: 24px;
+}
+
+.auth-subtitle {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--theme-text-secondary);
+    font-size: 14px;
+}
+
+.form-floating label {
+    color: var(--theme-text-secondary);
+}
+
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: var(--theme-accent-cyan);
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    margin: 30px 0;
+    color: var(--theme-text-secondary);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--theme-border);
+}
+
+.auth-divider span {
+    padding: 0 15px;
+    font-size: 12px;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 30px;
+    color: var(--theme-text-secondary);
+    font-size: 14px;
+}
+
+.auth-footer a {
+    color: var(--theme-accent-cyan);
+    text-decoration: none;
+}
+
+.auth-footer a:hover {
+    color: var(--theme-cta-lime);
+}
+
+/* Fix positioning for form-floating labels */
+.form-floating.password-input-wrapper {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--theme-text-secondary);
+    cursor: pointer;
+    z-index: 10;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+    margin-top: 0;
+    height: auto;
+    width: auto;
+}
+
+/* Position toggle relative to form-floating container */
+/* Position based on input field's actual vertical center */
+.form-floating.password-input-wrapper .password-toggle {
+    position: absolute;
+    right: 12px;
+    /* Bootstrap form-floating input height is ~58px, positioned with padding */
+    /* When label is up: input starts at ~8px (0.5rem), center is at ~29px (8px + 21px) */
+    top: 29px;
+    transform: translateY(-50%);
+    margin-top: 0;
+}
+
+/* When placeholder is shown (label inside input), input padding-top is larger */
+.form-floating.password-input-wrapper > .form-control:placeholder-shown ~ .password-toggle {
+    /* Input starts at ~26px (1.625rem), center is at ~47px (26px + 21px) */
+    top: 47px;
+    transform: translateY(-50%);
+}
+
+/* When input is focused or has value, label moves up */
+.form-floating.password-input-wrapper > .form-control:focus ~ .password-toggle,
+.form-floating.password-input-wrapper > .form-control:not(:placeholder-shown) ~ .password-toggle {
+    /* Input starts at ~8px (0.5rem), center is at ~29px (8px + 21px) */
+    top: 29px;
+    transform: translateY(-50%);
+    margin-top: 0;
+}
+
+.password-toggle:hover {
+    color: var(--theme-accent-cyan);
+}
+
+.password-toggle:focus {
+    outline: none;
+    color: var(--theme-accent-cyan);
+}
+
+.password-toggle i {
+    font-size: 18px;
+}
+
+.form-floating {
+    position: relative;
+}
+
+.password-input-wrapper {
+    position: relative;
+}
+
+.password-input-wrapper .form-control {
+    padding-right: 50px;
+}
+
+/* Hide Bootstrap validation icons on password fields */
+.password-input-wrapper .form-control.is-invalid {
+    background-image: none !important;
+    background-position: unset !important;
+    padding-right: 50px !important;
+}
+
+.password-input-wrapper .form-control.is-valid {
+    background-image: none !important;
+    background-position: unset !important;
+    padding-right: 50px !important;
+}
+
+.form-floating > .form-control:focus ~ .password-toggle,
+.form-floating > .form-control:not(:placeholder-shown) ~ .password-toggle {
+    color: var(--theme-accent-cyan);
+}
+
+.alert {
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 12px 24px;
+    transition: all 0.3s ease;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+

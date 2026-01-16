@@ -1,0 +1,38 @@
+Special Offer - 10% Discount - QuizFactor
+
+Hi {{name}},
+
+We have an exclusive offer just for you! Subscribe to QuizFactor Premium now and get 10% off your subscription.
+
+🎉 Limited Time Offer
+Use this exclusive link to claim your 10% discount when you subscribe!
+
+With QuizFactor Premium, you'll get:
+- 📚 Unlimited access to all quiz categories
+- 📊 Advanced performance analytics and insights
+- 🎯 Custom quiz creation and practice modes
+- ⚡ Priority customer support
+- 🚫 Ad-free learning experience
+- 📱 Access on all your devices
+
+Choose Your 10% Discount Plan:
+
+Monthly Plan:
+- Original Price: $5.00
+- Discounted Price: $4.50 (10% OFF)
+- Subscribe Now: {{monthlyDiscountLink}}
+
+Yearly Plan (BEST VALUE):
+- Original Price: $20.00
+- Discounted Price: $18.00 (10% OFF)
+- Subscribe Now: {{yearlyDiscountLink}}
+
+⏰ This offer is for a limited time only! Don't miss out on this opportunity to enhance your exam preparation at a discounted price.
+
+If you have any questions, our support team is here to help.
+
+Happy Learning!
+The QuizFactor Team
+
+© {{year}} QuizFactor. All rights reserved.
+

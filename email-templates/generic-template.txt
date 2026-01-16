@@ -1,0 +1,68 @@
+{{subject}}
+
+{{#greeting}}
+{{greeting}}
+{{/greeting}}
+{{^greeting}}
+Hi {{name}},
+{{/greeting}}
+
+{{#content}}
+{{#isArray}}
+{{#content}}
+{{.}}
+
+{{/content}}
+{{/isArray}}
+{{^isArray}}
+{{content}}
+{{/isArray}}
+{{/content}}
+
+{{#htmlContent}}
+{{{htmlContent}}}
+{{/htmlContent}}
+
+{{#infoBoxes}}
+{{#infoBoxes}}
+{{#title}}
+{{title}}
+{{/title}}
+{{content}}
+
+{{/infoBoxes}}
+{{/infoBoxes}}
+
+{{#listItems}}
+{{#listItems}}
+- {{.}}
+{{/listItems}}
+{{/listItems}}
+
+{{#hasKeyValuePairs}}
+{{#keyValuePairs}}
+{{key}}: {{value}}
+{{/keyValuePairs}}
+{{/hasKeyValuePairs}}
+
+{{#ctaText}}
+{{#ctaUrl}}
+{{ctaText}}: {{ctaUrl}}
+{{/ctaUrl}}
+{{/ctaText}}
+
+{{#closingMessage}}
+{{closingMessage}}
+{{/closingMessage}}
+
+{{#footerMessage}}
+{{footerMessage}}
+{{/footerMessage}}
+The QuizFactor Team
+
+© {{year}} QuizFactor. All rights reserved.
+
+{{#unsubscribeUrl}}
+Unsubscribe: {{unsubscribeUrl}}
+{{/unsubscribeUrl}}
+

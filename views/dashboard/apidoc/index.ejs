@@ -1,0 +1,56 @@
+<div class="page-header mb-0">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary">API Documentation</h4>
+                    <p class="text-theme-secondary mb-0">Explore and test the HypeEngine API v1 endpoints</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/apidoc">API Documentation</a></li>
+                    <li class="breadcrumb-item active">Documentation</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body mt-0" ng-controller="ApiDocController as apiDocCtrl" ng-init="apiDocCtrl.init()">
+    <div class="page-wrapper">
+        <div class="api-doc-container">
+            <!-- Left Sidebar Navigation -->
+            <%- include('./_apidoc-sidebar') %>
+
+            <!-- Main Content Pane -->
+            <main class="api-doc-content">
+                <!-- Introduction Sections -->
+                <%- include('./_apidoc-intro') %>
+
+                <!-- Authentication Sections -->
+                <%- include('./_apidoc-auth') %>
+
+                <!-- Projects API Sections -->
+                <%- include('./_apidoc-projects') %>
+
+                <!-- Accounts API Sections -->
+                <%- include('./_apidoc-accounts') %>
+
+                <!-- Posts API Sections -->
+                <%- include('./_apidoc-posts') %>
+
+                <!-- Media API Sections -->
+                <%- include('./_apidoc-media') %>
+
+                <!-- Tags API Sections -->
+                <%- include('./_apidoc-tags') %>
+            </main>
+
+            <!-- Right Sidebar Test Console -->
+            <%- include('./_apidoc-test-sidebar') %>
+        </div>
+    </div>
+</div>
+
+<script src="/scripts/app/apidoc.client.controller.js"></script>
+<link rel="stylesheet" href="/css/apidoc.css">

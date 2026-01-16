@@ -1,0 +1,161 @@
+<!-- Left Panel - Post Form -->
+<div class="col-md-8 d-flex flex-column post-editor-panel">
+    <div class="p-4">
+        <!-- Account Selection -->
+        <div class="mb-4">
+            <label class="form-label mb-2">Select Accounts</label>
+            <div class="d-flex flex-wrap gap-2">
+                <% if (typeof accounts !== 'undefined' && accounts) { %>
+                    <% accounts.forEach(function(account) { %>
+                        <% var accountId = account.id || account.uuid || 0; %>
+                        <button type="button" 
+                                class="btn btn-outline-primary position-relative account-select-button"
+                                data-account-id="<%= accountId %>"
+                                ng-click="vm.selectAccount(<%= accountId %>)"
+                                ng-class="{'active': vm.isAccountSelected(<%= accountId %>)}">
+                            <% if (false) { %>
+                                <img src="<%= account.image %>" 
+                                     alt="<%= account.name %>"
+                                     class="rounded-circle me-2 account-image">
+                            <% } else { %>
+                                <i class="bi me-2 <%= 
+                                    account.provider === 'twitter' ? 'bi-twitter text-primary' : 
+                                    account.provider === 'facebook' ? 'bi-facebook text-primary' : 
+                                    account.provider === 'instagram' ? 'bi-instagram text-danger' : 
+                                    account.provider === 'linkedin' ? 'bi-linkedin text-primary' : '' 
+                                %>"></i>
+                            <% } %>
+                            <span><%= account.name %></span>
+                            <span ng-if="vm.isAccountSelected(<%= accountId %>)" 
+                                  class="position-absolute top-0 end-0 bg-success rounded-circle account-check-indicator"></span>
+                        </button>
+                    <% }); %>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Post Editor -->
+        <div class="post-editor-card">
+            <div class="p-4">
+                <!-- Version Tabs Navigation -->
+                <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+                        <!-- Version Tabs -->
+                    <ul class="nav nav-tabs version-tabs border-0 flex-grow-1" role="tablist">
+                            <!-- Original Tab (active by default, but can be toggled) -->
+                            <li class="nav-item" role="presentation">
+                                <button type="button"
+                                        class="nav-link version-tab "
+                                        ng-class="{'active': vm.activeVersion === 0}"
+                                    ng-click="vm.switchAccountVersion(0)"
+                                    role="tab">
+                                    <span>Original</span>
+                                </button>
+                            </li>
+                            <!-- Account-specific Version Tabs -->
+                            <li class="nav-item" 
+                                role="presentation"
+                                ng-repeat="version in vm.form.versions | filter: {accountId: '!' + 0}">
+                                <button type="button"
+                                        class="nav-link version-tab position-relative"
+                                        ng-class="{'active': vm.activeVersion === version.accountId}"
+                                    ng-click="vm.switchAccountVersion(version.accountId)"
+                                    role="tab">
+                                    <span ng-if="vm.getVersionAccount(version.accountId)">
+                                        <i class="bi me-1" 
+                                           ng-class="{
+                                               'bi-twitter': vm.getVersionAccount(version.accountId).provider === 'twitter',
+                                               'bi-facebook': vm.getVersionAccount(version.accountId).provider === 'facebook',
+                                               'bi-instagram': vm.getVersionAccount(version.accountId).provider === 'instagram',
+                                               'bi-linkedin': vm.getVersionAccount(version.accountId).provider === 'linkedin'
+                                           }"></i>
+                                        {{ vm.getVersionAccount(version.accountId).name }}
+                                    </span>
+                                </button>
+                            </li>
+                        </ul>
+
+                    <!-- Add Version Button with Popover -->
+                        <div class="position-relative" ng-if="vm.getAvailableAccountsForVersion().length > 0">
+                            <button type="button"
+                                    class="btn btn-sm version-add-btn"
+                                ng-click="vm.openVersionPopover()"
+                                id="version-add-popover-trigger">
+                            <i class="bi bi-plus-lg"></i>
+                            </button>
+
+                        <!-- Version Popover Content -->
+                        <div class="version-popover"
+                             ng-class="{'show': vm.isVersionPopoverOpen}"
+                                 ng-click="$event.stopPropagation()">
+                            <div class="version-popover-header">
+                                    <strong>Create version for</strong>
+                                </div>
+                            <div class="version-popover-body">
+                                    <div ng-repeat="account in vm.getAvailableAccountsForVersion()"
+                                     class="version-popover-item"
+                                     ng-click="vm.addVersion(account.uuid); vm.closeVersionPopover()">
+                                        <div class="d-flex align-items-center">
+                                        <!-- <img ng-if="account.image" 
+                                                 ng-src="{{ account.image }}" 
+                                                 alt="{{ account.name }}"
+                                             class="rounded-circle me-2 version-account-image"> -->
+                                        <div class="version-account-icon me-2">
+                                                <i class="bi" 
+                                                   ng-class="{
+                                                       'bi-twitter': account.provider === 'twitter',
+                                                       'bi-facebook': account.provider === 'facebook',
+                                                       'bi-instagram': account.provider === 'instagram',
+                                                       'bi-linkedin': account.provider === 'linkedin'
+                                                   }"></i>
+                                            </div>
+                                            <span>{{ account.name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="version-tab-content">
+                    <!-- All Version Tab Panes (ng-repeat for all versions) -->
+                    <!-- Original tab pane is active when vm.activeVersion === 0 and version is original -->
+                    <!-- Account-specific tab panes are active when vm.activeVersion === version.accountId -->
+                    <div class="tab-pane fade"
+                         ng-class="{'show active': (vm.activeVersion === 0 && (version.accountId === 0 || version.isOriginal)) || (vm.activeVersion !== 0 && vm.activeVersion === version.accountId && version.accountId !== 0)}"
+                         id="version-tab-{{ version.accountId }}"
+                         role="tabpanel"
+                         ng-repeat="version in vm.form.versions">
+                        <!-- Rich Text Editor -->
+                        <div class="mb-3">
+                            <rich-text-editor 
+                                ng-model="version.content[0].body"
+                                placeholder="What's on your mind?"
+                                on-update="vm.updateVersionContent(version.accountId, 'body', content)">
+                            </rich-text-editor>
+                        </div>
+
+                        <!-- Media Button -->
+                        <div class="mb-3">
+                            <button type="button" 
+                                    class="btn add-media-btn"
+                                    ng-click="vm.openMediaSelectionModal(version.accountId)">
+                                <i class="bi bi-image me-2"></i>
+                                Add Media
+                            </button>
+                        </div>
+
+                        <!-- Media Preview -->
+                        <media-preview 
+                            ng-model="version.content[0].media"
+                            container-id="mediaPreviewContainer-{{ version.accountId }}"
+                            on-remove="vm.removeMedia(version.accountId, index)"
+                            on-reorder="vm.reorderMedia(version.accountId, oldIndex, newIndex, media)">
+                        </media-preview>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

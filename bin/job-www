@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+
+require('dotenv').config();
+const debug = require('debug')('Job-Server:server');
+const http = require('http');
+const db = require("../models");
+const logger = require("../utils/logger");
+const app = require('../job-app'); // This will auto-start cronserver
+const port = normalizePort(process.env.JOB_PORT || '3001');
+app.set('port', port);
+
+const server = http.createServer(app);
+
+async function syncDatabase(){
+  try {
+    await db.sequelize.sync();
+    
+    // Run jobs before starting the server
+    logger.info('Job server: Running startup jobs...');
+    //await jobManager.runAllJobs();
+    logger.info('Job server: Startup jobs completed');
+    
+    // Cron server auto-starts when required (no need to call start)
+    logger.info('Job server: Cron server will auto-start...');
+    
+    server.on('error', onError);
+    server.on('listening', onListening);
+    server.listen(port);
+  } catch (error) {
+    logger.error('Error during job server startup:', error);
+    process.exit(1);
+  }
+}
+setTimeout(syncDatabase, 2000);
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+  if (isNaN(port)) return val;
+  if (port >= 0) return port;
+  return false;
+}
+
+function onError(error) {
+  if (error.syscall !== 'listen') throw error;
+
+  const bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
+
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+function onListening() {
+  const addr = server.address();
+  const bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+  console.log('Job Server listening on Port : ' + bind);
+}

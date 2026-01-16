@@ -1,0 +1,145 @@
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <% if (typeof project !== 'undefined' && project) { %>
+                        <h4 class="m-b-5 text-theme-primary">Configure <%= serviceName.charAt(0).toUpperCase() + serviceName.slice(1) %> Service - <%= project.name %></h4>
+                        <p class="text-theme-secondary mb-0">Enter your API credentials for <%= project.name %></p>
+                    <% } else { %>
+                        <h4 class="m-b-5 text-theme-primary">Configure <%= serviceName.charAt(0).toUpperCase() + serviceName.slice(1) %> Service</h4>
+                        <p class="text-theme-secondary mb-0">Enter your API credentials</p>
+                    <% } %>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/projects">Projects</a></li>
+                    <% if (typeof project !== 'undefined' && project) { %>
+                        <li class="breadcrumb-item"><a href="/dashboard/projects/<%= project.uuid %>"><%= project.name %></a></li>
+                        <li class="breadcrumb-item"><a href="/dashboard/services/project/<%= project.uuid %>">Services</a></li>
+                    <% } else { %>
+                        <li class="breadcrumb-item"><a href="/dashboard/services">Services</a></li>
+                    <% } %>
+                    <li class="breadcrumb-item active"><%= serviceName.charAt(0).toUpperCase() + serviceName.slice(1) %></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body" ng-controller="ServicesConfigurationController as configCtrl" ng-init="configCtrl.init('<%= serviceName %>', '<%= typeof project !== 'undefined' && project ? project.uuid : '' %>')">
+    <div class="page-wrapper">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Service Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="/dashboard/services/configure/<%= serviceName %><%= typeof project !== 'undefined' && project ? '?project=' + project.uuid : '' %>" method="POST" id="serviceForm" ng-submit="configCtrl.saveConfiguration(); $event.preventDefault();">
+                            <% if (typeof project !== 'undefined' && project) { %>
+                                <input type="hidden" name="project" value="<%= project.uuid %>">
+                            <% } %>
+
+                            <% if (serviceName === 'twitter') { %>
+                                <%- include('_twitter') %>
+                            <% } else if (serviceName === 'facebook') { %>
+                                <%- include('_facebook') %>
+                            <% } else if (serviceName === 'instagram') { %>
+                                <%- include('_instagram') %>
+                            <% } else if (serviceName === 'linkedin') { %>
+                                <%- include('_linkedin') %>
+                            <% } else if (serviceName === 'mastodon') { %>
+                                <%- include('_mastodon') %>
+                            <% } else if (serviceName === 'tiktok') { %>
+                                <%- include('_tiktok') %>
+                            <% } else if (serviceName === 'unsplash') { %>
+                                <%- include('_unsplash') %>
+                            <% } else if (serviceName === 'tenor') { %>
+                                <%- include('_tenor') %>
+                            <% } else { %>
+                                <%- include('_default') %>
+                            <% } %>
+
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="active" name="active" value="true" checked>
+                                    <label class="form-check-label" for="active">
+                                        Activate this service
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">Service must be active to use it for connecting accounts</small>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a ng-href="{{ configCtrl.getCancelUrl() }}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary" ng-disabled="configCtrl.saving">
+                                    <i class="bi" ng-class="configCtrl.saving ? 'bi-hourglass-split' : 'bi-check-circle'"></i> 
+                                    {{ configCtrl.saving ? 'Saving...' : 'Save Configuration' }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Credentials Modal -->
+    <div class="modal fade" id="testCredentialsModal" tabindex="-1" aria-labelledby="testCredentialsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" ng-class="configCtrl.testResult && configCtrl.testResult.success ? 'bg-success text-white' : (configCtrl.testResult && !configCtrl.testResult.success ? 'bg-danger text-white' : '')">
+                    <h5 class="modal-title" id="testCredentialsModalLabel">
+                        <i class="bi" ng-class="configCtrl.testResult && configCtrl.testResult.success ? 'bi-check-circle-fill' : (configCtrl.testResult && !configCtrl.testResult.success ? 'bi-x-circle-fill' : 'bi-info-circle')"></i>
+                        Test Credentials Result
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ng-class="configCtrl.testResult && configCtrl.testResult.success ? 'btn-close-white' : (configCtrl.testResult && !configCtrl.testResult.success ? 'btn-close-white' : '')"></button>
+                </div>
+                <div class="modal-body">
+                    <div ng-if="!configCtrl.testResult" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Testing...</span>
+                        </div>
+                        <p class="mt-2">Testing credentials...</p>
+                    </div>
+                    <div ng-if="configCtrl.testResult">
+                        <div ng-if="configCtrl.testResult.success" class="alert alert-success">
+                            <h6 class="alert-heading"><i class="bi bi-check-circle"></i> Success!</h6>
+                            <p class="mb-0">{{ configCtrl.testResult.message }}</p>
+                            <div ng-if="configCtrl.testResult.data" class="mt-2">
+                                <small>
+                                    <strong>Details:</strong><br>
+                                    <span ng-repeat="(key, value) in configCtrl.testResult.data">
+                                        <strong>{{ key }}:</strong> {{ value }}<br>
+                                    </span>
+                                </small>
+                            </div>
+                        </div>
+                        <div ng-if="!configCtrl.testResult.success" class="alert alert-danger">
+                            <h6 class="alert-heading"><i class="bi bi-x-circle"></i> Failed!</h6>
+                            <p class="mb-0"><strong>{{ configCtrl.testResult.message }}</strong></p>
+                            <div ng-if="configCtrl.testResult.error" class="mt-2">
+                                <small><strong>Error:</strong> {{ configCtrl.testResult.error }}</small>
+                            </div>
+                        </div>
+                        <div ng-if="configCtrl.testResult.errors" class="mt-2">
+                            <small class="text-danger">
+                                <strong>Validation Errors:</strong><br>
+                                <span ng-repeat="(key, value) in configCtrl.testResult.errors">
+                                    <strong>{{ key }}:</strong> {{ value }}<br>
+                                </span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/scripts/app/services-configuration.client.controller.js"></script>
+

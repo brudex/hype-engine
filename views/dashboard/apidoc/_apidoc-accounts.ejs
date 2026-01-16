@@ -1,0 +1,150 @@
+<!-- List Accounts Section -->
+<div ng-if="apiDocCtrl.activeSection === 'list-accounts'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-info">GET</span>
+        <h2 class="api-doc-title">List Accounts</h2>
+    </div>
+    <p class="api-doc-description">
+        Retrieves a list of all social media accounts for a specific project.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('list-accounts-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="list-accounts-url">
+                <pre><code>GET /api/v1/:projectUuid/accounts</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Path Parameters</h3>
+        <ul class="api-doc-list">
+            <li><code>projectUuid</code> (required) - The UUID of the project</li>
+        </ul>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (200):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('list-accounts-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="list-accounts-success">
+                <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "uuid": "account-uuid",
+      "name": "Twitter Account",
+      "username": "twitter_user",
+      "provider": "twitter",
+      "provider_id": "1234567890",
+      "authorized": true,
+      "image": "https://...",
+      "created_at": "2024-01-15T10:00:00Z"
+    }
+  ]
+}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Notes</h3>
+        <ul class="api-doc-list">
+            <li>Accounts are returned in descending order by creation date</li>
+            <li>Only accounts belonging to the specified project are returned</li>
+            <li>The <code>authorized</code> field indicates if the account is currently authorized</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Get Account Section -->
+<div ng-if="apiDocCtrl.activeSection === 'get-account'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-info">GET</span>
+        <h2 class="api-doc-title">Get Account</h2>
+    </div>
+    <p class="api-doc-description">
+        Retrieves detailed information about a specific social media account.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('get-account-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="get-account-url">
+                <pre><code>GET /api/v1/:projectUuid/accounts/:accountUuid</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Path Parameters</h3>
+        <ul class="api-doc-list">
+            <li><code>projectUuid</code> (required) - The UUID of the project</li>
+            <li><code>accountUuid</code> (required) - The UUID of the account to retrieve</li>
+        </ul>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (200):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('get-account-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="get-account-success">
+                <pre><code>{
+  "success": true,
+  "data": {
+    "uuid": "account-uuid",
+    "name": "Twitter Account",
+    "username": "twitter_user",
+    "provider": "twitter",
+    "provider_id": "1234567890",
+    "authorized": true,
+    "image": "https://...",
+    "created_at": "2024-01-15T10:00:00Z"
+  }
+}</code></pre>
+            </div>
+        </div>
+        <p class="mt-3"><strong>Error (404):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Error Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('get-account-error')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="get-account-error">
+                <pre><code>{
+  "success": false,
+  "error": "Not Found",
+  "message": "Account not found"
+}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Notes</h3>
+        <ul class="api-doc-list">
+            <li>Returns 404 if the account does not exist or does not belong to the specified project</li>
+            <li>Returns 403 if the account belongs to a project that the API key does not have access to</li>
+        </ul>
+    </div>
+</div>
+

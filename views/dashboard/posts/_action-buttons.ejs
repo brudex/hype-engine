@@ -1,0 +1,55 @@
+<!-- Bottom Action Bar -->
+<div ng-if="vm.post || vm.currentProject" class="action-buttons-bar">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <!-- Left Side: Labels & Selected Tags -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <!-- Selected Tags -->
+            <div ng-if="vm.form.tags && vm.form.tags.length > 0" class="d-flex align-items-center gap-2 flex-wrap">
+                <span ng-repeat="tag in vm.form.tags" 
+                      class="action-tag-badge"
+                      ng-style="{'background-color': '#' + vm.getTagColor(tag), 'color': '#fff'}">
+                    {{ vm.getTagName(tag) }}
+                </span>
+            </div>
+            
+            <!-- Labels Button -->
+            <button type="button" 
+                    class="btn action-btn action-btn-labels"
+                    ng-click="vm.openLabelsModal()">
+                <i class="bi bi-tag"></i> LABELS
+            </button>
+        </div>
+
+        <!-- Right Side: Schedule Time & Post Now -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <!-- Schedule Time Display or Pick Time Button -->
+            <div ng-if="vm.form.date && vm.form.time" class="action-schedule-display">
+                <i class="bi bi-calendar me-2"></i>
+                <span>{{ vm.formatScheduleTime() }}</span>
+                <button type="button" 
+                        class="btn btn-link action-schedule-clear"
+                        ng-click="vm.clearSchedule()"
+                        title="Clear schedule">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+            
+            <button ng-if="!vm.form.date || !vm.form.time"
+                    type="button" 
+                    class="btn action-btn action-btn-time"
+                    ng-click="vm.openTimePicker()">
+                <i class="bi bi-calendar"></i> PICK TIME
+            </button>
+
+            <!-- Post Now Button -->
+            <button type="button" 
+                    class="btn action-btn action-btn-post"
+                    ng-click="vm.postNow()"
+                    ng-disabled="vm.saving || !vm.hasContent()">
+                <i class="bi" ng-class="vm.saving ? 'bi-arrow-repeat bi-spin' : 'bi-send'"></i> 
+                <%= text || 'POST NOW' %>
+            </button>
+        </div>
+    </div>
+</div>
+

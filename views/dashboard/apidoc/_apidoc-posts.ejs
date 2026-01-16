@@ -1,0 +1,376 @@
+<!-- List Posts Section -->
+<div ng-if="apiDocCtrl.activeSection === 'list-posts'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-info">GET</span>
+        <h2 class="api-doc-title">List Posts</h2>
+    </div>
+    <p class="api-doc-description">
+        Retrieves a paginated list of posts for a specific project. Supports filtering by status and includes all post versions.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('list-posts-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="list-posts-url">
+                <pre><code>GET /api/v1/:projectUuid/posts?status={status}&page={page}&limit={limit}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Path Parameters</h3>
+        <ul class="api-doc-list">
+            <li><code>projectUuid</code> (required) - The UUID of the project</li>
+        </ul>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Query Parameters</h3>
+        <ul class="api-doc-list">
+            <li><code>status</code> (optional) - Filter by status: 0 (draft), 1 (scheduled), 2 (published), 3 (failed)</li>
+            <li><code>page</code> (optional) - Page number (default: 1)</li>
+            <li><code>limit</code> (optional) - Items per page (default: 20, max: 100)</li>
+        </ul>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (200):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('list-posts-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="list-posts-success">
+                <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "uuid": "post-uuid",
+      "status": 1,
+      "scheduled_at": "2024-01-20T14:30:00Z",
+      "published_at": null,
+      "accounts": [...],
+      "tags": [...],
+      "versions": [
+        {
+          "account": null,
+          "content": {
+            "body": "Post content",
+            "media": ["media-uuid-1"]
+          },
+          "is_original": true
+        }
+      ],
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    }
+  ],
+  "meta": {
+    "total": 45,
+    "page": 1,
+    "per_page": 20,
+    "last_page": 3
+  }
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Get Post Section -->
+<div ng-if="apiDocCtrl.activeSection === 'get-post'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-info">GET</span>
+        <h2 class="api-doc-title">Get Post</h2>
+    </div>
+    <p class="api-doc-description">
+        Retrieves detailed information about a specific post, including all versions, accounts, and tags.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('get-post-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="get-post-url">
+                <pre><code>GET /api/v1/:projectUuid/posts/:postUuid</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Path Parameters</h3>
+        <ul class="api-doc-list">
+            <li><code>projectUuid</code> (required) - The UUID of the project</li>
+            <li><code>postUuid</code> (required) - The UUID of the post to retrieve</li>
+        </ul>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (200):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('get-post-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="get-post-success">
+                <pre><code>{
+  "success": true,
+  "data": {
+    "uuid": "post-uuid",
+    "status": 1,
+    "scheduled_at": "2024-01-20T14:30:00Z",
+    "published_at": null,
+    "accounts": [...],
+    "tags": [...],
+    "versions": [...],
+    "created_at": "2024-01-15T10:00:00Z",
+    "updated_at": "2024-01-15T10:00:00Z"
+  }
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Post Section -->
+<div ng-if="apiDocCtrl.activeSection === 'create-post'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-success">POST</span>
+        <h2 class="api-doc-title">Create Post</h2>
+    </div>
+    <p class="api-doc-description">
+        Creates a new social media post with multiple content versions. The post can be created as a draft or scheduled for future publication.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('create-post-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="create-post-url">
+                <pre><code>POST /api/v1/:projectUuid/posts</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Request Body</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Request Body</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('create-post-body')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="create-post-body">
+                <pre><code>{
+  "versions": [
+    {
+      "accountUuid": "",
+      "original": true,
+      "content": [
+        {
+          "body": "Base content for all accounts",
+          "media": ["media-uuid-1"]
+        }
+      ]
+    },
+    {
+      "accountUuid": "account-uuid-1",
+      "original": false,
+      "content": [
+        {
+          "body": "Custom content for Twitter",
+          "media": ["media-uuid-1", "media-uuid-2"]
+        }
+      ]
+    }
+  ],
+  "accountUuids": ["account-uuid-1", "account-uuid-2"],
+  "tags": ["tag-uuid-1"],
+  "date": "2024-12-25",
+  "time": "14:30"
+}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Request Fields</h3>
+        <ul class="api-doc-list">
+            <li><code>versions</code> (required) - Array of post versions. Each version can be original (for all accounts) or account-specific</li>
+            <li><code>accountUuids</code> (required) - Array of account UUIDs to associate with the post</li>
+            <li><code>tags</code> (optional) - Array of tag UUIDs</li>
+            <li><code>date</code> (optional) - Date in YYYY-MM-DD format for scheduling</li>
+            <li><code>time</code> (optional) - Time in HH:mm format for scheduling (required if date is provided)</li>
+        </ul>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Response</h3>
+        <p><strong>Success (201):</strong></p>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Success Response</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('create-post-success')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="create-post-success">
+                <pre><code>{
+  "success": true,
+  "data": {
+    "uuid": "post-uuid",
+    "status": 1,
+    "scheduled_at": "2024-12-25T14:30:00Z",
+    "published_at": null,
+    "accounts": [...],
+    "tags": [...],
+    "versions": [...],
+    "created_at": "2024-01-15T10:00:00Z",
+    "updated_at": "2024-01-15T10:00:00Z"
+  }
+}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Notes</h3>
+        <ul class="api-doc-list">
+            <li>At least one version is required. The original version (with <code>original: true</code>) is used as the default for all accounts</li>
+            <li>If <code>date</code> and <code>time</code> are provided, the post will be scheduled (status: 1). Otherwise, it's created as a draft (status: 0)</li>
+            <li>Media UUIDs must reference existing media files in your library</li>
+            <li>Account UUIDs must belong to the specified project</li>
+        </ul>
+    </div>
+    <button class="btn btn-outline-primary mt-3" ng-click="apiDocCtrl.testSidebarCollapsed = false">
+        <i class="bi bi-play-circle me-1"></i>Test in Console
+    </button>
+</div>
+
+<!-- Update Post Section -->
+<div ng-if="apiDocCtrl.activeSection === 'update-post'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-warning">PUT</span>
+        <h2 class="api-doc-title">Update Post</h2>
+    </div>
+    <p class="api-doc-description">
+        Updates an existing post. You can update versions, accounts, tags, and scheduled time.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('update-post-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="update-post-url">
+                <pre><code>PUT /api/v1/:projectUuid/posts/:postUuid</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Request Body</h3>
+        <p>Same structure as Create Post. All existing versions, accounts, and tags will be replaced with the new values.</p>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Notes</h3>
+        <ul class="api-doc-list">
+            <li>All existing versions, accounts, and tags are replaced with the new values</li>
+            <li>To remove scheduling, set <code>date</code> and <code>time</code> to <code>null</code></li>
+            <li>Published posts cannot be updated</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Delete Post Section -->
+<div ng-if="apiDocCtrl.activeSection === 'delete-post'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-warning">DELETE</span>
+        <h2 class="api-doc-title">Delete Post</h2>
+    </div>
+    <p class="api-doc-description">
+        Permanently deletes a post. This action cannot be undone.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('delete-post-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="delete-post-url">
+                <pre><code>DELETE /api/v1/:projectUuid/posts/:postUuid</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="callout-box callout-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        <div>
+            <strong>Warning:</strong> This action is irreversible. Make sure you want to delete the post before making this request.
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Post Section -->
+<div ng-if="apiDocCtrl.activeSection === 'schedule-post'" class="api-doc-section">
+    <div class="api-endpoint-header">
+        <span class="badge badge-info">POST</span>
+        <h2 class="api-doc-title">Schedule Post</h2>
+    </div>
+    <p class="api-doc-description">
+        Schedules a post to be published at a specific date and time. The post must exist and be in draft status.
+    </p>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Endpoint</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>URL</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('schedule-post-url')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="schedule-post-url">
+                <pre><code>POST /api/v1/:projectUuid/posts/:postUuid/schedule</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Request Body</h3>
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>Request Body</span>
+                <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('schedule-post-body')" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <div class="code-block" id="schedule-post-body">
+                <pre><code>{
+  "scheduled_at": "2024-01-20T14:30:00Z"
+}</code></pre>
+            </div>
+        </div>
+    </div>
+    <div class="api-endpoint-detail">
+        <h3 class="api-doc-subtitle">Notes</h3>
+        <ul class="api-doc-list">
+            <li>The scheduled time must be in the future and in ISO 8601 format</li>
+            <li>Post status changes to "scheduled" (status: 1) upon successful scheduling</li>
+        </ul>
+    </div>
+</div>
+

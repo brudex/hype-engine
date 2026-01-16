@@ -1,0 +1,239 @@
+<div ng-if="!vm.loading && vm.currentView === 'project' && vm.projectMetrics" class="dashboard-view-project">
+    <!-- Project Header -->
+    <div class="project-header card mb-4">
+        <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="project-header-icon me-3">
+                        <div ng-if="vm.selectedProject.imageUrl" class="project-icon-image">
+                            <img ng-src="{{ vm.selectedProject.imageUrl }}" alt="{{ vm.selectedProject.name }}">
+                        </div>
+                        <div ng-if="!vm.selectedProject.imageUrl" class="project-icon-initials">
+                            {{ vm.getProjectInitials(vm.selectedProject.name) }}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="mb-1 text-theme-primary">{{ vm.selectedProject.name }}</h4>
+                        <p class="text-theme-secondary small mb-0" ng-if="vm.selectedProject.description">
+                            {{ vm.selectedProject.description }}
+                        </p>
+                    </div>
+                </div>
+                <div class="project-header-actions">
+                    <a ng-href="/dashboard/posts/create/{{ vm.selectedProjectUuid }}" class="btn btn-accent-cyan me-2">
+                        <i class="bi bi-plus-circle me-1"></i>Create Post
+                    </a>
+                    <a ng-href="/dashboard/calendar/project/{{ vm.selectedProjectUuid }}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-calendar me-1"></i>Calendar
+                    </a>
+                    <a ng-href="/dashboard/projects/{{ vm.selectedProjectUuid }}/accounts" class="btn btn-outline-primary">
+                        <i class="bi bi-link-45deg me-1"></i>Accounts
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="metric-card card">
+                <div class="card-body">
+                    <div class="metric-icon metric-icon-accounts">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ vm.projectMetrics.metrics.totalAccounts }}</div>
+                        <div class="metric-label">Connected Accounts</div>
+                        <div class="metric-sublabel" ng-if="vm.projectMetrics.metrics.unauthorizedAccounts > 0" class="text-danger small">
+                            {{ vm.projectMetrics.metrics.unauthorizedAccounts }} unauthorized
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="metric-card card">
+                <div class="card-body">
+                    <div class="metric-icon metric-icon-scheduled">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ vm.projectMetrics.metrics.scheduledPosts }}</div>
+                        <div class="metric-label">Scheduled</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="metric-card card">
+                <div class="card-body">
+                    <div class="metric-icon metric-icon-published">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ vm.projectMetrics.metrics.publishedPosts }}</div>
+                        <div class="metric-label">Published</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="metric-card card">
+                <div class="card-body">
+                    <div class="metric-icon metric-icon-drafts">
+                        <i class="bi bi-file-earmark"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ vm.projectMetrics.metrics.draftPosts }}</div>
+                        <div class="metric-label">Drafts</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="row">
+        <!-- Left Column: Upcoming Posts & Accounts -->
+        <div class="col-lg-8 mb-4">
+            <!-- Upcoming Scheduled Posts -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0 text-theme-primary">
+                        <i class="bi bi-calendar-event me-2"></i>Upcoming Posts
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div ng-if="vm.projectMetrics.upcomingPosts.length === 0" class="empty-state-small text-center py-4">
+                        <i class="bi bi-calendar-x text-theme-secondary" style="font-size: 2rem; opacity: 0.6;"></i>
+                        <p class="text-theme-secondary small mt-2 mb-0">No upcoming scheduled posts</p>
+                    </div>
+                    <div ng-if="vm.projectMetrics.upcomingPosts.length > 0" class="posts-list">
+                        <div class="post-item" ng-repeat="post in vm.projectMetrics.upcomingPosts">
+                            <div class="post-item-accounts">
+                                <div class="account-badge" ng-repeat="account in post.accounts | limitTo: 3">
+                                    <img ng-if="account.image" ng-src="{{ account.image }}" alt="{{ account.name }}">
+                                    <i ng-if="!account.image" class="bi" ng-class="{
+                                        'bi-twitter': account.provider === 'twitter',
+                                        'bi-facebook': account.provider === 'facebook',
+                                        'bi-instagram': account.provider === 'instagram',
+                                        'bi-linkedin': account.provider === 'linkedin'
+                                    }"></i>
+                                </div>
+                            </div>
+                            <div class="post-item-content">
+                                <div class="post-item-time">
+                                    <i class="bi bi-clock me-1"></i>
+                                    {{ vm.formatDate(post.scheduledAt) }} at {{ vm.formatTime(post.scheduledAt) }}
+                                </div>
+                            </div>
+                            <div class="post-item-status">
+                                <span class="badge" ng-class="vm.getStatusClass(post.status)">
+                                    {{ post.status === 1 ? 'Scheduled' : 'Draft' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recently Published Posts -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0 text-theme-primary">
+                        <i class="bi bi-check-circle me-2"></i>Recently Published
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div ng-if="vm.projectMetrics.recentPosts.length === 0" class="empty-state-small text-center py-4">
+                        <i class="bi bi-file-x text-theme-secondary" style="font-size: 2rem; opacity: 0.6;"></i>
+                        <p class="text-theme-secondary small mt-2 mb-0">No recently published posts</p>
+                    </div>
+                    <div ng-if="vm.projectMetrics.recentPosts.length > 0" class="posts-list">
+                        <div class="post-item" ng-repeat="post in vm.projectMetrics.recentPosts">
+                            <div class="post-item-accounts">
+                                <div class="account-badge" ng-repeat="account in post.accounts | limitTo: 3">
+                                    <img ng-if="account.image" ng-src="{{ account.image }}" alt="{{ account.name }}">
+                                    <i ng-if="!account.image" class="bi" ng-class="{
+                                        'bi-twitter': account.provider === 'twitter',
+                                        'bi-facebook': account.provider === 'facebook',
+                                        'bi-instagram': account.provider === 'instagram',
+                                        'bi-linkedin': account.provider === 'linkedin'
+                                    }"></i>
+                                </div>
+                            </div>
+                            <div class="post-item-content">
+                                <div class="post-item-time">
+                                    <i class="bi bi-clock me-1"></i>
+                                    {{ vm.formatDate(post.publishedAt) }} at {{ vm.formatTime(post.publishedAt) }}
+                                </div>
+                            </div>
+                            <div class="post-item-status">
+                                <span class="badge badge-success">Published</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Connected Accounts -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-theme-primary">
+                            <i class="bi bi-person-circle me-2"></i>Connected Accounts
+                        </h5>
+                        <a ng-href="/dashboard/projects/{{ vm.selectedProjectUuid }}/accounts" class="btn btn-sm btn-link">
+                            <i class="bi bi-plus"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div ng-if="vm.projectMetrics.accounts.length === 0" class="empty-state-small text-center py-4">
+                        <i class="bi bi-person-x text-muted" style="font-size: 2rem;"></i>
+                        <p class="text-muted small mt-2 mb-3">No accounts connected</p>
+                        <a ng-href="/dashboard/projects/{{ vm.selectedProjectUuid }}/accounts" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus me-1"></i>Connect Account
+                        </a>
+                    </div>
+                    <div ng-if="vm.projectMetrics.accounts.length > 0" class="accounts-list">
+                        <div class="account-item" ng-repeat="account in vm.projectMetrics.accounts">
+                            <div class="account-item-avatar">
+                                <div class="account-provider-icon" ng-class="{
+                                    'provider-twitter': account.provider === 'twitter',
+                                    'provider-facebook': account.provider === 'facebook',
+                                    'provider-instagram': account.provider === 'instagram',
+                                    'provider-linkedin': account.provider === 'linkedin',
+                                    'provider-tiktok': account.provider === 'tiktok',
+                                    'provider-mastodon': account.provider === 'mastodon'
+                                }">
+                                    <i class="bi" ng-class="{
+                                        'bi-twitter': account.provider === 'twitter',
+                                        'bi-facebook': account.provider === 'facebook',
+                                        'bi-instagram': account.provider === 'instagram',
+                                        'bi-linkedin': account.provider === 'linkedin',
+                                        'bi-tiktok': account.provider === 'tiktok',
+                                        'bi-mastodon': account.provider === 'mastodon',
+                                        'bi-person-circle': !['twitter', 'facebook', 'instagram', 'linkedin', 'tiktok', 'mastodon'].includes(account.provider)
+                                    }"></i>
+                                </div>
+                            </div>
+                            <div class="account-item-info">
+                                <div class="account-item-name">{{ account.name }}</div>
+                                <div class="account-item-provider">{{ account.provider }}</div>
+                            </div>
+                            <div class="account-item-status">
+                                <span class="badge" ng-class="account.authorized ? 'badge-success' : 'badge-danger'">
+                                    <i class="bi" ng-class="account.authorized ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

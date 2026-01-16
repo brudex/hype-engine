@@ -1,0 +1,149 @@
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary">Media Library</h4>
+                    <p class="text-theme-secondary mb-0">Manage your images, videos, and media files</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item active">Media</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body" ng-controller="MixpostMediaController as mediaCtrl" ng-init="mediaCtrl.init()">
+    <div class="page-wrapper">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card media-library-card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0 text-theme-primary">
+                                    <i class="bi bi-image me-2 text-accent-cyan"></i>Your Media
+                                </h5>
+                                <p class="text-theme-secondary small mb-0 mt-1" ng-if="mediaCtrl.media.length > 0">
+                                    {{mediaCtrl.media.length}} item(s) uploaded
+                                </p>
+                            </div>
+                            <div>
+                                <label for="mediaFileInput" class="btn btn-accent-cyan mb-0 me-2">
+                                    <i class="bi bi-upload me-2"></i>Upload Media
+                                </label>
+                                <button class="btn btn-accent-purple mb-0" ng-if="mediaCtrl.uploader && mediaCtrl.uploader.myDropzone && mediaCtrl.uploader.myDropzone.files.length > 0" ng-click="mediaCtrl.saveMediaUpload()" ng-disabled="mediaCtrl.uploading">
+                                    <i class="bi bi-check-circle me-2"></i>Upload {{mediaCtrl.uploader.myDropzone.files.length}} File(s)
+                                </button>
+                                <input type="file" id="mediaFileInput" class="d-none" multiple accept="image/*,video/*">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Selection Bar -->
+                        <div class="selection-bar mb-3 p-3 bg-secondary rounded" ng-if="mediaCtrl.selectedItems.length > 0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-theme-primary">
+                                    <strong>{{mediaCtrl.selectedItems.length}}</strong> item(s) selected
+                                </span>
+                                <div>
+                                    <button class="btn btn-sm btn-accent-cyan me-2" ng-click="mediaCtrl.createPost()">
+                                        <i class="bi bi-plus-circle me-1"></i>Create Post
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" ng-click="mediaCtrl.deleteSelected()">
+                                        <i class="bi bi-trash me-1"></i>Delete Selected
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Area (always present for drag-and-drop) -->
+                        <div class="upload-area mb-4" ng-if="!mediaCtrl.uploading" id="mediaUploadArea">
+                            <div class="upload-area-content text-center py-5" ng-if="mediaCtrl.media.length === 0 && (!mediaCtrl.uploader || !mediaCtrl.uploader.myDropzone || mediaCtrl.uploader.myDropzone.files.length === 0)">
+                                <div class="upload-icon mb-3">
+                                    <i class="bi bi-cloud-upload"></i>
+                                </div>
+                                <h5 class="text-theme-primary mb-2">No media uploaded yet</h5>
+                                <p class="text-theme-secondary mb-4">Drag and drop files here or click to select</p>
+                                <label for="mediaFileInputEmpty" class="btn btn-accent-cyan">
+                                    <i class="bi bi-upload me-2"></i>Upload Your First Media
+                                </label>
+                                <input type="file" id="mediaFileInputEmpty" class="d-none" multiple accept="image/*,video/*">
+                            </div>
+                            <!-- Dropzone preview area will be shown here automatically -->
+                            <!-- Submit button for dropzone uploads -->
+                            <div class="text-center mt-3 mb-3" ng-if="mediaCtrl.uploader && mediaCtrl.uploader.myDropzone && mediaCtrl.uploader.myDropzone.files.length > 0">
+                                <button class="btn btn-accent-cyan btn-lg" ng-click="mediaCtrl.saveMediaUpload()" ng-disabled="mediaCtrl.uploading">
+                                    <i class="bi bi-upload me-2"></i>Upload {{mediaCtrl.uploader.myDropzone.files.length}} File(s)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Upload Progress -->
+                        <div class="upload-progress mb-4" ng-if="mediaCtrl.uploading">
+                            <div class="alert alert-primary d-flex align-items-center">
+                                <div class="spinner-border spinner-border-sm me-3" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span>Uploading media files...</span>
+                            </div>
+                        </div>
+
+                        <!-- Media Grid -->
+                        <div class="media-grid" ng-if="mediaCtrl.media.length > 0">
+                            <div class="row g-3">
+                                <div class="col-md-3 col-sm-6 col-xs-12" ng-repeat="item in mediaCtrl.media">
+                                    <div class="media-item-card card h-100" ng-class="{'selected': item.selected}">
+                                        <div class="media-item-image-wrapper">
+                                            <img ng-src="{{item.url || item.thumb_url}}" 
+                                                 class="media-item-image" 
+                                                 alt="{{item.name}}">
+                                            <div class="media-item-overlay">
+                                                <div class="media-item-actions">
+                                                    <button class="btn btn-sm btn-accent-cyan" ng-click="mediaCtrl.selectMedia(item)" title="Select">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                    <a ng-href="{{item.url}}" target="_blank" class="btn btn-sm btn-outline-cyan" title="View">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    <button class="btn btn-sm btn-danger" ng-click="mediaCtrl.deleteMedia(item.uuid)" title="Delete">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="media-item-selected" ng-if="item.selected">
+                                                <i class="bi bi-check-circle-fill"></i>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-2">
+                                            <p class="media-item-name mb-0 text-truncate" title="{{item.name}}">
+                                                {{item.name}}
+                                            </p>
+                                            <small class="text-theme-secondary">
+                                                {{mediaCtrl.formatFileSize(item.size)}}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Load More -->
+                            <div class="text-center mt-4" ng-if="mediaCtrl.hasMore">
+                                <button class="btn btn-outline-cyan" ng-click="mediaCtrl.loadMore()" ng-disabled="mediaCtrl.loading">
+                                    <i class="bi bi-arrow-clockwise me-2" ng-class="{'spinning': mediaCtrl.loading}"></i>
+                                    Load More
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/scripts/app/media.client.controller.js"></script>
+
+

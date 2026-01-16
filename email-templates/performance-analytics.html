@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Performance Analytics - QuizFactor</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #FFE873 0%, #FFF5A5 100%);">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #FFE873 0%, #FFF5A5 100%);">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 20px; box-shadow: 0 10px 40px rgba(29, 47, 111, 0.25);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #1d2f6f 0%, #3a4f8a 100%); padding: 50px 30px; text-align: center; border-radius: 20px 20px 0 0;">
+                            <h1 style="margin: 0; color: #FFE873; font-size: 32px; font-weight: 700; font-family: 'Bricolage Grotesque', sans-serif; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">📊 Your Performance Report</h1>
+                            <p style="margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 16px; font-family: 'Bricolage Grotesque', sans-serif;">{{period}} Analytics</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <p style="margin: 0 0 20px 0; color: #2c3e50; font-size: 16px; line-height: 1.6; font-family: 'Bricolage Grotesque', sans-serif;">
+                                Hi {{name}},
+                            </p>
+                            <p style="margin: 0 0 30px 0; color: #2c3e50; font-size: 16px; line-height: 1.6; font-family: 'Bricolage Grotesque', sans-serif;">
+                                Here's how you've been performing on QuizFactor. Keep up the great work!
+                            </p>
+                            
+                            <!-- Overall Stats -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 30px 0;">
+                                <tr>
+                                    <td style="padding: 30px; background: linear-gradient(135deg, #1d2f6f 0%, #3a4f8a 100%); border-radius: 12px; text-align: center; box-shadow: 0 8px 25px rgba(29, 47, 111, 0.25);">
+                                        <p style="margin: 0; color: #FFE873; font-size: 48px; font-weight: 700; font-family: 'Bricolage Grotesque', sans-serif;">{{totalQuizzes}}</p>
+                                        <p style="margin: 5px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px; font-family: 'Bricolage Grotesque', sans-serif;">Quizzes Completed</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Performance Metrics -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 20px 0; border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden;">
+                                <tr>
+                                    <td style="padding: 20px; background: linear-gradient(135deg, #1d2f6f 0%, #3a4f8a 100%);">
+                                        <h3 style="margin: 0; color: #FFE873; font-size: 18px; font-weight: 600; font-family: 'Bricolage Grotesque', sans-serif;">Performance Metrics</h3>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 20px; background-color: #f8f9fa;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                            {{#averageScore}}
+                                            <tr>
+                                                <td style="padding: 12px 0; color: #6c757d; font-size: 15px; font-family: 'Bricolage Grotesque', sans-serif;">Average Score:</td>
+                                                <td align="right" style="padding: 12px 0; color: #2c3e50; font-size: 15px; font-weight: 600; font-family: 'Bricolage Grotesque', sans-serif;">{{averageScore}}%</td>
+                                            </tr>
+                                            {{/averageScore}}
+                                            <tr>
+                                                <td style="padding: 12px 0; color: #6c757d; font-size: 15px; font-family: 'Bricolage Grotesque', sans-serif;">Total Questions Answered:</td>
+                                                <td align="right" style="padding: 12px 0; color: #2c3e50; font-size: 15px; font-weight: 600; font-family: 'Bricolage Grotesque', sans-serif;">{{totalQuestions}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 12px 0; color: #6c757d; font-size: 15px; font-family: 'Bricolage Grotesque', sans-serif;">Correct Answers:</td>
+                                                <td align="right" style="padding: 12px 0; color: #4CAF50; font-size: 15px; font-weight: 600; font-family: 'Bricolage Grotesque', sans-serif;">{{correctAnswers}}</td>
+                                            </tr>
+                                            {{#accuracyRate}}
+                                            <tr>
+                                                <td style="padding: 12px 0; color: #6c757d; font-size: 15px; font-family: 'Bricolage Grotesque', sans-serif;">Accuracy Rate:</td>
+                                                <td align="right" style="padding: 12px 0; color: #2c3e50; font-size: 15px; font-weight: 600; font-family: 'Bricolage Grotesque', sans-serif;">{{accuracyRate}}%</td>
+                                            </tr>
+                                            {{/accuracyRate}}
+                                            <tr>
+                                                <td style="padding: 12px 0; color: #6c757d; font-size: 15px; font-family: 'Bricolage Grotesque', sans-serif;">Time Spent:</td>
+                                                <td align="right" style="padding: 12px 0; color: #2c3e50; font-size: 15px; font-weight: 600; font-family: 'Bricolage Grotesque', sans-serif;">{{timeSpent}}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            {{#categoryPerformance}}
+                            <!-- Category Performance -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 30px 0; border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden;">
+                                <tr>
+                                    <td style="padding: 20px; background: linear-gradient(135deg, #1d2f6f 0%, #3a4f8a 100%);">
+                                        <h3 style="margin: 0; color: #FFE873; font-size: 18px; font-weight: 600; font-family: 'Bricolage Grotesque', sans-serif;">Performance by Category</h3>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 20px; background-color: #f8f9fa;">
+                                        {{#categoryPerformance}}
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 15px;">
+                                            <tr>
+                                                <td style="padding: 15px 0; border-bottom: 1px solid #e9ecef;">
+                                                    <p style="margin: 0; color: #2c3e50; font-size: 15px; font-weight: 600; font-family: 'Bricolage Grotesque', sans-serif;">{{name}}</p>
+                                                    <p style="margin: 5px 0 0 0; color: #6c757d; font-size: 13px; font-family: 'Bricolage Grotesque', sans-serif;">Score: {{score}}% | Quizzes: {{quizCount}}</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        {{/categoryPerformance}}
+                                    </td>
+                                </tr>
+                            </table>
+                            {{/categoryPerformance}}
+                            
+                            {{#improvementAreas}}
+                            <!-- Improvement Suggestions -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 30px 0;">
+                                <tr>
+                                    <td style="padding: 20px; background: linear-gradient(135deg, rgba(255, 232, 115, 0.3) 0%, rgba(255, 193, 7, 0.2) 100%); border-left: 4px solid #FFE873; border-radius: 8px;">
+                                        <p style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px; font-weight: 600; font-family: 'Bricolage Grotesque', sans-serif;">💡 Areas for Improvement</p>
+                                        <ul style="margin: 0; padding-left: 20px; color: #2c3e50; font-size: 14px; line-height: 1.8; font-family: 'Bricolage Grotesque', sans-serif;">
+                                            {{#improvementAreas}}
+                                            <li style="margin-bottom: 8px;">{{.}}</li>
+                                            {{/improvementAreas}}
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </table>
+                            {{/improvementAreas}}
+                            
+                            {{#achievements}}
+                            <!-- Achievement -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 30px 0;">
+                                <tr>
+                                    <td style="padding: 20px; background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(102, 187, 106, 0.15) 100%); border-left: 4px solid #4CAF50; border-radius: 8px;">
+                                        <p style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px; font-weight: 600; font-family: 'Bricolage Grotesque', sans-serif;">🏆 Recent Achievements</p>
+                                        <ul style="margin: 0; padding-left: 20px; color: #2c3e50; font-size: 14px; line-height: 1.8; font-family: 'Bricolage Grotesque', sans-serif;">
+                                            {{#achievements}}
+                                            <li style="margin-bottom: 8px;">{{.}}</li>
+                                            {{/achievements}}
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </table>
+                            {{/achievements}}
+                            
+                            <p style="margin: 30px 0 20px 0; color: #2c3e50; font-size: 16px; line-height: 1.6; font-family: 'Bricolage Grotesque', sans-serif;">
+                                Keep practicing to improve your scores and unlock new achievements!
+                            </p>
+                            
+                            <!-- CTA Button -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td align="center" style="padding: 20px 0;">
+                                        <a href="{{appUrl}}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #1d2f6f 0%, #3a4f8a 100%); color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 16px; font-family: 'Bricolage Grotesque', sans-serif; box-shadow: 0 4px 15px rgba(29, 47, 111, 0.25);">View Full Analytics</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px; background: linear-gradient(135deg, rgba(248, 249, 250, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%); border-radius: 0 0 20px 20px; text-align: center;">
+                            <p style="margin: 0 0 10px 0; color: #6c757d; font-size: 14px; font-family: 'Bricolage Grotesque', sans-serif;">
+                                Keep learning and improving!<br>
+                                <strong style="color: #1d2f6f; font-weight: 600;">The QuizFactor Team</strong>
+                            </p>
+                            <p style="margin: 20px 0 0 0; color: #999999; font-size: 12px; font-family: 'Bricolage Grotesque', sans-serif;">
+                                © {{year}} QuizFactor. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+

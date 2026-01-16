@@ -1,0 +1,49 @@
+<!-- Getting Started Section -->
+<div ng-if="apiDocCtrl.activeSection === 'getting-started'" class="api-doc-section">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="api-doc-title mb-0">Getting Started</h2>
+        <a href="/download/postman/HypeEngine-API-v1.postman_collection.json" 
+           class="btn btn-outline-primary btn-sm" 
+           download="HypeEngine-API-v1.postman_collection.json"
+           title="Download Postman Collection">
+            <i class="bi bi-download me-1"></i>Download Postman Collection
+        </a>
+    </div>
+    
+    <p class="api-doc-description">
+        The HypeEngine API provides programmatic access to manage your social media projects, accounts, posts, media files, and tags. 
+        Get started by generating an API key and making your first request.
+    </p>
+    
+    <div class="callout-box callout-info">
+        <i class="bi bi-info-circle"></i>
+        <div>
+            <strong>Postman Collection:</strong> Download our <a href="/download/postman/HypeEngine-API-v1.postman_collection.json" download class="api-doc-link">Postman collection</a> to quickly test all endpoints with pre-configured requests.
+        </div>
+    </div>
+    
+    <h3 class="api-doc-subtitle">Base URL</h3>
+    <p class="api-doc-description">
+        All API requests should be made to your HypeEngine instance base URL:
+    </p>
+    <div class="code-block-wrapper">
+        <div class="code-block-header">
+            <span>Base URL</span>
+            <button class="btn-copy" ng-click="apiDocCtrl.copyToClipboard('base-url')" title="Copy to clipboard">
+                <i class="bi bi-clipboard"></i>
+            </button>
+        </div>
+        <div class="code-block" id="base-url">
+            <pre><code><%= typeof apiBaseUrl !== 'undefined' ? apiBaseUrl : 'https://your-domain.com' %></code></pre>
+        </div>
+    </div>
+    
+    <h3 class="api-doc-subtitle">Quick Start</h3>
+    <ol class="api-doc-list">
+        <li><strong>Generate an API Key:</strong> Navigate to <a href="/dashboard/access-tokens" class="api-doc-link">Access Tokens</a> and create a new access token. Copy and securely store your API key immediately.</li>
+        <li><strong>Authenticate Requests:</strong> Include your API key in the <code>Authorization</code> header as <code>Bearer &lt;your-api-key&gt;</code>. See the <a href="#" ng-click="apiDocCtrl.navigateTo('auth-method'); $event.preventDefault();" class="api-doc-link">Authentication Method</a> section for details.</li>
+        <li><strong>Download Postman Collection:</strong> Download our <a href="/download/postman/HypeEngine-API-v1.postman_collection.json" download class="api-doc-link">Postman collection</a> and import it into Postman. Set your <code>base_url</code> and <code>access_token</code> variables.</li>
+        <li><strong>Make Your First Request:</strong> Try the <a href="#" ng-click="apiDocCtrl.navigateTo('list-projects'); $event.preventDefault();" class="api-doc-link">List Projects</a> or <a href="#" ng-click="apiDocCtrl.navigateTo('upload-media'); $event.preventDefault();" class="api-doc-link">Upload Media</a> endpoints to get started.</li>
+    </ol>
+</div>
+
