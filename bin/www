@@ -5,7 +5,6 @@ const debug = require('debug')('Cache-Checkout:server');
 const http = require('http');
 const db = require("../models");
 const logger = require("../utils/logger");
-const jobManager = require("../jobs");
 const app = require('../app');
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);

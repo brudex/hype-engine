@@ -4,14 +4,14 @@ module.exports = {
       script: "./bin/www",
       env: {
         NODE_ENV: "production",
-        PORT: 3045,
+        PORT: 3053,
       }
     },{
       name: "HypeEngine Job Server",
       script: "./bin/job-www",
       env: {
         NODE_ENV: "production",
-        PORT: 3046,
+        PORT: 3054,
       }
     }]
 };

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-PROJECT_FOLDER=/var/www/quize-factor
+PROJECT_FOLDER=/var/www/hypeengine
 cd ${PROJECT_FOLDER}
 echo "Starting Deployment"
 nvm use 20
