@@ -76,7 +76,7 @@ module.exports = (sequelize, DataTypes) => {
             }
         }
     }, {
-        tableName: "mixpost_api_keys",
+        tableName: "api_keys",
         timestamps: true
     });
 

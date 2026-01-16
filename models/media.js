@@ -49,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true
         }
     }, {
-        tableName: "mixpost_media",
+        tableName: "media",
         timestamps: true
     });
 

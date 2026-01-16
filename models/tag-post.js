@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         }
     }, {
-        tableName: "mixpost_tag_post",
+        tableName: "tag_post",
         timestamps: false
     });
 

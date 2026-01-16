@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: false
         }
     }, {
-        tableName: "mixpost_services",
+        tableName: "services",
         timestamps: false,
         hooks: {
             // Encrypt configuration before saving

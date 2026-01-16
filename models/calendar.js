@@ -66,7 +66,7 @@ module.exports = (sequelize, DataTypes) => {
             comment: 'Additional metadata for the calendar event'
         }
     }, {
-        tableName: "mixpost_calendars",
+        tableName: "calendars",
         timestamps: true,
         indexes: [
             {

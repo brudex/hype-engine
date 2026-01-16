@@ -20,13 +20,13 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(36),
             allowNull: false,
             references: {
-                model: 'mixpost_projects',
+                model: 'projects',
                 key: 'uuid'
             },
             onDelete: 'CASCADE'
         }
     }, {
-        tableName: "mixpost_tags",
+        tableName: "tags",
         timestamps: true
     });
 

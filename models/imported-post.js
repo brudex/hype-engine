@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         }
     }, {
-        tableName: "mixpost_imported_posts",
+        tableName: "imported_posts",
         timestamps: false,
         indexes: [
             {

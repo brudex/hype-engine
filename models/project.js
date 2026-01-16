@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
             comment: 'URL/path to the project image/logo'
         }
     }, {
-        tableName: "mixpost_projects",
+        tableName: "projects",
         timestamps: true
     });
 

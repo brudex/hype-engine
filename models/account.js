@@ -47,7 +47,7 @@ module.exports = (sequelize, DataTypes) => {
         }
       
     }, {
-        tableName: "mixpost_accounts",
+        tableName: "accounts",
         timestamps: true,
         indexes: [
             {

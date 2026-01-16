@@ -37,7 +37,7 @@ module.exports = (sequelize, DataTypes) => {
             comment: 'UUID of the project this post belongs to'
         }
     }, {
-        tableName: "mixpost_posts",
+        tableName: "posts",
         timestamps: true,
         paranoid: true, // Enables soft deletes
         deletedAt: 'deleted_at'
