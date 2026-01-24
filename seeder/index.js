@@ -9,7 +9,7 @@ const seeders = [
     // 'post-account.seeder.js',
     // 'metric.seeder.js',
     // 'audience.seeder.js',
-    'facebook-insight.seeder.js'
+    'job-batch.seeder.js'
 ];
 
 

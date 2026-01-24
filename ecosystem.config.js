@@ -5,6 +5,7 @@ module.exports = {
       env: {
         NODE_ENV: "production",
         PORT: 3053,
+        APP_NAME: "HypeEngine",
       }
     },{
       name: "HypeEngine Job Server",
@@ -12,6 +13,7 @@ module.exports = {
       env: {
         NODE_ENV: "production",
         PORT: 3054,
+        APP_NAME: "JobServer",
       }
     }]
 };

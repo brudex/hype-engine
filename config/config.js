@@ -6,7 +6,7 @@ const config = {
     development: {
         root: rootPath,
         app: {
-            name: "mix-post-node-better",
+            name: "hypeengine",
         },
         port: process.env.PORT,
         dbhost: process.env.DBHOST,
@@ -21,7 +21,7 @@ const config = {
     production: {
         root: rootPath,
         app: {
-            name: "mix-post-node-better",
+            name: "hypeengine",
         },
         port: process.env.PORT,
         dbhost: process.env.DBHOST,

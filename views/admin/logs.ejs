@@ -1,10 +1,12 @@
+<link rel="stylesheet" type="text/css" href="/css/logs.css">
+
 <div class="page-header mb-0">
     <div class="page-block">
         <div class="row align-items-center">
             <div class="col-md-12">
                 <div class="page-header-title">
-                    <h4 class="m-b-5 text-theme-primary">System Logs</h4>
-                    <p class="text-theme-secondary mb-0">View and manage application logs</p>
+                    <h2 class="m-b-5 text-theme-primary" style="font-size: 28px; font-weight: 700;">System Logs</h2>
+                    <p class="text-theme-secondary mb-0" style="font-size: 14px;">View and manage application logs for debugging, auditing automation jobs, integrations, and user actions</p>
                 </div>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
@@ -16,167 +18,377 @@
     </div>
 </div>
 
-<div class="main-body mt-0">
+<div class="main-body mt-0" ng-controller="LogsController as logsCtrl" ng-init="logsCtrl.init()">
     <div class="page-wrapper">
         <div class="container-fluid">
-            <!-- Filters -->
-            <div class="card mb-4">
+            <!-- Summary Bar -->
+            <div class="card mb-4" style="border: 1px solid var(--theme-border); background: var(--theme-secondary);">
+                <div class="card-body py-3">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(0, 239, 255, 0.1); display: flex; align-items: center; justify-content: center; color: var(--theme-accent-cyan);">
+                                        <i class="bi bi-list-ul" style="font-size: 18px;"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-theme-secondary" style="font-size: 12px; font-weight: 500;">Total Logs</div>
+                                    <div class="text-theme-primary" style="font-size: 20px; font-weight: 700;">
+                                        <span ng-if="logsCtrl.summary">{{ logsCtrl.summary.totalLogs.toLocaleString() }}</span>
+                                        <span ng-if="!logsCtrl.summary">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(220, 53, 69, 0.1); display: flex; align-items: center; justify-content: center; color: #dc3545;">
+                                        <i class="bi bi-exclamation-triangle" style="font-size: 18px;"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-theme-secondary" style="font-size: 12px; font-weight: 500;">Errors Today</div>
+                                    <div class="text-theme-primary" style="font-size: 20px; font-weight: 700; color: #dc3545;">
+                                        <span ng-if="logsCtrl.summary">{{ logsCtrl.summary.errorsToday.toLocaleString() }}</span>
+                                        <span ng-if="!logsCtrl.summary">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(255, 193, 7, 0.1); display: flex; align-items: center; justify-content: center; color: #ffc107;">
+                                        <i class="bi bi-exclamation-circle" style="font-size: 18px;"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-theme-secondary" style="font-size: 12px; font-weight: 500;">Warnings Today</div>
+                                    <div class="text-theme-primary" style="font-size: 20px; font-weight: 700; color: #ffc107;">
+                                        <span ng-if="logsCtrl.summary">{{ logsCtrl.summary.warningsToday.toLocaleString() }}</span>
+                                        <span ng-if="!logsCtrl.summary">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(0, 239, 255, 0.1); display: flex; align-items: center; justify-content: center; color: var(--theme-accent-cyan);">
+                                        <i class="bi bi-clock" style="font-size: 18px;"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-theme-secondary" style="font-size: 12px; font-weight: 500;">Last Log</div>
+                                    <div class="text-theme-primary" style="font-size: 13px; font-weight: 500;">
+                                        <span ng-if="logsCtrl.summary && logsCtrl.summary.lastLogTimestamp" class="relative-time" data-timestamp="{{ logsCtrl.getTimestamp(logsCtrl.summary.lastLogTimestamp) }}"></span>
+                                        <span ng-if="logsCtrl.summary && !logsCtrl.summary.lastLogTimestamp">Never</span>
+                                        <span ng-if="!logsCtrl.summary">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters & Search -->
+            <div class="card mb-4" style="border: 1px solid var(--theme-border); background: var(--theme-secondary);">
                 <div class="card-body">
-                    <form method="GET" action="/admin/logs" class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label">Level</label>
-                            <select name="level" class="form-select">
-                                <option value="">All Levels</option>
-                                <% filters.levels.forEach(level => { %>
-                                    <option value="<%= level %>" <%= filters.level === level ? 'selected' : '' %>><%= level.toUpperCase() %></option>
-                                <% }); %>
-                            </select>
+                    <form id="logs-filter-form" class="row g-3">
+                        <!-- Level and Service Pills (Same Row) -->
+                        <div class="col-12">
+                            <div class="row g-3">
+                                <!-- Level Pills -->
+                                <div class="col-md-6">
+                                    <label class="form-label text-theme-secondary" style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Level</label>
+                                    <div class="d-flex flex-wrap gap-2" id="level-filters">
+                                        <button type="button" class="filter-pill" data-filter="level" data-value="" data-active="<%= !filters.level ? 'true' : 'false' %>">
+                                            All
+                                        </button>
+                                        <% filters.levels.forEach(level => { %>
+                                            <button type="button" class="filter-pill" data-filter="level" data-value="<%= level %>" data-active="<%= filters.level === level ? 'true' : 'false' %>">
+                                                <%= level.toUpperCase() %>
+                                            </button>
+                                        <% }); %>
+                                    </div>
+                                    <input type="hidden" name="level" id="filter-level" value="<%= filters.level || '' %>">
+                                </div>
+                                <!-- Service Pills -->
+                                <div class="col-md-6">
+                                    <label class="form-label text-theme-secondary" style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Service</label>
+                                    <div class="d-flex flex-wrap gap-2" id="service-filters">
+                                        <button type="button" class="filter-pill" data-filter="service" data-value="" data-active="<%= !filters.service ? 'true' : 'false' %>">
+                                            All
+                                        </button>
+                                        <% if (filters.services && filters.services.length > 0) { %>
+                                            <% filters.services.forEach(service => { %>
+                                                <button type="button" class="filter-pill" data-filter="service" data-value="<%= service %>" data-active="<%= filters.service === service ? 'true' : 'false' %>">
+                                                    <%= service %>
+                                                </button>
+                                            <% }); %>
+                                        <% } %>
+                                    </div>
+                                    <input type="hidden" name="service" id="filter-service" value="<%= filters.service || '' %>">
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Service</label>
-                            <select name="service" class="form-select">
-                                <option value="">All Services</option>
-                                <% filters.services.forEach(service => { %>
-                                    <option value="<%= service %>" <%= filters.service === service ? 'selected' : '' %>><%= service %></option>
-                                <% }); %>
-                            </select>
+
+                        <!-- Time Range Pills -->
+                        <div class="col-12">
+                            <label class="form-label text-theme-secondary" style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Time Range</label>
+                            <div class="d-flex flex-wrap gap-2 align-items-center" id="time-range-filters">
+                                <button type="button" class="filter-pill" data-filter="timeRange" data-value="" data-active="<%= !filters.timeRange ? 'true' : 'false' %>">
+                                    All Time
+                                </button>
+                                <button type="button" class="filter-pill" data-filter="timeRange" data-value="15m" data-active="<%= filters.timeRange === '15m' ? 'true' : 'false' %>">
+                                    Last 15m
+                                </button>
+                                <button type="button" class="filter-pill" data-filter="timeRange" data-value="1h" data-active="<%= filters.timeRange === '1h' ? 'true' : 'false' %>">
+                                    Last 1h
+                                </button>
+                                <button type="button" class="filter-pill" data-filter="timeRange" data-value="24h" data-active="<%= filters.timeRange === '24h' ? 'true' : 'false' %>">
+                                    Last 24h
+                                </button>
+                                <button type="button" class="filter-pill" data-filter="timeRange" data-value="custom" data-active="<%= filters.timeRange === 'custom' ? 'true' : 'false' %>" id="custom-range-pill">
+                                    Custom Range
+                                </button>
+                            </div>
+                            <input type="hidden" name="timeRange" id="filter-timeRange" value="<%= filters.timeRange || '' %>">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Search</label>
-                            <input type="text" name="search" class="form-control" placeholder="Search messages..." value="<%= filters.search || '' %>">
+
+                        <!-- Date Range Selection (shown when Custom Range is selected) -->
+                        <div class="col-12" id="date-range-container" style="display: <%= filters.timeRange === 'custom' ? 'block' : 'none' %>;">
+                            <label class="form-label text-theme-secondary" style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Date Range</label>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-5">
+                                    <label class="form-label text-theme-secondary" style="font-size: 12px;">Start Date</label>
+                                    <input type="date" 
+                                           name="startDate" 
+                                           id="start-date" 
+                                           class="form-control" 
+                                           value="<%= filters.startDate ? new Date(filters.startDate).toISOString().slice(0, 10) : '' %>"
+                                           style="background: var(--theme-primary); border: 1px solid var(--theme-border); color: var(--theme-text-primary);">
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label text-theme-secondary" style="font-size: 12px;">End Date</label>
+                                    <input type="date" 
+                                           name="endDate" 
+                                           id="end-date" 
+                                           class="form-control" 
+                                           value="<%= filters.endDate ? new Date(filters.endDate).toISOString().slice(0, 10) : '' %>"
+                                           style="background: var(--theme-primary); border: 1px solid var(--theme-border); color: var(--theme-text-primary);">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label" style="visibility: hidden;">&nbsp;</label>
+                                    <button type="button" 
+                                            class="btn btn-primary w-100" 
+                                            ng-click="logsCtrl.applyCustomDateRange()"
+                                            style="min-width: 100px;">
+                                        <i class="bi bi-search me-1"></i> Search
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
-                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+
+                        <!-- Search & Actions -->
+                        <div class="col-12">
+                            <div class="d-flex gap-2 align-items-end">
+                                <div class="flex-grow-1">
+                                    <label class="form-label text-theme-secondary" style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Search</label>
+                                    <div class="position-relative">
+                                        <input type="text" 
+                                               name="search" 
+                                               id="search-input" 
+                                               class="form-control" 
+                                               placeholder="Search messages... (Press '/' to focus)" 
+                                               value="<%= filters.search || '' %>"
+                                               style="padding-right: 40px; background: var(--theme-primary); border: 1px solid var(--theme-border); color: var(--theme-text-primary);">
+                                        <button type="button" 
+                                                class="btn btn-link p-0 position-absolute" 
+                                                id="clear-search"
+                                                style="right: 8px; top: 50%; transform: translateY(-50%); color: var(--theme-text-secondary); display: <%= filters.search ? 'block' : 'none' %>; text-decoration: none;"
+                                                ng-click="logsCtrl.clearSearch()">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="form-label" style="visibility: hidden;">&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary" style="min-width: 100px;">
+                                        <i class="bi bi-funnel me-1"></i> Filter
+                                    </button>
+                                </div>
+                                <div>
+                                    <label class="form-label" style="visibility: hidden;">&nbsp;</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="auto-refresh-toggle" style="cursor: pointer;">
+                                        <label class="form-check-label text-theme-secondary" for="auto-refresh-toggle" style="font-size: 12px; cursor: pointer;">
+                                            Auto-refresh
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
             </div>
 
             <!-- Logs Table -->
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Logs (<%= pagination.totalItems %>)</h5>
-                    <button class="btn btn-sm btn-danger" onclick="cleanupLogs()">Cleanup Old Logs</button>
+            <div class="card" style="border: 1px solid var(--theme-border); background: var(--theme-secondary);">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: transparent; border-bottom: 1px solid var(--theme-border); padding: 16px 24px;">
+                    <h5 class="mb-0 text-theme-primary" style="font-weight: 600;">
+                        Logs <span class="text-theme-secondary" style="font-weight: 400;">(<span id="logs-count" ng-if="logsCtrl.pagination">{{ logsCtrl.pagination.totalItems.toLocaleString() }}</span><span ng-if="!logsCtrl.pagination">-</span>)</span>
+                    </h5>
+                    <button class="btn btn-sm logs-cleanup-btn" ng-click="logsCtrl.cleanupLogs()">
+                        <i class="bi bi-trash me-1"></i> Cleanup Old Logs
+                    </button>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 50000px; overflow-y: auto;">
+                        <table class="table table-hover mb-0" id="logs-table" style="margin-bottom: 0; background: transparent;">
+                            <thead class="table-header-sticky" style="position: sticky; top: 0; z-index: 10; background: var(--theme-secondary); border-bottom: 2px solid var(--theme-border);">
                                 <tr>
-                                    <th>Timestamp</th>
-                                    <th>Level</th>
-                                    <th>Service</th>
-                                    <th>Message</th>
-                                    <th>Meta</th>
+                                    <th style="width: 140px; padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Timestamp</th>
+                                    <th style="width: 100px; padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Level</th>
+                                    <th style="width: 180px; padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Service</th>
+                                    <th style="padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Message</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <% if (logs.length === 0) { %>
-                                    <tr>
-                                        <td colspan="5" class="text-center">No logs found</td>
-                                    </tr>
-                                <% } else { %>
-                                    <% logs.forEach(log => { %>
-                                        <tr>
-                                            <td><%= new Date(log.createdAt).toLocaleString() %></td>
-                                            <td>
-                                                <span class="badge bg-<%= log.level === 'error' ? 'danger' : log.level === 'warn' ? 'warning' : log.level === 'info' ? 'info' : 'secondary' %>">
-                                                    <%= log.level.toUpperCase() %>
-                                                </span>
-                                            </td>
-                                            <td><%= log.service || '-' %></td>
-                                            <td><%= log.message %></td>
-                                            <td>
-                                                <% if (log.meta) { %>
-                                                    <button class="btn btn-sm btn-outline-secondary" onclick="showMeta('<%= log.uuid %>')">View Meta</button>
-                                                    <div id="meta-<%= log.uuid %>" style="display:none;" class="mt-2">
-                                                        <pre class="bg-light p-2 rounded"><%= JSON.stringify(log.meta, null, 2) %></pre>
-                                                    </div>
-                                                <% } else { %>
-                                                    -
-                                                <% } %>
-                                            </td>
-                                        </tr>
-                                    <% }); %>
-                                <% } %>
+                            <tbody id="logs-tbody" style="background: transparent;">
+                                <tr ng-if="logsCtrl.loading" style="background: var(--theme-primary); border-bottom: 1px solid #2F2F33;">
+                                    <td colspan="4" class="text-center py-5" style="color: var(--theme-text-secondary); font-size: 14px;">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status" style="border-color: var(--theme-accent-cyan); border-right-color: transparent;"></div>
+                                        Loading logs...
+                                    </td>
+                                </tr>
+                                <tr ng-if="!logsCtrl.loading && (!logsCtrl.logs || logsCtrl.logs.length === 0)" 
+                                    style="background: #1F1F23; border-bottom: 1px solid #2F2F33;">
+                                    <td colspan="4" class="text-center" style="padding: 40px 16px; color: #B0B0B0; font-size: 14px; background: inherit;">
+                                        <i class="bi bi-inbox me-2" style="font-size: 18px; opacity: 0.6;"></i>No logs found
+                                    </td>
+                                </tr>
+                                <tr ng-repeat="log in logsCtrl.logs track by log.uuid" 
+                                    class="log-row" 
+                                    data-uuid="{{ log.uuid }}" 
+                                    data-level="{{ log.level }}"
+                                    ng-click="logsCtrl.showLogDetail(log.uuid)">
+                                    <td class="log-timestamp" style="font-size: 12px; color: #B0B0B0;">
+                                        <span class="relative-time" data-timestamp="{{ logsCtrl.getTimestamp(log.createdAt) }}"></span>
+                                    </td>
+                                    <td>
+                                        <span class="log-level-badge badge" 
+                                              ng-style="{'background': logsCtrl.getLevelColor(log.level)}"
+                                              style="display: inline-block; min-width: 70px; text-align: center; padding: 6px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; color: #fff;">
+                                            {{ log.level.toUpperCase() }}
+                                        </span>
+                                    </td>
+                                    <td style="font-size: 13px; color: #FFFFFF;">
+                                        <span ng-if="log.service">{{ log.service }}</span>
+                                        <span ng-if="!log.service" style="color: #B0B0B0;">-</span>
+                                    </td>
+                                    <td>
+                                        <div class="log-message" 
+                                             data-full="{{ log.message }}"
+                                             style="font-size: 13px; color: #FFFFFF; line-height: 1.5;">
+                                            <span class="log-message-text">{{ log.message.length > 150 ? (log.message.substring(0, 150) + '...') : log.message }}</span>
+                                            <button ng-if="log.message.length > 150" 
+                                                    class="btn btn-link p-0 ms-1 expand-message" 
+                                                    style="font-size: 11px; color: #00EFFF; text-decoration: none; padding: 0 !important;"
+                                                    ng-click="logsCtrl.toggleMessage($event.target.closest('button')); $event.stopPropagation()">
+                                                <i class="bi bi-chevron-down"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
 
                     <!-- Pagination -->
-                    <% if (pagination.totalPages > 1) { %>
+                    <div class="card-footer" ng-if="logsCtrl.pagination && logsCtrl.pagination.totalPages > 1" style="background: transparent; border-top: 1px solid var(--theme-border); padding: 16px 24px;">
                         <nav aria-label="Logs pagination">
-                            <ul class="pagination justify-content-center mt-4">
-                                <% if (pagination.currentPage > 1) { %>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=<%= pagination.currentPage - 1 %><%= filters.level ? '&level=' + filters.level : '' %><%= filters.service ? '&service=' + filters.service : '' %><%= filters.search ? '&search=' + filters.search : '' %>">Previous</a>
-                                    </li>
-                                <% } %>
+                            <ul class="pagination justify-content-center mb-0">
+                                <li class="page-item" ng-if="logsCtrl.pagination.currentPage > 1">
+                                    <a class="page-link" href="javascript:void(0)" ng-click="logsCtrl.goToPage(logsCtrl.pagination.currentPage - 1)" style="background: var(--theme-primary); border-color: var(--theme-border); color: var(--theme-text-primary); cursor: pointer;">Previous</a>
+                                </li>
                                 
-                                <% for (let i = 1; i <= pagination.totalPages; i++) { %>
-                                    <% if (i === pagination.currentPage) { %>
-                                        <li class="page-item active">
-                                            <span class="page-link"><%= i %></span>
-                                        </li>
-                                    <% } else if (i === 1 || i === pagination.totalPages || (i >= pagination.currentPage - 2 && i <= pagination.currentPage + 2)) { %>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page=<%= i %><%= filters.level ? '&level=' + filters.level : '' %><%= filters.service ? '&service=' + filters.service : '' %><%= filters.search ? '&search=' + filters.search : '' %>"><%= i %></a>
-                                        </li>
-                                    <% } else if (i === pagination.currentPage - 3 || i === pagination.currentPage + 3) { %>
-                                        <li class="page-item disabled">
-                                            <span class="page-link">...</span>
-                                        </li>
-                                    <% } %>
-                                <% } %>
+                                <li class="page-item" ng-repeat="i in logsCtrl.getPaginationPages() track by $index">
+                                    <span ng-if="i === '...'" class="page-link" style="background: var(--theme-primary); border-color: var(--theme-border); color: var(--theme-text-secondary);">...</span>
+                                    <span ng-if="i !== '...' && i === logsCtrl.pagination.currentPage" class="page-link" style="background: var(--theme-accent-cyan); border-color: var(--theme-accent-cyan); color: var(--theme-primary);">{{ i }}</span>
+                                    <a ng-if="i !== '...' && i !== logsCtrl.pagination.currentPage" 
+                                       class="page-link" 
+                                       href="javascript:void(0)" 
+                                       ng-click="logsCtrl.goToPage(i)" 
+                                       style="background: var(--theme-primary); border-color: var(--theme-border); color: var(--theme-text-primary); cursor: pointer;">{{ i }}</a>
+                                </li>
                                 
-                                <% if (pagination.currentPage < pagination.totalPages) { %>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=<%= pagination.currentPage + 1 %><%= filters.level ? '&level=' + filters.level : '' %><%= filters.service ? '&service=' + filters.service : '' %><%= filters.search ? '&search=' + filters.search : '' %>">Next</a>
-                                    </li>
-                                <% } %>
+                                <li class="page-item" ng-if="logsCtrl.pagination.currentPage < logsCtrl.pagination.totalPages">
+                                    <a class="page-link" href="javascript:void(0)" ng-click="logsCtrl.goToPage(logsCtrl.pagination.currentPage + 1)" style="background: var(--theme-primary); border-color: var(--theme-border); color: var(--theme-text-primary); cursor: pointer;">Next</a>
+                                </li>
                             </ul>
                         </nav>
-                    <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Log Detail Drawer -->
+        <div class="log-drawer" id="log-drawer" ng-show="logsCtrl.drawerVisible">
+            <div class="log-drawer-overlay" ng-click="logsCtrl.closeLogDrawer()"></div>
+            <div class="log-drawer-content" ng-if="logsCtrl.selectedLog">
+                <div class="log-drawer-header">
+                    <h5 class="mb-0 text-theme-primary">Log Details</h5>
+                    <button class="btn btn-link p-0" ng-click="logsCtrl.closeLogDrawer()" style="color: var(--theme-text-secondary); text-decoration: none;">
+                        <i class="bi bi-x-lg" style="font-size: 20px;"></i>
+                    </button>
+                </div>
+                <div class="log-drawer-body">
+                    <!-- Level and Timestamp Section -->
+                    <div class="log-detail-section">
+                        <div class="d-flex align-items-center gap-4" style="flex-wrap: wrap;">
+                            <div>
+                                <div class="log-detail-section-title" style="margin-bottom: 4px;">
+                                    <span>Level</span>
+                                </div>
+                                <span class="badge" ng-style="{'background': logsCtrl.getLevelColor(logsCtrl.selectedLog.level)}" style="color: #fff; padding: 6px 12px; font-size: 11px; font-weight: 600;">
+                                    {{ logsCtrl.selectedLog.level.toUpperCase() }}
+                                </span>
+                            </div>
+                            <div>
+                                <div class="log-detail-section-title" style="margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                                    <span>Timestamp</span>
+                                   
+                                </div>
+                                <div style="color: var(--theme-text-primary); font-size: 13px;" ng-if="logsCtrl.logDateInfo">
+                                    <span><strong>Absolute:</strong> {{ logsCtrl.logDateInfo.absolute }}</span>
+                                    <span class="ms-3"><strong>Relative:</strong> {{ logsCtrl.logDateInfo.relative }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Message and Metadata Section -->
+                    <div class="log-detail-section">
+                        <div class="log-detail-section-title">
+                            <span>Message<span ng-if="logsCtrl.selectedLog.meta"> & Metadata</span></span>
+                            <button class="copy-btn" ng-click="logsCtrl.copyLogMessage($event.target.closest('button'))">
+                                <i class="bi bi-copy me-1"></i> Copy
+                            </button>
+                        </div>
+                        <div class="log-detail-section-content" style="white-space: pre-wrap; word-wrap: break-word; text-align: left;">
+{{ logsCtrl.selectedLog.message }}<span ng-if="logsCtrl.selectedLog.meta">
+
+--- Metadata ---
+{{ logsCtrl.formatMetadata(logsCtrl.selectedLog.meta) }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-function showMeta(uuid) {
-    const metaDiv = document.getElementById('meta-' + uuid);
-    if (metaDiv.style.display === 'none') {
-        metaDiv.style.display = 'block';
-    } else {
-        metaDiv.style.display = 'none';
-    }
-}
-
-function cleanupLogs() {
-    if (!confirm('Are you sure you want to cleanup logs older than 30 days?')) {
-        return;
-    }
-    
-    fetch('/admin/api/logs/cleanup', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ daysToKeep: 30 })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Logs cleaned up successfully. ' + data.deletedCount + ' logs deleted.');
-            location.reload();
-        } else {
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        alert('Error: ' + error.message);
-    });
-}
-</script>
+<script type="text/javascript" src="/scripts/app/logs.client.controller.js"></script>

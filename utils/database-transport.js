@@ -1,5 +1,6 @@
 const winston = require('winston');
 const { Transform } = require('stream');
+const config = require('../config/config');
 
 /**
  * Custom Winston Transport for Database Logging
@@ -104,7 +105,7 @@ class DatabaseTransport extends winston.Transport {
             level: level || 'info',
             message: message || '',
             meta: Object.keys(cleanMeta).length > 0 ? cleanMeta : null,
-            service: service || 'mixpost-node-better',
+            service: service || process.env.APP_NAME || config.app.name,
             createdAt: timestamp ? new Date(timestamp) : new Date(),
             updatedAt: new Date()
         };

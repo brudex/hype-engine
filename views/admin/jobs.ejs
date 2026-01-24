@@ -1,3 +1,5 @@
+<link rel="stylesheet" type="text/css" href="/css/jobs.css">
+
 <div class="page-header mb-0">
     <div class="page-block">
         <div class="row align-items-center">
@@ -16,25 +18,29 @@
     </div>
 </div>
 
-<div class="main-body mt-0">
+<div class="main-body mt-0" ng-controller="JobsController as jobsCtrl" ng-init="jobsCtrl.init()">
     <div class="page-wrapper">
         <div class="container-fluid">
             <!-- Filters -->
-            <div class="card mb-4">
+            <div class="card mb-4" style="border: 1px solid var(--theme-border); background: var(--theme-secondary);">
                 <div class="card-body">
-                    <form method="GET" action="/admin/jobs" class="row g-3">
+                    <form class="row g-3" ng-submit="jobsCtrl.fetchJobs(); $event.preventDefault();">
                         <div class="col-md-4">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-select">
+                            <label class="form-label text-theme-secondary" style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Status</label>
+                            <select name="status" 
+                                    class="form-select" 
+                                    ng-model="jobsCtrl.filters.status"
+                                    ng-change="jobsCtrl.currentPage = 1; jobsCtrl.fetchJobs();"
+                                    style="background: var(--theme-primary); border: 1px solid var(--theme-border); color: var(--theme-text-primary);">
                                 <option value="">All Status</option>
-                                <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active</option>
-                                <option value="completed" <%= filters.status === 'completed' ? 'selected' : '' %>>Completed</option>
-                                <option value="failed" <%= filters.status === 'failed' ? 'selected' : '' %>>Failed</option>
-                                <option value="cancelled" <%= filters.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                                <option value="failed">Failed</option>
+                                <option value="cancelled">Cancelled</option>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
+                            <label class="form-label" style="visibility: hidden;">&nbsp;</label>
                             <button type="submit" class="btn btn-primary w-100">Filter</button>
                         </div>
                     </form>
@@ -42,123 +48,111 @@
             </div>
 
             <!-- Jobs Table -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Job Batches (<%= pagination.totalItems %>)</h5>
+            <div class="card" style="border: 1px solid var(--theme-border); background: var(--theme-secondary);">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: transparent; border-bottom: 1px solid var(--theme-border); padding: 16px 24px;">
+                    <h5 class="mb-0 text-theme-primary" style="font-weight: 600;">
+                        Job Batches <span class="text-theme-secondary" style="font-weight: 400;">(<span ng-if="jobsCtrl.pagination">{{ jobsCtrl.pagination.totalItems.toLocaleString() }}</span><span ng-if="!jobsCtrl.pagination">-</span>)</span>
+                    </h5>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 50000px; overflow-y: auto;">
+                        <table class="table table-hover mb-0" id="jobs-table" style="margin-bottom: 0; background: transparent;">
+                            <thead class="table-header-sticky" style="position: sticky; top: 0; z-index: 10; background: var(--theme-secondary); border-bottom: 2px solid var(--theme-border);">
                                 <tr>
-                                    <th>UUID</th>
-                                    <th>Name</th>
-                                    <th>Status</th>
-                                    <th>Progress</th>
-                                    <th>Total Jobs</th>
-                                    <th>Pending</th>
-                                    <th>Failed</th>
-                                    <th>Created</th>
-                                    <th>Finished</th>
-                                    <th>Actions</th>
+                                    <th style="width: 200px; padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Name</th>
+                                    <th style="width: 120px; padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Status</th>
+                                    <th style="width: 140px; padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Progress</th>
+                                    <th style="width: 100px; padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Total Jobs</th>
+                                    <th style="width: 100px; padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Pending</th>
+                                    <th style="width: 100px; padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Failed</th>
+                                    <th style="width: 180px; padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Created</th>
+                                    <th style="width: 180px; padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Finished</th>
+                                    <th style="width: 100px; padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-text-secondary);">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <% if (jobBatches.length === 0) { %>
-                                    <tr>
-                                        <td colspan="10" class="text-center">No job batches found</td>
-                                    </tr>
-                                <% } else { %>
-                                    <% jobBatches.forEach(job => { %>
-                                        <tr>
-                                            <td><small><%= job.uuid.substring(0, 8) %>...</small></td>
-                                            <td><%= job.name %></td>
-                                            <td>
-                                                <% if (job.finishedAt) { %>
-                                                    <span class="badge bg-success">Completed</span>
-                                                <% } else if (job.cancelledAt) { %>
-                                                    <span class="badge bg-secondary">Cancelled</span>
-                                                <% } else { %>
-                                                    <span class="badge bg-primary">Active</span>
-                                                <% } %>
-                                                <% if (job.failedJobs > 0) { %>
-                                                    <span class="badge bg-danger">Has Failures</span>
-                                                <% } %>
-                                            </td>
-                                            <td>
-                                                <% 
-                                                    const completed = job.totalJobs - job.pendingJobs;
-                                                    const progress = job.totalJobs > 0 ? Math.round((completed / job.totalJobs) * 100) : 0;
-                                                %>
-                                                <div class="progress" style="width: 100px;">
-                                                    <div class="progress-bar" role="progressbar" style="width: <%= progress %>%" aria-valuenow="<%= progress %>" aria-valuemin="0" aria-valuemax="100">
-                                                        <%= progress %>%
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td><%= job.totalJobs %></td>
-                                            <td><%= job.pendingJobs %></td>
-                                            <td>
-                                                <% if (job.failedJobs > 0) { %>
-                                                    <span class="text-danger"><%= job.failedJobs %></span>
-                                                <% } else { %>
-                                                    <%= job.failedJobs %>
-                                                <% } %>
-                                            </td>
-                                            <td><%= new Date(job.createdAt).toLocaleString() %></td>
-                                            <td>
-                                                <% if (job.finishedAt) { %>
-                                                    <%= new Date(job.finishedAt).toLocaleString() %>
-                                                <% } else if (job.cancelledAt) { %>
-                                                    <%= new Date(job.cancelledAt).toLocaleString() %>
-                                                <% } else { %>
-                                                    -
-                                                <% } %>
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="viewJobDetails('<%= job.uuid %>')">Details</button>
-                                            </td>
-                                        </tr>
-                                    <% }); %>
-                                <% } %>
+                            <tbody id="jobs-tbody" style="background: transparent;">
+                                <tr ng-if="jobsCtrl.loading" class="jobs-loading-state">
+                                    <td colspan="9" class="text-center">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status" style="border-color: var(--theme-accent-cyan); border-right-color: transparent;"></div>
+                                        Loading jobs...
+                                    </td>
+                                </tr>
+                                <tr ng-if="!jobsCtrl.loading && (!jobsCtrl.jobBatches || jobsCtrl.jobBatches.length === 0)" class="jobs-empty-state">
+                                    <td colspan="9">
+                                        <i class="bi bi-inbox me-2" style="font-size: 18px; opacity: 0.6;"></i>No job batches found
+                                    </td>
+                                </tr>
+                                <tr ng-repeat="job in jobsCtrl.jobBatches track by job.uuid" 
+                                    class="job-row"
+                                    ng-style="{'background': $even ? 'var(--theme-secondary)' : 'var(--theme-primary)'}">
+                                    <td style="font-size: 13px; color: #FFFFFF; font-weight: 500;">{{ job.name }}</td>
+                                    <td>
+                                        <span class="job-status-badge" 
+                                              ng-class="jobsCtrl.getJobStatusClass(job)"
+                                              style="color: #fff;">
+                                            {{ jobsCtrl.getJobStatus(job) }}
+                                        </span>
+                                        <span ng-if="job.failedJobs > 0" 
+                                              class="job-status-badge bg-danger ms-1"
+                                              style="color: #fff;">
+                                            Has Failures
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="job-progress">
+                                            <div class="job-progress-bar" style="width: {{ jobsCtrl.getProgress(job) }}%;">
+                                                {{ jobsCtrl.getProgress(job) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="font-size: 13px; color: #FFFFFF;">{{ job.totalJobs }}</td>
+                                    <td style="font-size: 13px; color: #FFFFFF;">{{ job.pendingJobs }}</td>
+                                    <td>
+                                        <span ng-if="job.failedJobs > 0" style="color: #dc3545; font-size: 13px; font-weight: 600;">{{ job.failedJobs }}</span>
+                                        <span ng-if="job.failedJobs === 0" style="color: #FFFFFF; font-size: 13px;">{{ job.failedJobs }}</span>
+                                    </td>
+                                    <td style="font-size: 12px; color: #B0B0B0;">{{ jobsCtrl.formatDate(job.createdAt) }}</td>
+                                    <td style="font-size: 12px; color: #B0B0B0;">
+                                        <span ng-if="job.finishedAt">{{ jobsCtrl.formatDate(job.finishedAt) }}</span>
+                                        <span ng-if="job.cancelledAt">{{ jobsCtrl.formatDate(job.cancelledAt) }}</span>
+                                        <span ng-if="!job.finishedAt && !job.cancelledAt" style="color: #B0B0B0;">-</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                ng-click="jobsCtrl.viewJobDetails(job.uuid)"
+                                                style="border-color: var(--theme-accent-cyan); color: var(--theme-accent-cyan);">
+                                            Details
+                                        </button>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
 
                     <!-- Pagination -->
-                    <% if (pagination.totalPages > 1) { %>
+                    <div class="card-footer" ng-if="jobsCtrl.pagination && jobsCtrl.pagination.totalPages > 1" style="background: transparent; border-top: 1px solid var(--theme-border); padding: 16px 24px;">
                         <nav aria-label="Jobs pagination">
-                            <ul class="pagination justify-content-center mt-4">
-                                <% if (pagination.currentPage > 1) { %>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=<%= pagination.currentPage - 1 %><%= filters.status ? '&status=' + filters.status : '' %>">Previous</a>
-                                    </li>
-                                <% } %>
+                            <ul class="pagination justify-content-center mb-0">
+                                <li class="page-item" ng-if="jobsCtrl.pagination.currentPage > 1">
+                                    <a class="page-link" href="javascript:void(0)" ng-click="jobsCtrl.goToPage(jobsCtrl.pagination.currentPage - 1)" style="background: var(--theme-primary); border-color: var(--theme-border); color: var(--theme-text-primary); cursor: pointer;">Previous</a>
+                                </li>
                                 
-                                <% for (let i = 1; i <= pagination.totalPages; i++) { %>
-                                    <% if (i === pagination.currentPage) { %>
-                                        <li class="page-item active">
-                                            <span class="page-link"><%= i %></span>
-                                        </li>
-                                    <% } else if (i === 1 || i === pagination.totalPages || (i >= pagination.currentPage - 2 && i <= pagination.currentPage + 2)) { %>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page=<%= i %><%= filters.status ? '&status=' + filters.status : '' %>"><%= i %></a>
-                                        </li>
-                                    <% } else if (i === pagination.currentPage - 3 || i === pagination.currentPage + 3) { %>
-                                        <li class="page-item disabled">
-                                            <span class="page-link">...</span>
-                                        </li>
-                                    <% } %>
-                                <% } %>
+                                <li class="page-item" ng-repeat="i in jobsCtrl.getPaginationPages() track by $index">
+                                    <span ng-if="i === '...'" class="page-link" style="background: var(--theme-primary); border-color: var(--theme-border); color: var(--theme-text-secondary);">...</span>
+                                    <span ng-if="i !== '...' && i === jobsCtrl.pagination.currentPage" class="page-link" style="background: var(--theme-accent-cyan); border-color: var(--theme-accent-cyan); color: var(--theme-primary);">{{ i }}</span>
+                                    <a ng-if="i !== '...' && i !== jobsCtrl.pagination.currentPage" 
+                                       class="page-link" 
+                                       href="javascript:void(0)" 
+                                       ng-click="jobsCtrl.goToPage(i)" 
+                                       style="background: var(--theme-primary); border-color: var(--theme-border); color: var(--theme-text-primary); cursor: pointer;">{{ i }}</a>
+                                </li>
                                 
-                                <% if (pagination.currentPage < pagination.totalPages) { %>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=<%= pagination.currentPage + 1 %><%= filters.status ? '&status=' + filters.status : '' %>">Next</a>
-                                    </li>
-                                <% } %>
+                                <li class="page-item" ng-if="jobsCtrl.pagination.currentPage < jobsCtrl.pagination.totalPages">
+                                    <a class="page-link" href="javascript:void(0)" ng-click="jobsCtrl.goToPage(jobsCtrl.pagination.currentPage + 1)" style="background: var(--theme-primary); border-color: var(--theme-border); color: var(--theme-text-primary); cursor: pointer;">Next</a>
+                                </li>
                             </ul>
                         </nav>
-                    <% } %>
+                    </div>
                 </div>
             </div>
         </div>
@@ -168,14 +162,14 @@
 <!-- Job Details Modal -->
 <div class="modal fade" id="jobDetailsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Job Batch Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content" style="background: var(--theme-secondary); border: 1px solid var(--theme-border);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--theme-border);">
+                <h5 class="modal-title text-theme-primary">Job Batch Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1);"></button>
             </div>
-            <div class="modal-body" id="jobDetailsContent">
+            <div class="modal-body" id="jobDetailsContent" style="color: var(--theme-text-primary);">
                 <div class="text-center">
-                    <div class="spinner-border" role="status">
+                    <div class="spinner-border" role="status" style="border-color: var(--theme-accent-cyan); border-right-color: transparent;">
                         <span class="visually-hidden">Loading...</span>
                     </div>
                 </div>
@@ -184,86 +178,4 @@
     </div>
 </div>
 
-<script>
-function viewJobDetails(uuid) {
-    const modal = new bootstrap.Modal(document.getElementById('jobDetailsModal'));
-    const content = document.getElementById('jobDetailsContent');
-    
-    content.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-    modal.show();
-    
-    fetch('/admin/api/jobs/' + uuid)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const job = data.data.jobBatch;
-                content.innerHTML = `
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong>UUID:</strong><br>
-                            <small>${job.uuid}</small>
-                        </div>
-                        <div class="col-md-6">
-                            <strong>Name:</strong><br>
-                            ${job.name}
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>Total Jobs:</strong> ${job.totalJobs}
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Pending:</strong> ${job.pendingJobs}
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Failed:</strong> ${job.failedJobs}
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong>Created:</strong><br>
-                            ${new Date(job.createdAt).toLocaleString()}
-                        </div>
-                        <div class="col-md-6">
-                            <strong>Finished:</strong><br>
-                            ${job.finishedAt ? new Date(job.finishedAt).toLocaleString() : '-'}
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <strong>Progress:</strong>
-                            <div class="progress">
-                                <div class="progress-bar" role="progressbar" style="width: ${data.data.progress}%" aria-valuenow="${data.data.progress}" aria-valuemin="0" aria-valuemax="100">
-                                    ${data.data.progress}%
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    ${job.failedJobIds && job.failedJobIds.length > 0 ? `
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <strong>Failed Job IDs:</strong>
-                                <ul>
-                                    ${job.failedJobIds.map(id => `<li>${id}</li>`).join('')}
-                                </ul>
-                            </div>
-                        </div>
-                    ` : ''}
-                    ${job.options ? `
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <strong>Options:</strong>
-                                <pre class="bg-light p-2 rounded">${JSON.stringify(job.options, null, 2)}</pre>
-                            </div>
-                        </div>
-                    ` : ''}
-                `;
-            } else {
-                content.innerHTML = '<div class="alert alert-danger">Error loading job details: ' + data.message + '</div>';
-            }
-        })
-        .catch(error => {
-            content.innerHTML = '<div class="alert alert-danger">Error: ' + error.message + '</div>';
-        });
-}
-</script>
+<script type="text/javascript" src="/scripts/app/jobs.client.controller.js"></script>

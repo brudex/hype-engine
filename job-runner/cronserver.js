@@ -23,15 +23,18 @@ function startScheduleDuePostsJob() {
         }
 
         try {
+            isScheduling = true;
             logger.info('Cron: Running schedule due posts job...');
             const result = await scheduleDuePosts();
             logger.info('Cron: Schedule due posts completed', result);
         } catch (error) {
             logger.error('Cron: Schedule due posts error:', error);
+        } finally {
+            isScheduling = false;
         }
     }, {
         scheduled: true,
-        timezone: 'UTC'
+        timezone: 'Etc/UTC'
     });
     
     logger.info('Schedule due posts cron job started');
@@ -62,7 +65,7 @@ function startPublishScheduledJob() {
         }
     }, {
         scheduled: true,
-        timezone: 'UTC'
+        timezone: 'Etc/UTC'
     });
     
     logger.info('Publish scheduled posts cron job started');
@@ -75,16 +78,25 @@ function startCleanupLogsJob() {
     logger.info('Starting cleanup logs cron job (daily at 12:00 AM)...');
     
     cron.schedule('0 0 * * *', async () => {
+        // Check if another cleanup operation is already running
+        if (isCleaning) {
+            logger.warn('Cron: Cleanup logs already running, skipping...');
+            return;
+        }
+
         try {
+            isCleaning = true;
             logger.info('Cron: Running cleanup logs job...');
             const result = await cleanupLogs();
             logger.info('Cron: Cleanup logs completed', result);
         } catch (error) {
             logger.error('Cron: Cleanup logs error:', error);
+        } finally {
+            isCleaning = false;
         }
     }, {
         scheduled: true,
-        timezone: 'UTC'
+        timezone: 'Etc/UTC'
     });
     
     logger.info('Cleanup logs cron job started');
@@ -98,15 +110,10 @@ setTimeout(() => {
     startCleanupLogsJob();
 
     logger.info('Cron server initialized with all scheduled jobs');
-logger.info('Cron Schedule Information:');
-logger.info('  - Schedule Due Posts: Every 3 minutes (*/3 * * * *)');
-logger.info('  - Publish Scheduled Posts: Every 1 minute (* * * * *)');
-logger.info('  - Cleanup Logs: Daily at 12:00 AM (0 0 * * *)');
+    logger.info('Cron Schedule Information:');
+    logger.info('  - Schedule Due Posts: Every 3 minutes (*/3 * * * *)');
+    logger.info('  - Publish Scheduled Posts: Every 1 minute (* * * * *)');
+    logger.info('  - Cleanup Logs: Daily at 12:00 AM (0 0 * * *)');
 }, 10000);
 
 
-module.exports = {
-    startScheduleDuePostsJob,
-    startPublishScheduledJob,
-    startCleanupLogsJob
-};

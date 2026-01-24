@@ -10,48 +10,12 @@ const JobsAdminController = {};
  */
 JobsAdminController.index = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 50;
-        const status = req.query.status || null; // active, completed, failed, cancelled
-        
-        const offset = (page - 1) * limit;
-        
-        // Build where clause based on status
-        const where = {};
-        if (status === 'active') {
-            where.finishedAt = null;
-            where.cancelledAt = null;
-        } else if (status === 'completed') {
-            where.finishedAt = { [Op.ne]: null };
-        } else if (status === 'failed') {
-            where.failedJobs = { [Op.gt]: 0 };
-        } else if (status === 'cancelled') {
-            where.cancelledAt = { [Op.ne]: null };
-        }
-        
-        // Get job batches with pagination
-        const { count, rows: jobBatches } = await db.JobBatch.findAndCountAll({
-            where: where,
-            order: [['createdAt', 'DESC']],
-            limit: limit,
-            offset: offset
-        });
-        
-        const totalPages = Math.ceil(count / limit);
-        
         res.render('admin/jobs', {
             layout: 'layouts/dashboard/index',
             currentPage: 'admin-jobs',
             user: req.user,
-            jobBatches: jobBatches,
-            pagination: {
-                currentPage: page,
-                totalPages: totalPages,
-                totalItems: count,
-                limit: limit
-            },
             filters: {
-                status: status
+                status: req.query.status || null
             }
         });
     } catch (error) {

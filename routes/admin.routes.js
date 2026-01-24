@@ -29,6 +29,9 @@ router.get('/jobs', JobsAdminController.index);
 
 // Logs API
 router.get('/api/logs', LogsAdminController.getLogs);
+router.get('/api/logs/summary', LogsAdminController.getSummary);
+router.get('/api/logs/:uuid', LogsAdminController.getLogDetail);
+router.get('/api/logs/:uuid/view', LogsAdminController.getLogDetailView);
 router.post('/api/logs/cleanup', LogsAdminController.cleanup);
 
 // Jobs API
