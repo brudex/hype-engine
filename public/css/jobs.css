@@ -1,0 +1,132 @@
+/**
+ * Jobs View Styles
+ * Styles for the admin jobs page
+ */
+
+/* Jobs Table Styling */
+#jobs-table {
+    margin-bottom: 0;
+    background: #1F1F23;
+    color: #FFFFFF;
+}
+
+#jobs-table thead {
+    background: #2A2A2E;
+    border-bottom: 2px solid rgba(0, 239, 255, 0.2);
+    position: relative;
+}
+
+#jobs-table thead:after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(0, 239, 255, 0.2);
+    pointer-events: none;
+}
+
+#jobs-table th {
+    padding: 14px 16px;
+    border-bottom: 2px solid rgba(0, 239, 255, 0.2);
+    font-weight: 600;
+    color: #E5E5E5;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #2A2A2E;
+    position: relative;
+}
+
+#jobs-table th:hover {
+    background: #2F2F33;
+    color: #00EFFF;
+}
+
+#jobs-table tbody {
+    background: #1F1F23;
+}
+
+#jobs-table tbody tr {
+    background: #1F1F23;
+}
+
+/* Job Row Styling */
+.job-row {
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #2F2F33;
+    background: #1F1F23;
+}
+
+.job-row:hover {
+    background-color: rgba(0, 239, 255, 0.08) !important;
+    border-left: 2px solid #00EFFF;
+    box-shadow: inset 0 0 20px rgba(0, 239, 255, 0.1);
+}
+
+.job-row td {
+    padding: 14px 16px;
+    background: inherit;
+    color: #FFFFFF;
+    font-size: 13px;
+}
+
+/* Progress Bar Styling */
+.job-progress {
+    width: 120px;
+    height: 20px;
+    background: #2F2F33;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.job-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #00EFFF 0%, #00B8CC 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1F1F23;
+    font-size: 11px;
+    font-weight: 600;
+    transition: width 0.3s ease;
+}
+
+/* Status Badge Styling */
+.job-status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Empty State */
+.jobs-empty-state {
+    background: #1F1F23;
+    border-bottom: 1px solid #2F2F33;
+}
+
+.jobs-empty-state td {
+    padding: 40px 16px;
+    color: #B0B0B0;
+    font-size: 14px;
+    background: inherit;
+    text-align: center;
+}
+
+/* Loading State */
+.jobs-loading-state {
+    background: #1F1F23;
+    border-bottom: 1px solid #2F2F33;
+}
+
+.jobs-loading-state td {
+    padding: 40px 16px;
+    color: #B0B0B0;
+    font-size: 14px;
+    background: inherit;
+    text-align: center;
+}
