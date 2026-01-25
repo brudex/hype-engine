@@ -130,3 +130,166 @@
     background: inherit;
     text-align: center;
 }
+
+/* Job Detail Modal Styling */
+.job-detail-container {
+    color: var(--theme-text-primary);
+}
+
+.job-detail-section {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--theme-border);
+}
+
+.job-detail-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.job-detail-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--theme-text-secondary);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--theme-border);
+}
+
+.job-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.job-detail-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.job-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.job-detail-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--theme-text-secondary);
+    opacity: 0.8;
+}
+
+.job-detail-value {
+    font-size: 14px;
+    color: var(--theme-text-primary);
+    word-break: break-word;
+}
+
+.job-detail-uuid {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 12px;
+    color: var(--theme-text-secondary);
+    background: var(--theme-primary);
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--theme-border);
+}
+
+.job-detail-number {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--theme-accent-cyan);
+}
+
+.job-detail-failed {
+    color: #dc3545 !important;
+}
+
+.job-progress-detail {
+    width: 100%;
+    height: 24px;
+    background: #2F2F33;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.job-progress-bar-detail {
+    height: 100%;
+    background: linear-gradient(90deg, #00EFFF 0%, #00B8CC 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1F1F23;
+    font-size: 12px;
+    font-weight: 600;
+    transition: width 0.3s ease;
+}
+
+.job-detail-failed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.job-detail-failed-item {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 12px;
+    color: #dc3545;
+}
+
+.job-detail-json-container {
+    margin-top: 12px;
+    background: var(--theme-primary);
+    border: 1px solid var(--theme-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.job-detail-json {
+    margin: 0;
+    padding: 16px;
+    background: var(--theme-primary);
+    border: none;
+    color: var(--theme-text-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.job-detail-json code {
+    color: #00EFFF;
+    background: transparent;
+    padding: 0;
+    font-size: 12px;
+    white-space: pre;
+}
+
+/* JSON Syntax Highlighting */
+.job-detail-json code {
+    color: #E5E5E5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .job-detail-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .job-detail-grid-3 {
+        grid-template-columns: 1fr;
+    }
+}

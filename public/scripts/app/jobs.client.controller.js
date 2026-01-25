@@ -49,7 +49,7 @@
                 if (hasActiveJobs) {
                     fetchJobs();
                 }
-            }, 10000); // Refresh every 10 seconds
+            }, 30000); // Refresh every 10 seconds
         }
 
         function fetchJobs() {
@@ -150,37 +150,103 @@
                     var job = response.data.data.jobBatch;
                     var progress = response.data.data.progress;
                     
-                    var content = '<div class="row mb-3">' +
-                        '<div class="col-md-6"><strong>UUID:</strong><br><small>' + job.uuid + '</small></div>' +
-                        '<div class="col-md-6"><strong>Name:</strong><br>' + job.name + '</div>' +
+                    var content = '<div class="job-detail-container">' +
+                        // Basic Info Section
+                        '<div class="job-detail-section">' +
+                        '<div class="job-detail-section-title">Basic Information</div>' +
+                        '<div class="job-detail-grid">' +
+                        '<div class="job-detail-item">' +
+                        '<div class="job-detail-label">Name</div>' +
+                        '<div class="job-detail-value">' + job.name + '</div>' +
                         '</div>' +
-                        '<div class="row mb-3">' +
-                        '<div class="col-md-4"><strong>Total Jobs:</strong> ' + job.totalJobs + '</div>' +
-                        '<div class="col-md-4"><strong>Pending:</strong> ' + job.pendingJobs + '</div>' +
-                        '<div class="col-md-4"><strong>Failed:</strong> ' + (job.failedJobs > 0 ? '<span class="text-danger">' + job.failedJobs + '</span>' : job.failedJobs) + '</div>' +
+                        '<div class="job-detail-item">' +
+                        '<div class="job-detail-label">UUID</div>' +
+                        '<div class="job-detail-value job-detail-uuid">' + job.uuid + '</div>' +
                         '</div>' +
-                        '<div class="row mb-3">' +
-                        '<div class="col-md-6"><strong>Created:</strong><br>' + formatDate(job.createdAt) + '</div>' +
-                        '<div class="col-md-6"><strong>Finished:</strong><br>' + (job.finishedAt ? formatDate(job.finishedAt) : '-') + '</div>' +
                         '</div>' +
-                        '<div class="row mb-3">' +
-                        '<div class="col-md-12"><strong>Progress:</strong>' +
-                        '<div class="progress mt-2"><div class="progress-bar" role="progressbar" style="width: ' + progress + '%">' + progress + '%</div></div>' +
-                        '</div></div>';
+                        '</div>' +
+                        
+                        // Status & Progress Section
+                        '<div class="job-detail-section">' +
+                        '<div class="job-detail-section-title">Status & Progress</div>' +
+                        '<div class="job-detail-grid">' +
+                        '<div class="job-detail-item">' +
+                        '<div class="job-detail-label">Status</div>' +
+                        '<div class="job-detail-value">' +
+                        '<span class="job-status-badge ' + getJobStatusClass(job) + '">' + getJobStatus(job) + '</span>' +
+                        (job.failedJobs > 0 ? ' <span class="job-status-badge bg-danger ms-2">Has Failures</span>' : '') +
+                        '</div>' +
+                        '</div>' +
+                        '<div class="job-detail-item">' +
+                        '<div class="job-detail-label">Progress</div>' +
+                        '<div class="job-detail-value">' +
+                        '<div class="job-progress-detail">' +
+                        '<div class="job-progress-bar-detail" style="width: ' + progress + '%">' + progress + '%</div>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>' +
+                        
+                        // Job Counts Section
+                        '<div class="job-detail-section">' +
+                        '<div class="job-detail-section-title">Job Counts</div>' +
+                        '<div class="job-detail-grid job-detail-grid-3">' +
+                        '<div class="job-detail-item">' +
+                        '<div class="job-detail-label">Total Jobs</div>' +
+                        '<div class="job-detail-value job-detail-number">' + job.totalJobs + '</div>' +
+                        '</div>' +
+                        '<div class="job-detail-item">' +
+                        '<div class="job-detail-label">Pending</div>' +
+                        '<div class="job-detail-value job-detail-number">' + job.pendingJobs + '</div>' +
+                        '</div>' +
+                        '<div class="job-detail-item">' +
+                        '<div class="job-detail-label">Failed</div>' +
+                        '<div class="job-detail-value job-detail-number ' + (job.failedJobs > 0 ? 'job-detail-failed' : '') + '">' + job.failedJobs + '</div>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>' +
+                        
+                        // Timestamps Section
+                        '<div class="job-detail-section">' +
+                        '<div class="job-detail-section-title">Timestamps</div>' +
+                        '<div class="job-detail-grid">' +
+                        '<div class="job-detail-item">' +
+                        '<div class="job-detail-label">Created</div>' +
+                        '<div class="job-detail-value">' + formatDate(job.createdAt) + '</div>' +
+                        '</div>' +
+                        '<div class="job-detail-item">' +
+                        '<div class="job-detail-label">' + (job.finishedAt ? 'Finished' : job.cancelledAt ? 'Cancelled' : 'Status') + '</div>' +
+                        '<div class="job-detail-value">' + (job.finishedAt ? formatDate(job.finishedAt) : job.cancelledAt ? formatDate(job.cancelledAt) : 'In Progress') + '</div>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>';
                     
+                    // Failed Job IDs Section
                     if (job.failedJobIds && job.failedJobIds.length > 0) {
                         var failedIds = Array.isArray(job.failedJobIds) ? job.failedJobIds : JSON.parse(job.failedJobIds);
-                        content += '<div class="row mb-3"><div class="col-md-12"><strong>Failed Job IDs:</strong><ul>';
+                        content += '<div class="job-detail-section">' +
+                            '<div class="job-detail-section-title">Failed Job IDs</div>' +
+                            '<div class="job-detail-failed-list">';
                         failedIds.forEach(function(id) {
-                            content += '<li>' + id + '</li>';
+                            content += '<div class="job-detail-failed-item">' + id + '</div>';
                         });
-                        content += '</ul></div></div>';
+                        content += '</div></div>';
                     }
                     
+                    // Options Section (JSON Code Block)
                     if (job.options) {
                         var options = typeof job.options === 'string' ? JSON.parse(job.options) : job.options;
-                        content += '<div class="row mb-3"><div class="col-md-12"><strong>Options:</strong><pre class="bg-light p-2 rounded">' + JSON.stringify(options, null, 2) + '</pre></div></div>';
+                        var jsonString = JSON.stringify(options, null, 2);
+                        content += '<div class="job-detail-section">' +
+                            '<div class="job-detail-section-title">Options</div>' +
+                            '<div class="job-detail-json-container">' +
+                            '<pre class="job-detail-json"><code>' + escapeHtml(jsonString) + '</code></pre>' +
+                            '</div>' +
+                            '</div>';
                     }
+                    
+                    content += '</div>';
                     
                     var modal = new bootstrap.Modal(document.getElementById('jobDetailsModal'));
                     var modalContent = document.getElementById('jobDetailsContent');
@@ -193,6 +259,17 @@
                 console.error('Error fetching job details:', error);
                 alert('Failed to load job details');
             });
+        }
+
+        function escapeHtml(text) {
+            var map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
 
         function formatDate(dateString) {
