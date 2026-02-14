@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const db = require('../../models');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../utils/logger');
@@ -9,6 +10,23 @@ const twitterPlatform = require('../../services/platform/twitter');
  * Handles redirects from X, Facebook, etc. after user authorizes the app.
  */
 const CallbackController = {};
+
+/**
+ * Generate CRC response_token for X webhook verification.
+ * HMAC-SHA256(consumer_secret, crc_token), then base64-encode and prefix "sha256=".
+ * @param {string} crc_token - Token from X (req.query.crc_token)
+ * @param {string} consumer_secret - Twitter/X Consumer Secret
+ * @returns {string} response_token e.g. "sha256=EqvHPHlg6ibHALsy+0r1FHXKvbaiRaoxoJSAeWOsY/o="
+ */
+function generateCrcResponseToken(crc_token, consumer_secret) {
+    if (!crc_token || !consumer_secret) {
+        throw new Error('Missing crc_token or consumer_secret');
+    }
+    const hmac = crypto.createHmac('sha256', consumer_secret);
+    hmac.update(crc_token);
+    const digestBase64 = hmac.digest('base64');
+    return `sha256=${digestBase64}`;
+}
 
 /**
  * Log full error details for troubleshooting (no secrets).
@@ -31,20 +49,60 @@ function logXCallbackError(err, context) {
 }
 
 /**
- * X (Twitter) OAuth 1.0a callback – X redirects here with ?oauth_token=...&oauth_verifier=...
- * Always returns 200 with JSON (no flash, no redirects).
+ * X (Twitter) callback – handles:
+ * 1. CRC (Challenge-Response Check): ?crc_token=...&nonce=... → { response_token: "sha256=..." }
+ * 2. OAuth 1.0a callback: ?oauth_token=...&oauth_verifier=... → connect account, return JSON
+ * Always returns 200 with JSON.
  * @route GET /dashboard/integrations/x/callback
  */
 CallbackController.x = async (req, res) => {
     try {
-        logger.info('X OAuth callback request', {
+        const { crc_token, nonce, oauth_token, oauth_verifier, denied, error: oauthError } = req.query;
+
+        logger.info('X callback request', {
             queryKeys: Object.keys(req.query || {}),
+            hasCrcToken: !!crc_token,
             hasSession: !!(req.session && req.session.id),
             hasXConnect: !!(req.session && req.session.xConnect)
         });
 
-        const { oauth_token, oauth_verifier, denied, error: oauthError } = req.query;
+        // CRC: X webhook verification (Challenge-Response Check)
+        if (crc_token) {
+            const oauthService = await db.OauthService.findOne({ where: { name: 'twitter' } });
+            if (!oauthService || !oauthService.configuration) {
+                logger.warn('X CRC: Twitter OAuth not configured');
+                return res.status(200).json({
+                    response_token: null,
+                    error: 'twitter_not_configured'
+                });
+            }
+            let config = oauthService.configuration;
+            logger.info('X CRC: OAuth Service Configuration', { config });
+            console.log('X CRC: OAuth Service Configuration', { config });
+            if (typeof config === 'string') config = JSON.parse(config);
+            const consumerSecret = config.consumer_secret || config.client_secret;
+            if (!consumerSecret) {
+                logger.warn('X CRC: Consumer Secret missing');
+                return res.status(200).json({
+                    response_token: null,
+                    error: 'consumer_secret_missing'
+                });
+            }
+            try {
+                const responseToken = generateCrcResponseToken(crc_token, consumerSecret);
+                logger.info('X CRC response sent', { nonce: nonce || null });
+                res.set('Content-Type', 'application/json');
+                return res.status(200).json({ response_token: responseToken });
+            } catch (err) {
+                logger.error('X CRC generateResponseToken error', { message: err.message });
+                return res.status(200).json({
+                    response_token: null,
+                    error: err.message || 'crc_failed'
+                });
+            }
+        }
 
+        // OAuth 1.0a callback flow
         if (oauthError || denied) {
             logger.warn('X OAuth callback: user denied or OAuth error', { oauthError, denied });
             return res.status(200).json({
