@@ -11,48 +11,100 @@ const twitterPlatform = require('../../services/platform/twitter');
 const CallbackController = {};
 
 /**
+ * Log full error details for troubleshooting (no secrets).
+ */
+function logXCallbackError(err, context) {
+    const detail = {
+        message: err && err.message,
+        code: err && err.code,
+        name: err && err.name,
+        step: context
+    };
+    if (err && err.response) {
+        detail.httpStatus = err.response.status;
+        detail.responseData = err.response.data;
+    }
+    if (err && err.stack) {
+        detail.stack = err.stack;
+    }
+    logger.error('X OAuth callback error (details for troubleshooting)', detail);
+}
+
+/**
  * X (Twitter) OAuth 1.0a callback – X redirects here with ?oauth_token=...&oauth_verifier=...
+ * Always returns 200 with JSON (no flash, no redirects).
  * @route GET /dashboard/integrations/x/callback
  */
 CallbackController.x = async (req, res) => {
-    console.log('X OAuth callback request: req.query', req.query);
-    logger.info('X OAuth callback request: req.query', req.query);
-    const { oauth_token, oauth_verifier, denied, error: oauthError } = req.query;
-
-    if (oauthError || denied) {
-        logger.warn('X OAuth callback user denied or error:', { oauthError, denied });
-        req.flash('error', 'X authorization was denied or returned an error. Reason: ' + (oauthError || denied || 'user_denied') + '. You can try connecting again from Accounts.');
-        return res.redirect('/dashboard/error');
-    }
-
-    if (!oauth_token || !oauth_verifier) {
-        logger.warn('X OAuth callback missing oauth_token or oauth_verifier');
-        req.flash('error', 'X callback: invalid response. Missing oauth_token or oauth_verifier in the callback URL. This can happen if you did not complete the flow on X or the link was altered. Try connecting again from Accounts.');
-        return res.redirect('/dashboard/error');
-    }
-
-    const stored = req.session && req.session.xConnect && req.session.xConnect[oauth_token];
-    if (!stored) {
-        logger.warn('X OAuth callback invalid or expired request token');
-        req.flash('error', 'X callback: request token invalid or expired. The connection session may have expired. Please start again from Dashboard → Accounts → Connect account for your project.');
-        return res.redirect('/dashboard/error');
-    }
-
-    const { oauth_token_secret, projectUuid, userUuid } = stored;
-
     try {
+        logger.info('X OAuth callback request', {
+            queryKeys: Object.keys(req.query || {}),
+            hasSession: !!(req.session && req.session.id),
+            hasXConnect: !!(req.session && req.session.xConnect)
+        });
+
+        const { oauth_token, oauth_verifier, denied, error: oauthError } = req.query;
+
+        if (oauthError || denied) {
+            logger.warn('X OAuth callback: user denied or OAuth error', { oauthError, denied });
+            return res.status(200).json({
+                success: false,
+                message: 'X authorization was denied or returned an error',
+                error: oauthError || denied || 'user_denied'
+            });
+        }
+
+        if (!oauth_token || !oauth_verifier) {
+            logger.warn('X OAuth callback: missing params', {
+                hasOauthToken: !!oauth_token,
+                hasOauthVerifier: !!oauth_verifier,
+                query: req.query
+            });
+            return res.status(200).json({
+                success: false,
+                message: 'Missing oauth_token or oauth_verifier in callback',
+                error: 'invalid_callback_params'
+            });
+        }
+
+        const stored = req.session && req.session.xConnect && req.session.xConnect[oauth_token];
+        if (!stored) {
+            logger.warn('X OAuth callback: request token not found in session', {
+                oauthTokenPresent: !!oauth_token,
+                sessionKeys: req.session && req.session.xConnect ? Object.keys(req.session.xConnect) : []
+            });
+            return res.status(200).json({
+                success: false,
+                message: 'Request token invalid or expired',
+                error: 'invalid_or_expired_token'
+            });
+        }
+
+        const { oauth_token_secret, projectUuid, userUuid } = stored;
+
         const oauthService = await db.OauthService.findOne({ where: { name: 'twitter' } });
         if (!oauthService || !oauthService.configuration) {
-            req.flash('error', 'X callback: Twitter OAuth is not configured. Configure Twitter in Dashboard → OAuth Connect, then try connecting your X account again.');
-            return res.redirect('/dashboard/error');
+            logger.warn('X OAuth callback: Twitter not configured', {
+                hasService: !!oauthService,
+                hasConfig: !!(oauthService && oauthService.configuration)
+            });
+            return res.status(200).json({
+                success: false,
+                message: 'Twitter OAuth is not configured',
+                error: 'twitter_not_configured'
+            });
         }
         let config = oauthService.configuration;
         if (typeof config === 'string') config = JSON.parse(config);
         const appKey = config.consumer_key || config.client_id;
         const appSecret = config.consumer_secret || config.client_secret;
         if (!appKey || !appSecret) {
-            req.flash('error', 'X callback: Twitter OAuth service has no Consumer Key or Secret. Edit the Twitter service in OAuth Connect and save both values.');
-            return res.redirect('/dashboard/error');
+            logger.warn('X OAuth callback: Twitter credentials missing', { hasAppKey: !!appKey, hasAppSecret: !!appSecret });
+            return res.status(200).json({
+                success: false,
+                message: 'Twitter OAuth has no Consumer Key or Secret',
+                error: 'twitter_credentials_missing'
+            });
         }
 
         const { accessToken, accessSecret, userId, screenName } = await twitterPlatform.exchangeRequestToken(
@@ -102,18 +154,36 @@ CallbackController.x = async (req, res) => {
             });
         }
 
-        logger.info('X account connected', { accountUuid: account.uuid, screenName, userId });
-        return res.redirect('/dashboard/accounts?project=' + encodeURIComponent(projectUuid) + '&x_connected=1');
+        logger.info('X account connected', { accountUuid: account.uuid, screenName, userId, projectUuid });
+        return res.status(200).json({
+            success: true,
+            message: 'X account connected',
+            data: {
+                accountUuid: account.uuid,
+                projectUuid,
+                screenName: screenName || null,
+                userId: String(userId)
+            }
+        });
     } catch (err) {
-        logger.error('X callback error:', err);
-        if (req.session && req.session.xConnect && req.session.xConnect[oauth_token]) {
-            delete req.session.xConnect[oauth_token];
+        logXCallbackError(err, 'exchange_or_save');
+        const token = (req.query && req.query.oauth_token);
+        if (req.session && req.session.xConnect && token && req.session.xConnect[token]) {
+            delete req.session.xConnect[token];
         }
-        const errMsg = err.response
-            ? 'X API error ' + (err.response.status || '') + ': ' + (err.response.data?.error || err.message || 'Token exchange failed')
-            : (err.message || String(err));
-        req.flash('error', 'X callback failed. ' + errMsg + ' (Step: exchange request token for access token). Try connecting again from Accounts; if it persists, check OAuth Connect Twitter config and callback URL in the X Developer Portal.');
-        return res.redirect('/dashboard/error');
+        const httpStatus = err.response && err.response.status;
+        const apiError = err.response && (err.response.data?.error || err.response.data?.errors || err.response.data?.message);
+        const errMsg = err.message || String(err);
+        return res.status(200).json({
+            success: false,
+            message: 'X callback failed',
+            error: errMsg,
+            details: {
+                httpStatus: httpStatus || null,
+                apiError: apiError != null ? (typeof apiError === 'string' ? apiError : apiError) : null,
+                step: 'exchange_request_token'
+            }
+        });
     }
 };
 

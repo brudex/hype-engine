@@ -386,8 +386,8 @@ AccountsController.connectIntegration = async (req, res) => {
                 req.flash('error', 'Twitter (X) credentials incomplete. Missing: ' + missing.join(', ') + '. Edit the Twitter service in OAuth Connect and save both values from the X Developer Portal.');
                 return res.redirect('/dashboard/error');
             }
-            const baseUrl = (req.protocol || 'https') + '://' + (req.get('host') || 'localhost');
-            const callbackUrl = baseUrl + '/dashboard/integrations/x/callback';
+            const baseUrl = "https://hypeengine.cachetechs.com";
+            const callbackUrl = baseUrl + '/integrations/x/callback';
             logger.info('X connect: generating auth link', { callbackUrl, baseUrl });
 
             try {
