@@ -1,0 +1,148 @@
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary" ng-if="accountsCtrl.selectedProject">Social Accounts - {{ accountsCtrl.selectedProject.name }}</h4>
+                    <h4 class="m-b-5 text-theme-primary" ng-if="!accountsCtrl.selectedProject">Social Accounts</h4>
+                    <p class="text-theme-secondary mb-0" ng-if="accountsCtrl.selectedProject">Manage social media accounts for {{ accountsCtrl.selectedProject.name }}</p>
+                    <p class="text-theme-secondary mb-0" ng-if="!accountsCtrl.selectedProject">Manage your connected social media accounts</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/projects">Projects</a></li>
+                    <li class="breadcrumb-item" ng-if="accountsCtrl.selectedProject">
+                        <a href="/dashboard/projects/{{ accountsCtrl.selectedProject.uuid }}">{{ accountsCtrl.selectedProject.name }}</a>
+                    </li>
+                    <li class="breadcrumb-item active">Accounts</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body mt-0" ng-controller="AccountsController as accountsCtrl" ng-init='accountsCtrl.init(<%- JSON.stringify(accounts || []) %>, <%- JSON.stringify(is_configured_service || {}) %>, <%- JSON.stringify(is_service_active || {}) %>, <%- JSON.stringify(typeof projectUuid !== 'undefined' ? projectUuid : '') %>)'>
+    <div class="page-wrapper">
+        <!-- Project Selection -->
+        <%- include('../partials/_project-selection', { controllerName: 'accountsCtrl', placeholder: '..Select Project..' }) %>
+
+        <div ng-if="accountsCtrl.loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- No Project Selected Message -->
+        <div ng-if="!accountsCtrl.loading && !accountsCtrl.selectedProject" class="text-center py-5">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                <h5 class="alert-heading">Select a Project</h5>
+                <p class="mb-0">Please select a project from the dropdown above to manage social accounts.</p>
+            </div>
+        </div>
+
+        <!-- Accounts List (only shown when project is selected) -->
+        <div ng-if="!accountsCtrl.loading && accountsCtrl.selectedProject">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5>Connected Accounts - {{ accountsCtrl.selectedProject.name }}</h5>
+                            <button class="btn btn-primary" ng-click="accountsCtrl.openAddAccountModal()">
+                                <i class="bi bi-plus-circle"></i> Add Account
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <!-- Alert for unconfigured services -->
+                            <div class="alert alert-warning" ng-if="accountsCtrl.hasUnconfiguredServices()">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <p class="mb-0">Some services are not configured. Please configure them in <a href="/dashboard/services">Services</a>.</p>
+                            </div>
+
+                            <!-- Accounts Grid -->
+                            <div class="row">
+                            <div class="col-md-3 mb-4" ng-repeat="account in accountsCtrl.accounts">
+                                <div class="card border account-card">
+                                    <div class="card-body text-center position-relative">
+                                        <div class="dropdown position-absolute" style="top: 10px; right: 10px;">
+                                            <button class="btn btn-sm btn-link posts-dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="bi bi-three-dots-vertical" style="font-size: 18px;"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end posts-dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item posts-dropdown-item" href="#" ng-click="accountsCtrl.refreshAccount(account.uuid)">
+                                                        <i class="bi bi-arrow-clockwise me-2"></i> Refresh
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item posts-dropdown-item delete" href="#" ng-click="accountsCtrl.deleteAccount(account.uuid)">
+                                                        <i class="bi bi-trash me-2"></i> Delete
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <img ng-if="account.image" ng-src="{{account.image}}" class="rounded-circle mb-2" style="width: 80px; height: 80px; object-fit: cover;" alt="{{account.name}}">
+                                        <div ng-if="!account.image" class="rounded-circle mb-2 d-inline-flex align-items-center justify-content-center bg-secondary text-white" style="width: 80px; height: 80px;">
+                                            <i class="bi bi-person-circle" style="font-size: 40px;"></i>
+                                        </div>
+                                        <h6 class="card-title">{{account.name}}</h6>
+                                        <p class="text-muted small">@{{account.username || 'N/A'}}</p>
+                                        <span class="badge mb-2" ng-class="account.authorized ? 'bg-success' : 'bg-danger'">
+                                            {{account.authorized ? 'Authorized' : 'Unauthorized'}}
+                                        </span>
+                                        <p class="text-muted small mt-2">{{account.provider}}</p>
+                                        <p ng-if="account.project" class="text-muted small">
+                                            <i class="bi bi-folder"></i> {{account.project.name}}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                            <div ng-if="accountsCtrl.accounts.length === 0" class="text-center py-5">
+                                <p class="text-muted">No accounts connected yet.</p>
+                                <button class="btn btn-primary" ng-click="accountsCtrl.openAddAccountModal()">
+                                    <i class="bi bi-plus-circle"></i> Connect Your First Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Account Modal -->
+    <div class="modal fade" id="addAccountModal" tabindex="-1" aria-labelledby="addAccountModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addAccountModalLabel">Add Social Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ng-click="accountsCtrl.closeAddAccountModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Select a social media platform to connect. Only platforms with configured services are available.</p>
+                    <div class="list-group" ng-if="accountsCtrl.configuredServices.length > 0">
+                        <button type="button" 
+                                class="list-group-item list-group-item-action d-flex align-items-center" 
+                                ng-repeat="service in accountsCtrl.configuredServices"
+                                ng-click="accountsCtrl.connectAccount(service.name)">
+                            <i class="bi" ng-class="accountsCtrl.getServiceIcon(service.name)" style="font-size: 20px; margin-right: 10px;"></i>
+                            <span>{{ accountsCtrl.getServiceName(service.name) }}</span>
+                        </button>
+                    </div>
+                    <div ng-if="accountsCtrl.configuredServices.length === 0" class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <p class="mb-0">No services are configured yet. Please configure services in <a href="/dashboard/services">Services</a> first.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" ng-click="accountsCtrl.closeAddAccountModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/scripts/app/accounts.client.controller.js"></script>
+

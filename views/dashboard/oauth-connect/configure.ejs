@@ -1,0 +1,137 @@
+<div class="page-header">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary">Configure <%= serviceName.charAt(0).toUpperCase() + serviceName.slice(1) %> OAuth</h4>
+                    <p class="text-theme-secondary mb-0">Enter your OAuth credentials for the app</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/oauth-connect">OAuth Connect</a></li>
+                    <li class="breadcrumb-item active"><%= serviceName.charAt(0).toUpperCase() + serviceName.slice(1) %></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body" ng-controller="OauthConnectConfigurationController as configCtrl" ng-init="configCtrl.init('<%= serviceName %>')">
+    <div class="page-wrapper">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">OAuth Service Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="/dashboard/oauth-connect/configure/<%= serviceName %>" method="POST" id="serviceForm" ng-submit="configCtrl.saveConfiguration(); $event.preventDefault();">
+
+                            <% if (typeof formFields !== 'undefined' && formFields && formFields.length) { %>
+                                <% formFields.forEach(function(field) { %>
+                                    <div class="mb-3">
+                                        <label for="<%= field.fieldName %>" class="form-label"><%= field.fieldLabel %> <span class="text-danger">*</span></label>
+                                        <% if (field.fieldType === 'password') { %>
+                                            <input type="password" class="form-control" id="<%= field.fieldName %>" name="configuration[<%= field.fieldName %>]" required>
+                                        <% } else if (field.fieldType === 'select' && field.options && field.options.length) { %>
+                                            <select class="form-control" id="<%= field.fieldName %>" name="configuration[<%= field.fieldName %>]" required>
+                                                <% field.options.forEach(function(opt) { %>
+                                                    <option value="<%= opt %>"><%= opt.charAt(0).toUpperCase() + opt.slice(1) %></option>
+                                                <% }); %>
+                                            </select>
+                                        <% } else { %>
+                                            <input type="text" class="form-control" id="<%= field.fieldName %>" name="configuration[<%= field.fieldName %>]" required>
+                                        <% } %>
+                                    </div>
+                                <% }); %>
+                            <% } %>
+
+                            <div class="mb-3">
+                                <button type="button" class="btn btn-outline-info" ng-click="configCtrl.testCredentials()" ng-disabled="configCtrl.testing">
+                                    <i class="bi" ng-class="configCtrl.testing ? 'bi-hourglass-split' : 'bi-check-circle'"></i>
+                                    {{ configCtrl.testing ? 'Testing...' : 'Test Credentials' }}
+                                </button>
+                                <small class="form-text text-muted d-block mt-1">Test if your API credentials are valid</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="active" name="active" value="true" checked>
+                                    <label class="form-check-label" for="active">
+                                        Activate this service
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">Service must be active to use it for connecting accounts</small>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a ng-href="{{ configCtrl.getCancelUrl() }}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary" ng-disabled="configCtrl.saving">
+                                    <i class="bi" ng-class="configCtrl.saving ? 'bi-hourglass-split' : 'bi-check-circle'"></i>
+                                    {{ configCtrl.saving ? 'Saving...' : 'Save Configuration' }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Credentials Modal -->
+    <div class="modal fade" id="testCredentialsModal" tabindex="-1" aria-labelledby="testCredentialsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" ng-class="configCtrl.testResult && configCtrl.testResult.success ? 'bg-success text-white' : (configCtrl.testResult && !configCtrl.testResult.success ? 'bg-danger text-white' : '')">
+                    <h5 class="modal-title" id="testCredentialsModalLabel">
+                        <i class="bi" ng-class="configCtrl.testResult && configCtrl.testResult.success ? 'bi-check-circle-fill' : (configCtrl.testResult && !configCtrl.testResult.success ? 'bi-x-circle-fill' : 'bi-info-circle')"></i>
+                        Test Credentials Result
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ng-class="configCtrl.testResult && configCtrl.testResult.success ? 'btn-close-white' : (configCtrl.testResult && !configCtrl.testResult.success ? 'btn-close-white' : '')"></button>
+                </div>
+                <div class="modal-body">
+                    <div ng-if="!configCtrl.testResult" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Testing...</span>
+                        </div>
+                        <p class="mt-2">Testing credentials...</p>
+                    </div>
+                    <div ng-if="configCtrl.testResult">
+                        <div ng-if="configCtrl.testResult.success" class="alert alert-success">
+                            <h6 class="alert-heading"><i class="bi bi-check-circle"></i> Success!</h6>
+                            <p class="mb-0">{{ configCtrl.testResult.message }}</p>
+                            <div ng-if="configCtrl.testResult.data" class="mt-2">
+                                <small>
+                                    <strong>Details:</strong><br>
+                                    <span ng-repeat="(key, value) in configCtrl.testResult.data">
+                                        <strong>{{ key }}:</strong> {{ value }}<br>
+                                    </span>
+                                </small>
+                            </div>
+                        </div>
+                        <div ng-if="!configCtrl.testResult.success" class="alert alert-danger">
+                            <h6 class="alert-heading"><i class="bi bi-x-circle"></i> Failed!</h6>
+                            <p class="mb-0"><strong>{{ configCtrl.testResult.message }}</strong></p>
+                            <div ng-if="configCtrl.testResult.error" class="mt-2">
+                                <small><strong>Error:</strong> {{ configCtrl.testResult.error }}</small>
+                            </div>
+                        </div>
+                        <div ng-if="configCtrl.testResult.errors" class="mt-2">
+                            <small class="text-danger">
+                                <strong>Validation Errors:</strong><br>
+                                <span ng-repeat="(key, value) in configCtrl.testResult.errors">
+                                    <strong>{{ key }}:</strong> {{ value }}<br>
+                                </span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/scripts/app/oauth-connect-configuration.client.controller.js"></script>

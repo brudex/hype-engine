@@ -80,13 +80,7 @@
                 </a>
             </li>
 
-            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'services' ? 'active' : '' %>">
-                <a href="/dashboard/services">
-                    <span class="pcoded-micon"><i class="bi bi-plug"></i></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">Services</span>
-                    <span class="pcoded-mcaret"></span>
-                </a>
-            </li>
+           
              
         </ul>
         <div class="pcoded-navigatio-lavel" data-i18n="nav.category.ui-element" menu-title-theme="theme5">API</div>
@@ -121,6 +115,13 @@
         <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
         <div class="pcoded-navigatio-lavel" data-i18n="nav.category.ui-element" menu-title-theme="theme5">Admin</div>
         <ul class="pcoded-item pcoded-left-item">
+            <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'oauth-connect' ? 'active' : '' %>">
+                <a href="/dashboard/oauth-connect">
+                    <span class="pcoded-micon"><i class="bi bi-plug"></i></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-pickers.main">Connect Oauth Services</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
             <li class="<%= typeof currentPage !== 'undefined' && currentPage === 'admin-logs' ? 'active' : '' %>">
                 <a href="/admin/logs">
                     <span class="pcoded-micon"><i class="bi bi-file-text"></i></span>

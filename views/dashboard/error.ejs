@@ -1,0 +1,89 @@
+<div class="page-header mb-0">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h2 class="m-b-5 text-theme-primary" style="font-size: 28px; font-weight: 700;">Error</h2>
+                    <p class="text-theme-secondary mb-0">An error occurred while processing your request</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item active">Error</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body mt-0">
+    <div class="page-wrapper">
+        <div class="container-fluid">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card" style="border: 1px solid var(--theme-border); background: var(--theme-secondary);">
+                        <div class="card-body text-center py-5">
+                            <div class="mb-4">
+                                <div style="width: 120px; height: 120px; margin: 0 auto; border-radius: 50%; background: rgba(220, 53, 69, 0.1); display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-exclamation-triangle" style="font-size: 64px; color: #dc3545;"></i>
+                                </div>
+                            </div>
+
+                            <% 
+                            // Flash messages (from connect-flash via res.locals.messages)
+                            var messages = typeof messages !== 'undefined' ? messages : {};
+                            var errorMsg = typeof message !== 'undefined' ? message : (messages.error && messages.error[0]);
+                            var successMsg = messages.success && messages.success[0];
+                            if (!errorMsg && typeof error !== 'undefined' && error) errorMsg = error;
+                            %>
+
+                            <% if (errorMsg) { %>
+                                <h3 class="text-theme-primary mb-3" style="font-weight: 600;">Error</h3>
+                                <div class="alert alert-danger mt-3" style="background: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; text-align: left;">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bi bi-info-circle me-2" style="font-size: 20px; margin-top: 2px;"></i>
+                                        <div><%= errorMsg %></div>
+                                    </div>
+                                </div>
+                            <% } else if (successMsg) { %>
+                                <h3 class="text-theme-primary mb-3" style="font-weight: 600;">Notice</h3>
+                                <div class="alert alert-success mt-3"><%= successMsg %></div>
+                            <% } else { %>
+                                <h3 class="text-theme-primary mb-3" style="font-weight: 600;">Something went wrong</h3>
+                            <% } %>
+
+                            <% if (typeof error === 'string' && error && error !== errorMsg) { %>
+                                <div class="alert alert-danger mt-4" style="background: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; text-align: left;">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bi bi-info-circle me-2" style="font-size: 20px; margin-top: 2px;"></i>
+                                        <div>
+                                            <strong>Error Details:</strong>
+                                            <pre style="margin-top: 8px; margin-bottom: 0; font-size: 13px; white-space: pre-wrap; word-wrap: break-word; color: var(--theme-text-primary);"><%= error %></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% } %>
+
+                            <div class="mt-4">
+                                <a href="/dashboard" class="btn btn-primary me-2" style="min-width: 120px;">
+                                    <i class="bi bi-house-door me-1"></i> Go to Dashboard
+                                </a>
+                                <a href="/dashboard/accounts" class="btn btn-outline-primary me-2" style="min-width: 140px;">
+                                    <i class="bi bi-person-badge me-1"></i> Accounts
+                                </a>
+                                <button onclick="window.history.back()" class="btn btn-outline-secondary" style="min-width: 120px;">
+                                    <i class="bi bi-arrow-left me-1"></i> Go Back
+                                </button>
+                            </div>
+
+                            <% if (typeof status !== 'undefined' && status) { %>
+                                <div class="mt-4">
+                                    <small class="text-theme-secondary">Error Code: <%= status %></small>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,50 +1,51 @@
-const TwitterService = require('./twitter.service');
-const FacebookService = require('./facebook.service');
-const LinkedInService = require('./linkedin.service');
-const TikTokService = require('./tiktok.service');
-const MastodonService = require('./mastodon.service');
+const twitter = require('./twitter');
+const facebook = require('./facebook');
+const linkedin = require('./linkedin');
+const tiktok = require('./tiktok');
+const mastodon = require('./mastodon');
+
+const platformMap = {
+    twitter,
+    facebook,
+    linkedin,
+    tiktok,
+    mastodon,
+    instagram: facebook
+};
 
 /**
- * Platform Service Factory
- * Returns the appropriate platform service for testing credentials
+ * Return the platform service for a given name.
+ * Service has testCredentials(config) and publishPost(post, postVersion, tags, account).
+ * @param {string} platformName - Platform name (e.g. 'twitter', 'facebook')
+ * @returns {{ testCredentials: Function, publishPost: Function } | null}
  */
-class PlatformServiceFactory {
-    static getService(platformName) {
-        const services = {
-            twitter: TwitterService,
-            facebook: FacebookService,
-            linkedin: LinkedInService,
-            tiktok: TikTokService,
-            mastodon: MastodonService,
-            // Add more platforms as needed
-            instagram: FacebookService, // Instagram uses Facebook API
-            unsplash: null, // Unsplash uses simple API key
-            tenor: null // Tenor uses simple API key
-        };
-
-        return services[platformName] || null;
-    }
-
-    /**
-     * Test credentials for a platform
-     * @param {string} platformName - Platform name
-     * @param {object} configuration - Service configuration
-     * @returns {Promise<object>} - Test result
-     */
-    static async testCredentials(platformName, configuration) {
-        const service = this.getService(platformName);
-
-        if (!service) {
-            return {
-                success: false,
-                message: 'Platform not supported for testing',
-                error: `Testing not implemented for ${platformName}`
-            };
-        }
-
-        return await service.testCredentials(configuration);
-    }
+function getService(platformName) {
+    if (!platformName) return null;
+    const key = String(platformName).toLowerCase();
+    return platformMap[key] || null;
 }
 
-module.exports = PlatformServiceFactory;
+/**
+ * Test credentials for a platform.
+ * @param {string} platformName - Platform name
+ * @param {object} configuration - Service configuration
+ * @returns {Promise<object>} - Test result
+ */
+async function testCredentials(platformName, configuration) {
+    const service = getService(platformName);
 
+    if (!service) {
+        return {
+            success: false,
+            message: 'Platform not supported for testing',
+            error: `Testing not implemented for ${platformName}`
+        };
+    }
+
+    return service.testCredentials(configuration);
+}
+
+module.exports = {
+    getService,
+    testCredentials
+};

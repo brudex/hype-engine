@@ -30,6 +30,17 @@ DashboardController.index = async (req, res) => {
 };
 
 /**
+ * Dashboard error page – shows flash messages (e.g. from connectIntegration failures).
+ * @route GET /dashboard/error
+ */
+DashboardController.errorPage = (req, res) => {
+    res.render('dashboard/error', {
+        layout: 'layouts/dashboard/index',
+        currentPage: 'error'
+    });
+};
+
+/**
  * Get global dashboard metrics (all projects)
  * @route GET /api/dashboard/global
  */

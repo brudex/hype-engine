@@ -9,15 +9,17 @@ const PostsController = require('../controllers/posts.controller');
 const MediaController = require('../controllers/media.controller');
 const TagsController = require('../controllers/tags.controller');
 const ServicesController = require('../controllers/services.controller');
+const OauthConfigAdminController = require('../controllers/admin/oauth-config.admin.controller');
 const SettingsController = require('../controllers/settings.controller');
 const CalendarController = require('../controllers/calendar.controller');
 const ReportsController = require('../controllers/reports.controller');
-const MixpostApiController = require('../controllers/api.controller');
 const ApiDocController = require('../controllers/apidoc.controller');
 const AccessTokenController = require('../controllers/access-token.controller');
 
 // Middleware
 const authMiddleware = require('../middlewares/auth.middleware');
+
+
 
 // Apply authentication middleware to all dashboard routes
 // Use requireLogin for session-based authentication (Passport)
@@ -31,6 +33,7 @@ router.use(authMiddleware.requireLogin);
 
 // Dashboard Page Routes
 router.get('/', DashboardController.index);
+router.get('/error', DashboardController.errorPage);
 
 // Dashboard API Routes
 router.get('/api/dashboard/global', DashboardController.getGlobalMetrics);
@@ -67,8 +70,10 @@ router.get('/projects/:projectUuid/accounts', AccountsController.index);
 // Accounts API Routes
 router.get('/api/accounts/project/:projectUuid', AccountsController.getAccounts);
 router.get('/api/accounts/single/:uuid', AccountsController.getAccount);
+router.post('/api/accounts/configure-apikey/:platformName', AccountsController.saveApiKeyConfiguration);
 router.put('/api/accounts/:uuid', AccountsController.update);
 router.delete('/api/accounts/:uuid', AccountsController.delete);
+
 
 // ============================================
 // Posts
@@ -139,15 +144,29 @@ router.post('/api/reports/project/:projectUuid', ReportsController.getReports);
 // ============================================
 
 // Services Page Routes
-router.get('/services', ServicesController.index);
-router.get('/services/project/:projectUuid', ServicesController.indexForProject);
-router.get('/services/configure/:platformName', ServicesController.configurePage);
-router.post('/services/configure/:platformName', ServicesController.configure);
+// router.get('/services', ServicesController.index);
+// router.get('/services/project/:projectUuid', ServicesController.indexForProject);
+// router.get('/services/configure/:platformName', ServicesController.configurePage);
+// router.post('/services/configure/:platformName', ServicesController.configure);
 
-// Services API Routes
-router.get('/api/services', ServicesController.list);
-router.get('/api/services/:name', ServicesController.getService);
-router.post('/api/services/:name/test', ServicesController.testCredentials);
+// // Services API Routes
+// router.get('/api/services', ServicesController.list);
+// router.get('/api/services/:name', ServicesController.getService);
+// router.post('/api/services/:name/test', ServicesController.testCredentials);
+
+// ============================================
+// OAuth Connect (app-wide, no project)
+// ============================================
+
+// OAuth Connect Page Routes
+router.get('/oauth-connect', OauthConfigAdminController.index);
+router.get('/oauth-connect/configure/:platformName', OauthConfigAdminController.configurePage);
+router.post('/oauth-connect/configure/:platformName', OauthConfigAdminController.configure);
+
+// OAuth Connect API Routes
+router.get('/api/oauth-connect', OauthConfigAdminController.list);
+router.get('/api/oauth-connect/:name', OauthConfigAdminController.getService);
+router.post('/api/oauth-connect/:name/test', OauthConfigAdminController.testCredentials);
 
 // ============================================
 // Settings

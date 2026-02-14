@@ -4,18 +4,18 @@
         .module('app')
         .controller('ProjectManageController', ProjectManageController);
 
-    ProjectManageController.$inject = ['brudexservices', 'brudexutils', '$location'];
+    ProjectManageController.$inject = ['brudexservices', 'brudexutils', '$location', '$http'];
 
-    function ProjectManageController(services, utils, $location) {
+    function ProjectManageController(services, utils, $location, $http) {
         var vm = this;
 
         // Properties
         vm.project = null;
         vm.loading = false;
         vm.projectUuid = null;
-        vm.activeTab = 'accounts'; // Default to connect accounts tab
-        vm.activePlatform = 'facebook'; // Default platform
+        vm.activePlatform = 'facebook';
         vm.services = [];
+        vm.serviceDefinitions = {};
         vm.availableServices = [
             { name: 'twitter', displayName: 'Twitter / X' },
             { name: 'facebook', displayName: 'Facebook / Meta' },
@@ -34,14 +34,81 @@
         vm.configureServices = configureServices;
         vm.getPlatformAccounts = getPlatformAccounts;
         vm.connectAccount = connectAccount;
+        vm.getFormFields = getFormFields;
+        vm.saveApiKeyConfig = saveApiKeyConfig;
         vm.capitalize = capitalize;
         vm.getProjectInitials = getProjectInitials;
 
-        // Initialize
+        // Initialize (serviceDefinitions are read from #project-service-definitions script tag)
         function init(projectUuid) {
             vm.projectUuid = projectUuid;
+            var el = document.getElementById('project-service-definitions');
+            vm.serviceDefinitions = el ? (function () { try { return JSON.parse(el.textContent); } catch (e) { return {}; } })() : {};
             loadProject();
             loadServices();
+        }
+
+        // Form fields for API key tab (from socialaccount-api-definitions)
+        function getFormFields(platform) {
+            var def = vm.serviceDefinitions[platform];
+            return (def && def.formFields && Array.isArray(def.formFields)) ? def.formFields : [];
+        }
+
+        // Build configuration object from form elements named configuration[fieldName]
+        function getConfigurationFromForm(form) {
+            var config = {};
+            if (!form || !form.elements) return config;
+            for (var i = 0; i < form.elements.length; i++) {
+                var el = form.elements[i];
+                var name = el.name;
+                if (name && name.indexOf('configuration[') === 0) {
+                    var key = name.slice(14, -1); // 'configuration['.length = 14, then remove ']'
+                    if (key && el.type !== 'checkbox') {
+                        config[key] = el.value;
+                    } else if (key && el.type === 'checkbox' && el.checked) {
+                        config[key] = el.value;
+                    }
+                }
+            }
+            return config;
+        }
+
+        // Save API key configuration via API (each Connect with API keys tab)
+        function saveApiKeyConfig(platform, event) {
+            if (event) event.preventDefault();
+            if (!vm.projectUuid) {
+                utils.alertError('Error', 'Project not found');
+                return;
+            }
+            var form = event && event.target ? event.target : null;
+            if (!form) {
+                utils.alertError('Error', 'Form not found');
+                return;
+            }
+            var configuration = getConfigurationFromForm(form);
+            var url = '/dashboard/api/accounts/configure-apikey/' + (platform || '').toLowerCase();
+            vm.savingApiKey = vm.savingApiKey || {};
+            vm.savingApiKey[platform] = true;
+            $http.post(url, {
+                projectUuid: vm.projectUuid,
+                configuration: configuration
+            }).then(function(response) {
+                vm.savingApiKey[platform] = false;
+                if (response.data && response.data.success) {
+                    utils.alertSuccess('Saved', response.data.message || 'API key configuration saved');
+                    loadProject();
+                } else {
+                    utils.alertError('Error', (response.data && response.data.message) || 'Save failed');
+                }
+            }).catch(function(err) {
+                vm.savingApiKey[platform] = false;
+                var msg = (err.data && err.data.message) || err.statusText || 'Failed to save';
+                var errors = err.data && err.data.errors;
+                if (errors && typeof errors === 'object') {
+                    msg = msg + ': ' + Object.keys(errors).map(function(k) { return errors[k]; }).join(', ');
+                }
+                utils.alertError('Error', msg);
+            });
         }
 
         // Load project
@@ -113,8 +180,12 @@
 
         // Connect account for a platform
         function connectAccount(platform) {
-            // Navigate to account connection page with project context
-            window.location.href = '/dashboard/accounts/connect?provider=' + platform + '&project=' + vm.projectUuid;
+            if (!vm.projectUuid) {
+                utils.alertError('Error', 'Project not found');
+                return;
+            }
+            var p = (platform || '').toLowerCase();
+            window.location.href = '/integrations/' + p + '/connect/' + vm.projectUuid;
         }
 
         // Capitalize first letter

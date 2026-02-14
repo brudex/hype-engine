@@ -1,7 +1,7 @@
 const db = require('../models');
 const logger = require('../utils/logger');
 const { v4: uuidv4 } = require('uuid');
-const serviceDefinitions = require('../services/service-definitions');
+const serviceDefinitions = require('../services/socialaccount-api-definitions');
 
 const ServicesController = {};
 
@@ -640,8 +640,7 @@ ServicesController.testCredentials = async (req, res) => {
         }
 
         logger.info('ServicesController.testCredentials - Calling platform service:', {
-            serviceName: name,
-            platformService: platformService.constructor.name
+            serviceName: name
         });
 
         const testStartTime = Date.now();

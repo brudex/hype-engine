@@ -16,25 +16,23 @@
         vm.loading = false;
         vm.isConfiguredService = {};
         vm.isServiceActive = {};
-        vm.configuredServices = [];
         vm.selectedProjectUuid = null;
+        vm.serviceDefinitions = {};
+        vm.savingApiKey = {};
 
         // Methods
         vm.init = init;
         vm.loadProjects = loadProjects;
         vm.loadAccounts = loadAccounts;
-        vm.loadServices = loadServices;
         vm.onProjectChange = onProjectChange;
         vm.selectProject = selectProject;
         vm.getProjectInitials = getProjectInitials;
-        vm.hasUnconfiguredServices = hasUnconfiguredServices;
         vm.refreshAccount = refreshAccount;
         vm.deleteAccount = deleteAccount;
-        vm.openAddAccountModal = openAddAccountModal;
-        vm.closeAddAccountModal = closeAddAccountModal;
         vm.connectAccount = connectAccount;
-        vm.getServiceIcon = getServiceIcon;
-        vm.getServiceName = getServiceName;
+        vm.getPlatformAccounts = getPlatformAccounts;
+        vm.getFormFields = getFormFields;
+        vm.saveApiKeyConfig = saveApiKeyConfig;
 
         // Initialize
         function init(accounts, isConfiguredService, isServiceActive, projectUuid) {
@@ -42,6 +40,8 @@
             vm.isConfiguredService = isConfiguredService || {};
             vm.isServiceActive = isServiceActive || {};
             vm.selectedProjectUuid = projectUuid || null;
+            var el = document.getElementById('accounts-service-definitions');
+            vm.serviceDefinitions = el ? (function () { try { return JSON.parse(el.textContent); } catch (e) { return {}; } })() : {};
             
             loadProjects();
             
@@ -54,15 +54,10 @@
                         });
                         if (project) {
                             vm.selectedProject = project;
-                            loadServices(projectUuid);
                             loadAccounts(projectUuid);
-                        } else {
-                            loadServices();
                         }
                     });
                 }, 500);
-            } else {
-                loadServices();
             }
         }
 
@@ -177,24 +172,13 @@
             onProjectChange();
         }
 
-        // Handle project selection change - navigate to project-specific accounts page
+        // Handle project selection change
         function onProjectChange() {
             if (vm.selectedProject && vm.selectedProject.uuid) {
-                // Load accounts and services for the selected project
                 loadAccounts(vm.selectedProject.uuid);
-                loadServices(vm.selectedProject.uuid);
             } else {
-                // If no project selected, clear accounts and services
                 vm.accounts = [];
-                vm.configuredServices = [];
             }
-        }
-
-        // Check if there are unconfigured services
-        function hasUnconfiguredServices() {
-            return Object.keys(vm.isConfiguredService).some(function(key) {
-                return !['tenor', 'unsplash'].includes(key) && !vm.isConfiguredService[key];
-            });
         }
 
         // Refresh account
@@ -203,7 +187,8 @@
                 $http.put('/dashboard/api/accounts/' + uuid).then(function(response) {
                     if (response.data.success) {
                         utils.alertSuccess('Success', 'Account refreshed successfully');
-                        loadAccounts(vm.selectedProjectUuid);
+                        var pu = (vm.selectedProject && vm.selectedProject.uuid) || vm.selectedProjectUuid;
+                        if (pu) loadAccounts(pu);
                     } else {
                         utils.alertError('Error', response.data.message || 'Failed to refresh account');
                     }
@@ -219,7 +204,8 @@
                 $http.delete('/dashboard/api/accounts/' + uuid).then(function(response) {
                     if (response.data.success) {
                         utils.alertSuccess('Success', 'Account deleted successfully');
-                        loadAccounts(vm.selectedProjectUuid);
+                        var pu = (vm.selectedProject && vm.selectedProject.uuid) || vm.selectedProjectUuid;
+                        if (pu) loadAccounts(pu);
                     } else {
                         utils.alertError('Error', response.data.message || 'Failed to delete account');
                     }
@@ -229,97 +215,86 @@
             });
         }
 
-        // Open add account modal
-        function openAddAccountModal() {
-            var modalElement = document.getElementById('addAccountModal');
-            if (modalElement) {
-                // Get or create modal instance
-                var modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-                
-                // Add event listener to ensure backdrop is removed when modal is hidden
-                modalElement.addEventListener('hidden.bs.modal', function() {
-                    // Remove any lingering backdrop
-                    var backdrops = document.querySelectorAll('.modal-backdrop');
-                    backdrops.forEach(function(backdrop) {
-                        backdrop.remove();
-                    });
-                    // Remove modal-open class from body
-                    document.body.classList.remove('modal-open');
-                    document.body.style.overflow = '';
-                    document.body.style.paddingRight = '';
-                }, { once: true });
-                
-                modal.show();
-            }
-        }
-
-        // Close add account modal
-        function closeAddAccountModal() {
-            var modalElement = document.getElementById('addAccountModal');
-            if (modalElement) {
-                var modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) {
-                    modal.hide();
-                }
-            }
-        }
-
-        // Connect account for selected provider
+        // Connect account: navigate to integration connect route
         function connectAccount(provider) {
-            var url = '/dashboard/accounts/connect?provider=' + provider;
-            if (vm.selectedProject && vm.selectedProject.uuid) {
-                url += '&project=' + vm.selectedProject.uuid;
-            } else if (vm.selectedProjectUuid) {
-                url += '&project=' + vm.selectedProjectUuid;
+            var projectUuid = (vm.selectedProject && vm.selectedProject.uuid) || vm.selectedProjectUuid;
+            if (!projectUuid) {
+                utils.alertError('Error', 'Please select a project first');
+                return;
             }
-            
-            // Close modal first and clean up backdrop
-            var modalElement = document.getElementById('addAccountModal');
-            if (modalElement) {
-                var modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) {
-                    modal.hide();
+            var platform = (provider || '').toLowerCase();
+            window.location.href = '/integrations/' + platform + '/connect/' + projectUuid;
+        }
+
+        // Get accounts for a specific platform (for selected project)
+        function getPlatformAccounts(platform) {
+            if (!vm.accounts || !vm.accounts.length) return [];
+            return vm.accounts.filter(function(account) {
+                return account.provider && account.provider.toLowerCase() === (platform || '').toLowerCase();
+            });
+        }
+
+        // Form fields for API key tab (from serviceDefinitions)
+        function getFormFields(platform) {
+            var def = vm.serviceDefinitions[platform];
+            return (def && def.formFields && Array.isArray(def.formFields)) ? def.formFields : [];
+        }
+
+        // Build configuration object from form elements named configuration[fieldName]
+        function getConfigurationFromForm(form) {
+            var config = {};
+            if (!form || !form.elements) return config;
+            for (var i = 0; i < form.elements.length; i++) {
+                var el = form.elements[i];
+                var name = el.name;
+                if (name && name.indexOf('configuration[') === 0) {
+                    var key = name.slice(14, -1);
+                    if (key && el.type !== 'checkbox') {
+                        config[key] = el.value;
+                    } else if (key && el.type === 'checkbox' && el.checked) {
+                        config[key] = el.value;
+                    }
                 }
-                
-                // Ensure backdrop is removed
-                $timeout(function() {
-                    var backdrops = document.querySelectorAll('.modal-backdrop');
-                    backdrops.forEach(function(backdrop) {
-                        backdrop.remove();
-                    });
-                    document.body.classList.remove('modal-open');
-                    document.body.style.overflow = '';
-                    document.body.style.paddingRight = '';
-                }, 300);
             }
-            
-            window.location.href = url;
+            return config;
         }
 
-        // Get service icon class
-        function getServiceIcon(serviceName) {
-            var icons = {
-                'twitter': 'bi-twitter text-primary',
-                'facebook': 'bi-facebook text-primary',
-                'instagram': 'bi-instagram text-danger',
-                'linkedin': 'bi-linkedin text-primary',
-                'mastodon': 'bi-mastodon text-primary',
-                'tiktok': 'bi-tiktok'
-            };
-            return icons[serviceName] || 'bi-share';
-        }
-
-        // Get service display name
-        function getServiceName(serviceName) {
-            var names = {
-                'twitter': 'Twitter / X',
-                'facebook': 'Facebook',
-                'instagram': 'Instagram',
-                'linkedin': 'LinkedIn',
-                'mastodon': 'Mastodon',
-                'tiktok': 'TikTok'
-            };
-            return names[serviceName] || serviceName.charAt(0).toUpperCase() + serviceName.slice(1);
+        // Save API key configuration via API
+        function saveApiKeyConfig(platform, event) {
+            if (event) event.preventDefault();
+            var projectUuid = (vm.selectedProject && vm.selectedProject.uuid) || vm.selectedProjectUuid;
+            if (!projectUuid) {
+                utils.alertError('Error', 'Please select a project first');
+                return;
+            }
+            var form = event && event.target ? event.target : null;
+            if (!form) {
+                utils.alertError('Error', 'Form not found');
+                return;
+            }
+            var configuration = getConfigurationFromForm(form);
+            var url = '/dashboard/api/accounts/configure-apikey/' + (platform || '').toLowerCase();
+            vm.savingApiKey[platform] = true;
+            $http.post(url, {
+                projectUuid: projectUuid,
+                configuration: configuration
+            }).then(function(response) {
+                vm.savingApiKey[platform] = false;
+                if (response.data && response.data.success) {
+                    utils.alertSuccess('Saved', response.data.message || 'API key configuration saved');
+                    loadAccounts(projectUuid);
+                } else {
+                    utils.alertError('Error', (response.data && response.data.message) || 'Save failed');
+                }
+            }).catch(function(err) {
+                vm.savingApiKey[platform] = false;
+                var msg = (err.data && err.data.message) || err.statusText || 'Failed to save';
+                var errors = err.data && err.data.errors;
+                if (errors && typeof errors === 'object') {
+                    msg = msg + ': ' + Object.keys(errors).map(function(k) { return errors[k]; }).join(', ');
+                }
+                utils.alertError('Error', msg);
+            });
         }
 
         // Get project initials (first 2 letters, best practice)

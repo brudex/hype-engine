@@ -44,6 +44,20 @@ module.exports = (sequelize, DataTypes) => {
         accessToken: {
             type: DataTypes.TEXT,
             allowNull: false
+        },
+        apiKey: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+            comment: 'Encrypted JSON configuration'
+        },
+        authMethod: {
+            type: DataTypes.STRING, // oauth, apikey
+            allowNull: false,
+            comment: 'Authentication method'
+        },
+        active: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
         }
       
     }, {

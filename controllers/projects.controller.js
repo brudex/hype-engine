@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs').promises;
 const logger = require('../utils/logger');
+const socialaccountApiDefinitions = require('../services/socialaccount-api-definitions');
 
 const ProjectsController = {};
 
@@ -190,6 +191,20 @@ ProjectsController.renderProjectPage = async (req, res) => {
             return res.redirect('/dashboard/projects');
         }
 
+        // Build serializable service definitions for API key forms (formFields per platform)
+        const serviceDefinitions = {};
+        const platformNames = socialaccountApiDefinitions.getServiceNames();
+        for (const name of platformNames) {
+            const serviceDef = socialaccountApiDefinitions.getService(name);
+            if (serviceDef && typeof serviceDef.form === 'function') {
+                const formFields = serviceDef.form.call(serviceDef);
+                serviceDefinitions[name] = {
+                    nameLocalized: serviceDef.nameLocalized || name,
+                    formFields: Array.isArray(formFields) ? formFields : []
+                };
+            }
+        }
+
         res.render('dashboard/projects/show', {
             project: {
                 uuid: project.uuid,
@@ -201,6 +216,7 @@ ProjectsController.renderProjectPage = async (req, res) => {
                 createdAt: project.createdAt,
                 updatedAt: project.updatedAt
             },
+            serviceDefinitions,
             currentPage: 'projects',
             layout: 'layouts/dashboard/index'
         });
