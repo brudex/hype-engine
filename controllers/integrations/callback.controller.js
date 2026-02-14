@@ -58,6 +58,8 @@ function logXCallbackError(err, context) {
 CallbackController.x = async (req, res) => {
     try {
         const { crc_token, nonce, oauth_token, oauth_verifier, denied, error: oauthError } = req.query;
+        console.log('X callback request >>>', req.query);
+        logger.info('X callback request >>>', req.query);
 
         logger.info('X callback request', {
             queryKeys: Object.keys(req.query || {}),
@@ -92,9 +94,13 @@ CallbackController.x = async (req, res) => {
                 const responseToken = generateCrcResponseToken(crc_token, consumerSecret);
                 logger.info('X CRC response sent', { nonce: nonce || null });
                 res.set('Content-Type', 'application/json');
+                console.log('X CRC response sent >>>', responseToken);
+                logger.info('X CRC response sent >>>', responseToken);
                 return res.status(200).json({ response_token: responseToken });
             } catch (err) {
                 logger.error('X CRC generateResponseToken error', { message: err.message });
+                console.log('X CRC generateResponseToken error >>>', err.message);
+                logger.info('X CRC generateResponseToken error >>>', err.message);
                 return res.status(200).json({
                     response_token: null,
                     error: err.message || 'crc_failed'
