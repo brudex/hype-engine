@@ -13,17 +13,19 @@ const CallbackController = {};
 
 /**
  * Generate CRC response_token for X webhook verification.
+ * X expects exactly: { "response_token": "sha256=<base64>" }.
  * HMAC-SHA256(consumer_secret, crc_token), then base64-encode and prefix "sha256=".
  * @param {string} crc_token - Token from X (req.query.crc_token)
- * @param {string} consumer_secret - Twitter/X Consumer Secret
+ * @param {string} consumer_secret - Twitter/X Consumer Secret (will be trimmed)
  * @returns {string} response_token e.g. "sha256=EqvHPHlg6ibHALsy+0r1FHXKvbaiRaoxoJSAeWOsY/o="
  */
 function generateCrcResponseToken(crc_token, consumer_secret) {
     if (!crc_token || !consumer_secret) {
         throw new Error('Missing crc_token or consumer_secret');
     }
-    const hmac = crypto.createHmac('sha256', consumer_secret);
-    hmac.update(crc_token);
+    const secret = String(consumer_secret).trim();
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(String(crc_token));
     const digestBase64 = hmac.digest('base64');
     return `sha256=${digestBase64}`;
 }
@@ -51,15 +53,26 @@ function logXCallbackError(err, context) {
 /**
  * X (Twitter) callback – handles:
  * 1. CRC (Challenge-Response Check): ?crc_token=...&nonce=... → { response_token: "sha256=..." }
+ *    (nonce is sent by X for their tracking; we do not use it in the response.)
  * 2. OAuth 1.0a callback: ?oauth_token=...&oauth_verifier=... → connect account, return JSON
- * Always returns 200 with JSON.
- * @route GET /dashboard/integrations/x/callback
+ *
+ * If the X Developer Portal shows "500" or verification failed, it means X could not validate
+ * our response. Check: (1) Webhook URL in X portal matches this endpoint exactly (HTTPS),
+ * (2) Consumer Secret in Dashboard → OAuth Connect → Twitter is from the same X app as the webhook.
+ * @route GET /integrations/x/callback
  */
 CallbackController.x = async (req, res) => {
+    // X portal only accepts this exact shape; extra keys can cause verification to fail (shown as 500 on X).
+    const sendCrcResponse = (responseToken, errorCode) => {
+        res.set('Content-Type', 'application/json');
+        res.status(200);
+        return res.json({ response_token: responseToken != null ? responseToken : null });
+    };
+
+    const isCrcRequest = !!(req && req.query && req.query.crc_token);
+
     try {
         const { crc_token, nonce, oauth_token, oauth_verifier, denied, error: oauthError } = req.query;
-        console.log('X callback request >>>', req.query);
-        logger.info('X callback request >>>', req.query);
 
         logger.info('X callback request', {
             queryKeys: Object.keys(req.query || {}),
@@ -70,41 +83,37 @@ CallbackController.x = async (req, res) => {
 
         // CRC: X webhook verification (Challenge-Response Check)
         if (crc_token) {
-            const oauthService = await db.OauthService.findOne({ where: { name: 'twitter' } });
-            if (!oauthService || !oauthService.configuration) {
-                logger.warn('X CRC: Twitter OAuth not configured');
-                return res.status(200).json({
-                    response_token: null,
-                    error: 'twitter_not_configured'
-                });
-            }
-            let config = oauthService.configuration;
-            logger.info('X CRC: OAuth Service Configuration', { config });
-            console.log('X CRC: OAuth Service Configuration', { config });
-            if (typeof config === 'string') config = JSON.parse(config);
-            const consumerSecret = config.consumer_secret || config.client_secret;
-            if (!consumerSecret) {
-                logger.warn('X CRC: Consumer Secret missing');
-                return res.status(200).json({
-                    response_token: null,
-                    error: 'consumer_secret_missing'
-                });
-            }
             try {
+                const oauthService = await db.OauthService.findOne({ where: { name: 'twitter' } });
+                if (!oauthService || !oauthService.configuration) {
+                    logger.warn('X CRC: Twitter OAuth not configured');
+                    return sendCrcResponse(null, 'twitter_not_configured');
+                }
+                let config = oauthService.configuration;
+                if (typeof config === 'string') {
+                    try {
+                        config = JSON.parse(config);
+                    } catch (parseErr) {
+                        logger.error('X CRC: configuration is not valid JSON', { message: parseErr.message });
+                        return sendCrcResponse(null, 'invalid_config_format');
+                    }
+                }
+                const consumerSecret = config && (config.consumer_secret || config.client_secret);
+                if (!consumerSecret) {
+                    logger.warn('X CRC: Consumer Secret missing');
+                    return sendCrcResponse(null, 'consumer_secret_missing');
+                }
                 const responseToken = generateCrcResponseToken(crc_token, consumerSecret);
                 logger.info('X CRC response sent', { nonce: nonce || null });
-                res.set('Content-Type', 'application/json');
-                console.log('X CRC response sent >>>', responseToken);
-                logger.info('X CRC response sent >>>', responseToken);
-                return res.status(200).json({ response_token: responseToken });
+                return sendCrcResponse(responseToken);
             } catch (err) {
-                logger.error('X CRC generateResponseToken error', { message: err.message });
-                console.log('X CRC generateResponseToken error >>>', err.message);
-                logger.info('X CRC generateResponseToken error >>>', err.message);
-                return res.status(200).json({
-                    response_token: null,
-                    error: err.message || 'crc_failed'
+                logger.error('X CRC error (details for troubleshooting)', {
+                    message: err.message,
+                    code: err.code,
+                    name: err.name,
+                    step: 'crc_lookup_or_compute'
                 });
+                return sendCrcResponse(null, err.message || 'crc_failed');
             }
         }
 
@@ -234,6 +243,9 @@ CallbackController.x = async (req, res) => {
         const token = (req.query && req.query.oauth_token);
         if (req.session && req.session.xConnect && token && req.session.xConnect[token]) {
             delete req.session.xConnect[token];
+        }
+        if (isCrcRequest) {
+            return sendCrcResponse(null, err.message || 'crc_failed');
         }
         const httpStatus = err.response && err.response.status;
         const apiError = err.response && (err.response.data?.error || err.response.data?.errors || err.response.data?.message);
