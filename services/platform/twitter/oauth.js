@@ -39,8 +39,14 @@ async function exchangeRequestToken(oauthToken, oauthTokenSecret, oauthVerifier,
         accessSecret: oauthTokenSecret
     });
 
-    const { accessToken, accessSecret, userId, screenName } = await clientUser.login(oauthVerifier);
-    return { accessToken, accessSecret, userId, screenName };
+    try {
+        const { accessToken, accessSecret, userId, screenName } = await clientUser.login(oauthVerifier);
+        return { accessToken, accessSecret, userId, screenName };
+    } catch (err) {
+        logger.error('Twitter OAuth login failed:', err?.message || err);
+        const msg = err?.message || String(err);
+        throw new Error(msg.includes('verifier') || msg.includes('invalid') ? 'Invalid or expired authorization. Please try connecting again.' : `X login failed: ${msg}`);
+    }
 }
 
 /**

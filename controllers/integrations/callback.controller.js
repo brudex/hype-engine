@@ -279,16 +279,18 @@ CallbackController.x = async (req, res) => {
         const httpStatus = err.response && err.response.status;
         const apiError = err.response && (err.response.data?.error || err.response.data?.errors || err.response.data?.message);
         const errMsg = err.message || String(err);
-        return res.status(200).json({
-            success: false,
-            message: 'X callback failed',
-            error: errMsg,
-            details: {
-                httpStatus: httpStatus || null,
-                apiError: apiError != null ? (typeof apiError === 'string' ? apiError : apiError) : null,
-                step: 'exchange_request_token'
-            }
-        });
+        const flashMsg = typeof errMsg === 'string' && errMsg.length > 0 ? errMsg : 'X connection failed. Please try again.';
+        req.flash('error', flashMsg);
+        const oauthToken = req.query && req.query.oauth_token;
+        let redirectUrl = '/dashboard/accounts';
+        if (oauthToken) {
+            const pending = await db.Account.findOne({
+                where: { provider: 'twitter', accessToken: oauthToken },
+                attributes: ['uuid']
+            });
+            if (pending && pending.uuid) redirectUrl = '/dashboard/accounts/connect-status/' + pending.uuid;
+        }
+        return res.redirect(302, redirectUrl);
     }
 };
 

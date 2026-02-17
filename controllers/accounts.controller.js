@@ -473,6 +473,7 @@ AccountsController.connectStatus = async (req, res) => {
             return res.redirect('/dashboard/accounts');
         }
         const platformLabel = (account.provider || 'twitter').toLowerCase() === 'twitter' ? 'X (Twitter)' : (account.provider || 'Account');
+        const isConnected = !!account.authorized;
         res.render('dashboard/accounts/connect-status', {
             layout: 'layouts/dashboard/index',
             currentPage: 'accounts',
@@ -482,9 +483,11 @@ AccountsController.connectStatus = async (req, res) => {
                 username: account.username,
                 provider: account.provider,
                 projectUuid: account.projectUuid,
-                projectName: account.project ? account.project.name : null
+                projectName: account.project ? account.project.name : null,
+                authorized: isConnected
             },
-            platformLabel
+            platformLabel,
+            isConnected
         });
     } catch (error) {
         logger.error('Connect status error:', error);
