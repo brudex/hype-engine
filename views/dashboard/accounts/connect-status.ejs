@@ -1,0 +1,99 @@
+<% 
+var _messages = typeof messages !== 'undefined' ? messages : {};
+var _hasSuccess = (_messages.success && _messages.success.length) > 0;
+var _hasError = (_messages.error && _messages.error.length) > 0;
+var _isConnected = typeof isConnected !== 'undefined' ? isConnected : (typeof account !== 'undefined' && account && account.authorized);
+var _statusSubtitle = _hasError ? 'Connection failed' : (_hasSuccess ? 'Connection successful' : (_isConnected ? 'Connection successful' : 'Connection failed'));
+%>
+<div class="page-header mb-0">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h2 class="m-b-5 text-theme-primary" style="font-size: 28px; font-weight: 700;">Connect Status</h2>
+                    <p class="text-theme-secondary mb-0"><%= _statusSubtitle %></p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/accounts">Accounts</a></li>
+                    <li class="breadcrumb-item active">Connect Status</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body mt-0">
+    <div class="page-wrapper">
+        <div class="container-fluid">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <% 
+                    var messages = typeof messages !== 'undefined' ? messages : {};
+                    var successMessages = messages.success || [];
+                    var errorMessages = messages.error || [];
+                    %>
+                    <% if (successMessages.length) { %>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <% successMessages.forEach(function(msg) { %>
+                                <div><%= msg %></div>
+                            <% }); %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    <% } %>
+                    <% if (errorMessages.length) { %>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <% errorMessages.forEach(function(msg) { %>
+                                <div><%= msg %></div>
+                            <% }); %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    <% } %>
+
+                    <div class="card" style="border: 1px solid var(--theme-border); background: var(--theme-secondary);">
+                        <div class="card-body text-center py-5">
+                            <% if (_isConnected) { %>
+                            <div class="mb-4">
+                                <div style="width: 100px; height: 100px; margin: 0 auto; border-radius: 50%; background: rgba(25, 135, 84, 0.15); display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-check-circle-fill" style="font-size: 56px; color: #198754;"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-theme-primary mb-3" style="font-weight: 600;">Successfully connected account</h3>
+                            <p class="text-theme-secondary mb-2">
+                                <strong><%= typeof account !== 'undefined' && account && account.name ? account.name : 'Account' %></strong>
+                                <% if (typeof account !== 'undefined' && account && account.username) { %>
+                                    <span class="text-muted">(@<%= account.username %>)</span>
+                                <% } %>
+                            </p>
+                            <p class="text-theme-secondary mb-4">
+                                has been connected to <strong><%= typeof platformLabel !== 'undefined' ? platformLabel : 'the platform' %></strong>
+                                <% if (typeof account !== 'undefined' && account && account.projectName) { %>
+                                    for project <strong><%= account.projectName %></strong>
+                                <% } %>.
+                            </p>
+                            <% } else { %>
+                            <div class="mb-4">
+                                <div style="width: 100px; height: 100px; margin: 0 auto; border-radius: 50%; background: rgba(220, 53, 69, 0.15); display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-x-circle-fill" style="font-size: 56px; color: #dc3545;"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-theme-primary mb-3" style="font-weight: 600;">Connection failed</h3>
+                            <p class="text-theme-secondary mb-4">
+                                This account is not authorized. Please try connecting again from the accounts page.
+                            </p>
+                            <% } %>
+                            <div class="mt-4">
+                                <a href="/dashboard/accounts?project=<%= typeof account !== 'undefined' && account && account.projectUuid ? account.projectUuid : '' %>" class="btn btn-primary me-2">
+                                    <i class="bi bi-person-badge me-1"></i> View Accounts
+                                </a>
+                                <a href="/dashboard" class="btn btn-outline-secondary">
+                                    <i class="bi bi-house-door me-1"></i> Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
