@@ -205,15 +205,16 @@ CallbackController.x = async (req, res) => {
 
         const providerId = String(userId);
         const name = screenName ? `@${screenName}` : `X ${providerId}`;
-        const encryptedApiKey = encryptObject({});
 
         const updateAccountWithCredentials = async (acc) => {
-            acc.accessToken = accessToken;
-            acc.data = acc.data || {};
-            acc.data.accessSecret = accessSecret;
-            acc.data.accessToken = accessToken;
-            acc.data.userId = userId;
-            acc.data.screenName = screenName;
+            const oauthData = {
+                accessSecret: accessSecret,
+                accessToken: accessToken,
+                userId: userId,
+                screenName: screenName
+            };
+            acc.accessToken = JSON.stringify(oauthData);
+            acc.data = oauthData;
             acc.name = name;
             acc.username = screenName || null;
             acc.projectUuid = projectUuid;
@@ -221,7 +222,7 @@ CallbackController.x = async (req, res) => {
             acc.authorized = true;
             acc.active = true;
             acc.authMethod = 'oauth';
-            acc.apiKey = encryptedApiKey;
+            acc.apiKey = '';
             await account.save();
         };
 
