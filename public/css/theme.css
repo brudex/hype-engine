@@ -19,6 +19,8 @@
     --theme-border: #2F2F33;
     --theme-success: #28a745;
     --theme-danger: #dc3545;
+    --theme-warning: #FFC107;
+    --theme-info: #0dcaf0;
 }
 
 /* Base Styles */
@@ -157,6 +159,324 @@ body {
     border-color: var(--theme-accent-purple);
     color: var(--theme-text-primary);
     box-shadow: 0 0 15px rgba(188, 0, 255, 0.4);
+}
+
+/* ============================================
+   Bootstrap button overrides (theme-matched)
+   ============================================ */
+.btn {
+    border-width: 1px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+/* Primary → Neon Cyan (main CTA) */
+.btn-primary {
+    background-color: var(--theme-accent-cyan);
+    border-color: var(--theme-accent-cyan);
+    color: var(--theme-primary);
+}
+
+.btn-primary:hover {
+    background-color: #00D4E6;
+    border-color: #00D4E6;
+    color: var(--theme-primary);
+    box-shadow: 0 0 20px rgba(0, 239, 255, 0.4);
+}
+
+.btn-primary:focus,
+.btn-primary.focus {
+    border-color: var(--theme-accent-cyan);
+    box-shadow: 0 0 0 0.2rem rgba(0, 239, 255, 0.25);
+}
+
+.btn-primary:active,
+.btn-primary.active {
+    background-color: #00B8C9;
+    border-color: #00B8C9;
+    color: var(--theme-primary);
+}
+
+/* Secondary → Graphite */
+.btn-secondary {
+    background-color: var(--theme-secondary);
+    border-color: var(--theme-border);
+    color: var(--theme-text-primary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--theme-primary);
+    border-color: var(--theme-accent-cyan);
+    color: var(--theme-text-primary);
+    box-shadow: 0 4px 12px rgba(0, 239, 255, 0.1);
+}
+
+.btn-secondary:focus,
+.btn-secondary.focus {
+    border-color: var(--theme-accent-cyan);
+    box-shadow: 0 0 0 0.2rem rgba(0, 239, 255, 0.25);
+}
+
+/* Success → Electric Lime / green */
+.btn-success {
+    background-color: var(--theme-cta-lime);
+    border-color: var(--theme-cta-lime);
+    color: var(--theme-primary);
+}
+
+.btn-success:hover {
+    background-color: #B0E600;
+    border-color: #B0E600;
+    color: var(--theme-primary);
+    box-shadow: 0 0 20px rgba(198, 255, 0, 0.4);
+}
+
+.btn-success:focus,
+.btn-success.focus {
+    border-color: var(--theme-cta-lime);
+    box-shadow: 0 0 0 0.2rem rgba(198, 255, 0, 0.25);
+}
+
+/* Danger */
+.btn-danger {
+    background-color: var(--theme-danger);
+    border-color: var(--theme-danger);
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(220, 53, 69, 0.4);
+}
+
+.btn-danger:focus,
+.btn-danger.focus {
+    border-color: var(--theme-danger);
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Warning */
+.btn-warning {
+    background-color: var(--theme-warning);
+    border-color: var(--theme-warning);
+    color: var(--theme-primary);
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+    color: var(--theme-primary);
+    box-shadow: 0 0 15px rgba(255, 193, 7, 0.4);
+}
+
+.btn-warning:focus,
+.btn-warning.focus {
+    border-color: var(--theme-warning);
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+
+/* Info → Cyan (aligned with theme accent) */
+.btn-info {
+    background-color: var(--theme-accent-cyan);
+    border-color: var(--theme-accent-cyan);
+    color: var(--theme-primary);
+}
+
+.btn-info:hover {
+    background-color: #00D4E6;
+    border-color: #00D4E6;
+    color: var(--theme-primary);
+    box-shadow: 0 0 20px rgba(0, 239, 255, 0.4);
+}
+
+.btn-info:focus,
+.btn-info.focus {
+    border-color: var(--theme-accent-cyan);
+    box-shadow: 0 0 0 0.2rem rgba(0, 239, 255, 0.25);
+}
+
+/* Light → subtle secondary */
+.btn-light {
+    background-color: var(--theme-secondary);
+    border-color: var(--theme-border);
+    color: var(--theme-text-primary);
+}
+
+.btn-light:hover {
+    background-color: var(--theme-primary);
+    border-color: var(--theme-accent-cyan);
+    color: var(--theme-text-primary);
+}
+
+.btn-light:focus,
+.btn-light.focus {
+    border-color: var(--theme-accent-cyan);
+    box-shadow: 0 0 0 0.2rem rgba(0, 239, 255, 0.25);
+}
+
+/* Dark → Jet black */
+.btn-dark {
+    background-color: var(--theme-primary);
+    border-color: var(--theme-border);
+    color: var(--theme-text-primary);
+}
+
+.btn-dark:hover {
+    background-color: var(--theme-secondary);
+    border-color: var(--theme-accent-cyan);
+    color: var(--theme-text-primary);
+    box-shadow: 0 4px 12px rgba(0, 239, 255, 0.1);
+}
+
+.btn-dark:focus,
+.btn-dark.focus {
+    border-color: var(--theme-accent-cyan);
+    box-shadow: 0 0 0 0.2rem rgba(0, 239, 255, 0.25);
+}
+
+/* Outline variants */
+.btn-outline-primary {
+    border-color: var(--theme-accent-cyan);
+    color: var(--theme-accent-cyan);
+    background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--theme-accent-cyan);
+    border-color: var(--theme-accent-cyan);
+    color: var(--theme-primary);
+    box-shadow: 0 0 15px rgba(0, 239, 255, 0.4);
+}
+
+.btn-outline-primary:focus,
+.btn-outline-primary.focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 239, 255, 0.25);
+}
+
+/* Active state (e.g. tab toggles, btn-group selected) – use theme cyan, not Bootstrap blue */
+.btn-outline-primary.active,
+.btn-group .btn-outline-primary.active,
+.btn-group[role="tablist"] .btn-outline-primary.active,
+.btn-check:checked + .btn-outline-primary {
+    background-color: var(--theme-accent-cyan) !important;
+    border-color: var(--theme-accent-cyan) !important;
+    color: var(--theme-primary) !important;
+}
+
+.btn-outline-primary.active:hover,
+.btn-group .btn-outline-primary.active:hover,
+.btn-group[role="tablist"] .btn-outline-primary.active:hover {
+    background-color: #00D4E6 !important;
+    border-color: #00D4E6 !important;
+    color: var(--theme-primary) !important;
+    box-shadow: 0 0 15px rgba(0, 239, 255, 0.4);
+}
+
+.btn-outline-secondary {
+    border-color: var(--theme-border);
+    color: var(--theme-text-secondary);
+    background-color: transparent;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--theme-secondary);
+    border-color: var(--theme-accent-cyan);
+    color: var(--theme-text-primary);
+}
+
+.btn-outline-secondary:focus,
+.btn-outline-secondary.focus {
+    border-color: var(--theme-accent-cyan);
+    box-shadow: 0 0 0 0.2rem rgba(0, 239, 255, 0.25);
+}
+
+.btn-outline-success {
+    border-color: var(--theme-cta-lime);
+    color: var(--theme-cta-lime);
+    background-color: transparent;
+}
+
+.btn-outline-success:hover {
+    background-color: var(--theme-cta-lime);
+    border-color: var(--theme-cta-lime);
+    color: var(--theme-primary);
+    box-shadow: 0 0 15px rgba(198, 255, 0, 0.4);
+}
+
+.btn-outline-danger {
+    border-color: var(--theme-danger);
+    color: var(--theme-danger);
+    background-color: transparent;
+}
+
+.btn-outline-danger:hover {
+    background-color: var(--theme-danger);
+    border-color: var(--theme-danger);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(220, 53, 69, 0.4);
+}
+
+.btn-outline-warning {
+    border-color: var(--theme-warning);
+    color: var(--theme-warning);
+    background-color: transparent;
+}
+
+.btn-outline-warning:hover {
+    background-color: var(--theme-warning);
+    border-color: var(--theme-warning);
+    color: var(--theme-primary);
+}
+
+.btn-outline-info {
+    border-color: var(--theme-accent-cyan);
+    color: var(--theme-accent-cyan);
+    background-color: transparent;
+}
+
+.btn-outline-info:hover {
+    background-color: var(--theme-accent-cyan);
+    border-color: var(--theme-accent-cyan);
+    color: var(--theme-primary);
+    box-shadow: 0 0 15px rgba(0, 239, 255, 0.4);
+}
+
+.btn-outline-light {
+    border-color: var(--theme-border);
+    color: var(--theme-text-secondary);
+    background-color: transparent;
+}
+
+.btn-outline-light:hover {
+    background-color: var(--theme-secondary);
+    border-color: var(--theme-accent-cyan);
+    color: var(--theme-text-primary);
+}
+
+.btn-outline-dark {
+    border-color: var(--theme-border);
+    color: var(--theme-text-primary);
+    background-color: transparent;
+}
+
+.btn-outline-dark:hover {
+    background-color: var(--theme-primary);
+    border-color: var(--theme-accent-cyan);
+    color: var(--theme-text-primary);
+    box-shadow: 0 4px 12px rgba(0, 239, 255, 0.1);
+}
+
+/* Link button (minimal) */
+.btn-link {
+    color: var(--theme-accent-cyan);
+    background: transparent;
+    border: none;
+}
+
+.btn-link:hover {
+    color: var(--theme-cta-lime);
 }
 
 /* Cards */
