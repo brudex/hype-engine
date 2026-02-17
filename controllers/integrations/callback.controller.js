@@ -31,6 +31,48 @@ function generateCrcResponseToken(crc_token, consumer_secret) {
 }
 
 /**
+ * Handle X webhook CRC (Challenge-Response Check) verification.
+ * Loads Twitter OAuth config, computes response_token, returns it or an error code.
+ * @param {string} crc_token - From req.query.crc_token
+ * @param {string} [nonce] - From req.query.nonce (logged only)
+ * @returns {Promise<{ responseToken: string | null, errorCode?: string }>}
+ */
+async function handleWebHookVerification(crc_token, nonce) {
+    const oauthService = await db.OauthService.findOne({ where: { name: 'twitter' } });
+    if (!oauthService || !oauthService.configuration) {
+        logger.warn('X CRC: Twitter OAuth not configured');
+        return { responseToken: null, errorCode: 'twitter_not_configured' };
+    }
+    let config = oauthService.configuration;
+    if (typeof config === 'string') {
+        try {
+            config = JSON.parse(config);
+        } catch (parseErr) {
+            logger.error('X CRC: configuration is not valid JSON', { message: parseErr.message });
+            return { responseToken: null, errorCode: 'invalid_config_format' };
+        }
+    }
+    const consumerSecret = config && (config.consumer_secret || config.client_secret);
+    if (!consumerSecret) {
+        logger.warn('X CRC: Consumer Secret missing');
+        return { responseToken: null, errorCode: 'consumer_secret_missing' };
+    }
+    try {
+        const responseToken = generateCrcResponseToken(crc_token, consumerSecret);
+        logger.info('X CRC response sent', { nonce: nonce || null });
+        return { responseToken };
+    } catch (err) {
+        logger.error('X CRC error (details for troubleshooting)', {
+            message: err.message,
+            code: err.code,
+            name: err.name,
+            step: 'crc_lookup_or_compute'
+        });
+        return { responseToken: null, errorCode: err.message || 'crc_failed' };
+    }
+}
+
+/**
  * Log full error details for troubleshooting (no secrets).
  */
 function logXCallbackError(err, context) {
@@ -83,38 +125,8 @@ CallbackController.x = async (req, res) => {
 
         // CRC: X webhook verification (Challenge-Response Check)
         if (crc_token) {
-            try {
-                const oauthService = await db.OauthService.findOne({ where: { name: 'twitter' } });
-                if (!oauthService || !oauthService.configuration) {
-                    logger.warn('X CRC: Twitter OAuth not configured');
-                    return sendCrcResponse(null, 'twitter_not_configured');
-                }
-                let config = oauthService.configuration;
-                if (typeof config === 'string') {
-                    try {
-                        config = JSON.parse(config);
-                    } catch (parseErr) {
-                        logger.error('X CRC: configuration is not valid JSON', { message: parseErr.message });
-                        return sendCrcResponse(null, 'invalid_config_format');
-                    }
-                }
-                const consumerSecret = config && (config.consumer_secret || config.client_secret);
-                if (!consumerSecret) {
-                    logger.warn('X CRC: Consumer Secret missing');
-                    return sendCrcResponse(null, 'consumer_secret_missing');
-                }
-                const responseToken = generateCrcResponseToken(crc_token, consumerSecret);
-                logger.info('X CRC response sent', { nonce: nonce || null });
-                return sendCrcResponse(responseToken);
-            } catch (err) {
-                logger.error('X CRC error (details for troubleshooting)', {
-                    message: err.message,
-                    code: err.code,
-                    name: err.name,
-                    step: 'crc_lookup_or_compute'
-                });
-                return sendCrcResponse(null, err.message || 'crc_failed');
-            }
+            const result = await handleWebHookVerification(crc_token, nonce);
+            return sendCrcResponse(result.responseToken, result.errorCode);
         }
 
         // OAuth 1.0a callback flow
@@ -140,11 +152,15 @@ CallbackController.x = async (req, res) => {
             });
         }
 
-        const stored = req.session && req.session.xConnect && req.session.xConnect[oauth_token];
-        if (!stored) {
-            logger.warn('X OAuth callback: request token not found in session', {
+        const pendingAccounts = await db.Account.findAll({
+            where: { provider: 'twitter' ,accessToken: oauth_token},
+            attributes: ['uuid', 'projectUuid', 'data']
+        });
+        const placeholderAccount = pendingAccounts[0] || null;
+        if (!placeholderAccount || !placeholderAccount.data || !placeholderAccount.data.oauth_token_secret) {
+            logger.warn('X OAuth callback: no account found with this request token', {
                 oauthTokenPresent: !!oauth_token,
-                sessionKeys: req.session && req.session.xConnect ? Object.keys(req.session.xConnect) : []
+                checkedCount: pendingAccounts.length
             });
             return res.status(200).json({
                 success: false,
@@ -153,7 +169,9 @@ CallbackController.x = async (req, res) => {
             });
         }
 
-        const { oauth_token_secret, projectUuid, userUuid } = stored;
+        const oauth_token_secret = placeholderAccount.data.oauth_token_secret;
+        const projectUuid = placeholderAccount.projectUuid;
+        const pendingAccountUuid = placeholderAccount.uuid;
 
         const oauthService = await db.OauthService.findOne({ where: { name: 'twitter' } });
         if (!oauthService || !oauthService.configuration) {
@@ -180,34 +198,55 @@ CallbackController.x = async (req, res) => {
             });
         }
 
+        console.log('Calling exchangeRequestToken with: oauth_token', oauth_token);
+        console.log('Calling exchangeRequestToken with: oauth_token_secret', oauth_token_secret);
+        console.log('Calling exchangeRequestToken with: oauth_verifier', oauth_verifier);
+        console.log('Calling exchangeRequestToken with: appKey', appKey);
+        console.log('Calling exchangeRequestToken with: appSecret', appSecret);
+        logger.info('Calling exchangeRequestToken with: oauth_token', oauth_token);
+        logger.info('Calling exchangeRequestToken with: oauth_token_secret', oauth_token_secret);
+        logger.info('Calling exchangeRequestToken with: oauth_verifier', oauth_verifier);
+        logger.info('Calling exchangeRequestToken with: appKey', appKey);
+        logger.info('Calling exchangeRequestToken with: appSecret', appSecret);
         const { accessToken, accessSecret, userId, screenName } = await twitterPlatform.exchangeRequestToken(
             oauth_token,
             oauth_token_secret,
             oauth_verifier,
             { appKey, appSecret }
         );
-
-        delete req.session.xConnect[oauth_token];
+        logger.info('exchangeRequestToken result: accessToken', accessToken);
+        logger.info('exchangeRequestToken result: accessSecret', accessSecret);
+        logger.info('exchangeRequestToken result: userId', userId);
+        logger.info('exchangeRequestToken result: screenName', screenName);
+        console.log('exchangeRequestToken result: accessToken', accessToken);
+        console.log('exchangeRequestToken result: accessSecret', accessSecret);
+        console.log('exchangeRequestToken result: userId', userId);
+        console.log('exchangeRequestToken result: screenName', screenName);
 
         const providerId = String(userId);
         const name = screenName ? `@${screenName}` : `X ${providerId}`;
         const encryptedApiKey = encryptObject({});
 
-        let account = await db.Account.findOne({
-            where: { provider: 'twitter', providerId }
-        });
+        const updateAccountWithCredentials = (acc) => {
+            acc.accessToken = accessToken;
+            acc.data = acc.data || {};
+            acc.data.accessSecret = accessSecret;
+            acc.data.accessToken = accessToken;
+            acc.data.userId = userId;
+            acc.data.screenName = screenName;
+            acc.name = name;
+            acc.username = screenName || null;
+            acc.projectUuid = projectUuid;
+            acc.providerId = providerId;
+            acc.authorized = true;
+            acc.active = true;
+            acc.authMethod = 'oauth';
+            acc.apiKey = encryptedApiKey;
+        };
 
+        let account = await db.Account.findOne({ where: { uuid: pendingAccountUuid } });
         if (account) {
-            account.accessToken = accessToken;
-            account.data = account.data || {};
-            account.data.accessSecret = accessSecret;
-            account.name = name;
-            account.username = screenName || null;
-            account.projectUuid = projectUuid;
-            account.authorized = true;
-            account.active = true;
-            account.authMethod = 'oauth';
-            account.apiKey = encryptedApiKey;
+            updateAccountWithCredentials(account);
             await account.save();
         } else {
             account = await db.Account.create({
@@ -225,25 +264,15 @@ CallbackController.x = async (req, res) => {
                 data: { accessSecret },
                 media: null
             });
+            updateAccountWithCredentials(account);
+            await account.save();
         }
 
         logger.info('X account connected', { accountUuid: account.uuid, screenName, userId, projectUuid });
-        return res.status(200).json({
-            success: true,
-            message: 'X account connected',
-            data: {
-                accountUuid: account.uuid,
-                projectUuid,
-                screenName: screenName || null,
-                userId: String(userId)
-            }
-        });
+        req.flash('success', name + ' has been successfully connected to X (Twitter) for this project. You can now use this account to post.');
+        return res.redirect(302, '/dashboard/accounts/connect-status/' + account.uuid);
     } catch (err) {
         logXCallbackError(err, 'exchange_or_save');
-        const token = (req.query && req.query.oauth_token);
-        if (req.session && req.session.xConnect && token && req.session.xConnect[token]) {
-            delete req.session.xConnect[token];
-        }
         if (isCrcRequest) {
             return sendCrcResponse(null, err.message || 'crc_failed');
         }

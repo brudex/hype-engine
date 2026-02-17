@@ -33,7 +33,6 @@ function getService(platformName) {
  */
 async function testCredentials(platformName, configuration) {
     const service = getService(platformName);
-
     if (!service) {
         return {
             success: false,
@@ -41,7 +40,6 @@ async function testCredentials(platformName, configuration) {
             error: `Testing not implemented for ${platformName}`
         };
     }
-
     return service.testCredentials(configuration);
 }
 

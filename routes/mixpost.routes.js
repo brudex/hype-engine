@@ -64,6 +64,7 @@ router.delete('/projects/:uuid', ProjectsController.delete);
 
 // Accounts Page Routes
 router.get('/accounts', AccountsController.index);
+router.get('/accounts/connect-status/:accountUuid', AccountsController.connectStatus);
 router.get('/accounts/:projectUuid', AccountsController.index);
 router.get('/projects/:projectUuid/accounts', AccountsController.index);
 

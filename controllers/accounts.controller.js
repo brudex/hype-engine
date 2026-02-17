@@ -395,13 +395,36 @@ AccountsController.connectIntegration = async (req, res) => {
                     { appKey, appSecret },
                     callbackUrl
                 );
-                req.session.xConnect = req.session.xConnect || {};
-                req.session.xConnect[oauth_token] = {
-                    oauth_token_secret,
-                    projectUuid,
-                    userUuid
-                };
-                logger.info('X connect: redirecting to X', { hasUrl: !!url, projectUuid });
+
+                let placeholderAccount = await db.Account.findOne({
+                    where: { projectUuid, provider: 'twitter' }
+                });
+                if (!placeholderAccount) {
+                    placeholderAccount = await db.Account.create({
+                        uuid: uuidv4(),
+                        projectUuid,
+                        name: 'X (pending)',
+                        username: null,
+                        provider: 'twitter',
+                        providerId: 'pending-' + oauth_token,
+                        authMethod: 'oauth',
+                        accessToken: oauth_token,
+                        apiKey: encryptObject({}),
+                        authorized: false,
+                        active: false,
+                        data: { oauth_token, oauth_token_secret },
+                        media: null
+                    });
+                } else {
+                    placeholderAccount.providerId = 'pending-' + oauth_token;
+                    placeholderAccount.data = { oauth_token, oauth_token_secret };
+                    placeholderAccount.authorized = false;
+                    placeholderAccount.accessToken = oauth_token;
+                    placeholderAccount.active = false;
+                    await placeholderAccount.save();
+                }
+
+                logger.info('X connect: redirecting to X', { hasUrl: !!url, projectUuid, accountUuid: placeholderAccount.uuid });
                 return res.redirect(url);
             } catch (err) {
                 logger.error('X generateAuthLink error:', err);
@@ -419,6 +442,54 @@ AccountsController.connectIntegration = async (req, res) => {
         const errMsg = (error && error.message) ? error.message : String(error);
         req.flash('error', 'Connect integration failed. ' + errMsg + ' (Step: connectIntegration; platform=' + (req.params.platformName || '') + ', projectUuid=' + (req.params.projectUuid || '') + ')');
         res.redirect('/dashboard/error');
+    }
+};
+
+/**
+ * Connect status page – shown after OAuth callback with success/error flash.
+ * @route GET /dashboard/accounts/connect-status/:accountUuid
+ */
+AccountsController.connectStatus = async (req, res) => {
+    try {
+        const { accountUuid } = req.params;
+        const userUuid = req.user?.uuid;
+        if (!userUuid) {
+            req.flash('error', 'Please log in to view this page');
+            return res.redirect('/auth/login');
+        }
+        const account = await db.Account.findOne({
+            where: { uuid: accountUuid },
+            include: [{ model: db.Project, as: 'project', attributes: ['uuid', 'name'] }]
+        });
+        if (!account) {
+            req.flash('error', 'Account not found');
+            return res.redirect('/dashboard/accounts');
+        }
+        const project = await db.Project.findOne({
+            where: { uuid: account.projectUuid, userUuid }
+        });
+        if (!project) {
+            req.flash('error', 'You do not have access to this account');
+            return res.redirect('/dashboard/accounts');
+        }
+        const platformLabel = (account.provider || 'twitter').toLowerCase() === 'twitter' ? 'X (Twitter)' : (account.provider || 'Account');
+        res.render('dashboard/accounts/connect-status', {
+            layout: 'layouts/dashboard/index',
+            currentPage: 'accounts',
+            account: {
+                uuid: account.uuid,
+                name: account.name,
+                username: account.username,
+                provider: account.provider,
+                projectUuid: account.projectUuid,
+                projectName: account.project ? account.project.name : null
+            },
+            platformLabel
+        });
+    } catch (error) {
+        logger.error('Connect status error:', error);
+        req.flash('error', 'Failed to load connect status');
+        res.redirect('/dashboard/accounts');
     }
 };
 
