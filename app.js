@@ -65,7 +65,7 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production', // HTTPS only in production
         httpOnly: true, // Prevent XSS
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: 'strict', // CSRF protection
+        sameSite: 'lax', // Lax so session is sent when OAuth provider redirects back (strict would drop cookie on that redirect)
         signed: true // Sign cookies for tamper protection
     }
 }));
