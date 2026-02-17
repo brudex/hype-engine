@@ -19,9 +19,10 @@ const AccessTokenController = require('../controllers/access-token.controller');
 // Middleware
 const authMiddleware = require('../middlewares/auth.middleware');
 
+// Unauthenticated: OAuth callback redirects here; user may not have session in same tab
+router.get('/accounts/connect-status/:accountUuid', AccountsController.connectStatus);
 
-
-// Apply authentication middleware to all dashboard routes
+// Apply authentication middleware to all other dashboard routes
 // Use requireLogin for session-based authentication (Passport)
 // Use requireRegisteredUser for routes that need registered accounts (not guests)
 // Use requireAdmin for admin-only routes
@@ -64,7 +65,6 @@ router.delete('/projects/:uuid', ProjectsController.delete);
 
 // Accounts Page Routes
 router.get('/accounts', AccountsController.index);
-router.get('/accounts/connect-status/:accountUuid', AccountsController.connectStatus);
 router.get('/accounts/:projectUuid', AccountsController.index);
 router.get('/projects/:projectUuid/accounts', AccountsController.index);
 
