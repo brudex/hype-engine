@@ -73,11 +73,11 @@
                                                 <div class="list-group-item d-flex justify-content-between align-items-center" ng-repeat="account in accountsCtrl.getPlatformAccounts('facebook')">
                                                     <div><h6 class="mb-0">{{ account.name }}</h6><small class="text-muted">{{ account.username || 'N/A' }}</small></div>
                                                     <div class="d-flex align-items-center gap-2">
-                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span>
+                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span><span class="badge bg-secondary ms-1" ng-if="!account.active">Deactivated</span>
                                                         <div class="dropdown">
                                                             <button class="btn btn-sm btn-link p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                                <li><a class="dropdown-item" href="#" ng-click="accountsCtrl.refreshAccount(account.uuid); $event.preventDefault()"><i class="bi bi-arrow-clockwise me-2"></i> Refresh</a></li>
+                                                                <li><a class="dropdown-item" href="#" ng-click="accountsCtrl.setActiveAccount(account.uuid, !account.active); $event.preventDefault()"><i class="bi bi-pause-circle me-2"></i>{{ account.active ? 'Deactivate' : 'Activate' }}</a></li>
                                                                 <li><a class="dropdown-item text-danger" href="#" ng-click="accountsCtrl.deleteAccount(account.uuid); $event.preventDefault()"><i class="bi bi-trash me-2"></i> Delete</a></li>
                                                             </ul>
                                                         </div>
@@ -85,7 +85,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <button class="btn btn-primary" ng-click="accountsCtrl.connectAccount('facebook')"><i class="bi bi-plus-circle"></i> Connect Facebook Page</button>
+                                        <button class="btn btn-primary" ng-if="!accountsCtrl.hasAuthorizedAccount('facebook')" ng-click="accountsCtrl.connectAccount('facebook')"><i class="bi bi-plus-circle"></i> Connect Facebook Page</button>
                                     </div>
                                     <div class="tab-pane fade" id="acc-facebook-apikeys" role="tabpanel" aria-labelledby="tab-acc-facebook-apikeys">
                                         <div class="alert alert-info mb-3" role="alert">Authorize connection of your Facebook with API keys.</div>
@@ -131,11 +131,11 @@
                                                 <div class="list-group-item d-flex justify-content-between align-items-center" ng-repeat="account in accountsCtrl.getPlatformAccounts('linkedin')">
                                                     <div><h6 class="mb-0">{{ account.name }}</h6><small class="text-muted">{{ account.username || 'N/A' }}</small></div>
                                                     <div class="d-flex align-items-center gap-2">
-                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span>
+                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span><span class="badge bg-secondary ms-1" ng-if="!account.active">Deactivated</span>
                                                         <div class="dropdown">
                                                             <button class="btn btn-sm btn-link p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                                <li><a class="dropdown-item" href="#" ng-click="accountsCtrl.refreshAccount(account.uuid); $event.preventDefault()"><i class="bi bi-arrow-clockwise me-2"></i> Refresh</a></li>
+                                                                <li><a class="dropdown-item" href="#" ng-click="accountsCtrl.setActiveAccount(account.uuid, !account.active); $event.preventDefault()"><i class="bi bi-pause-circle me-2"></i>{{ account.active ? 'Deactivate' : 'Activate' }}</a></li>
                                                                 <li><a class="dropdown-item text-danger" href="#" ng-click="accountsCtrl.deleteAccount(account.uuid); $event.preventDefault()"><i class="bi bi-trash me-2"></i> Delete</a></li>
                                                             </ul>
                                                         </div>
@@ -143,7 +143,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <button class="btn btn-primary" ng-click="accountsCtrl.connectAccount('linkedin')"><i class="bi bi-plus-circle"></i> Connect LinkedIn Page</button>
+                                        <button class="btn btn-primary" ng-if="!accountsCtrl.hasAuthorizedAccount('linkedin')" ng-click="accountsCtrl.connectAccount('linkedin')"><i class="bi bi-plus-circle"></i> Connect LinkedIn Page</button>
                                     </div>
                                     <div class="tab-pane fade" id="acc-linkedin-apikeys" role="tabpanel">
                                         <div class="alert alert-info mb-3" role="alert">Authorize connection of your LinkedIn with API keys.</div>
@@ -189,11 +189,11 @@
                                                 <div class="list-group-item d-flex justify-content-between align-items-center" ng-repeat="account in accountsCtrl.getPlatformAccounts('twitter')">
                                                     <div><h6 class="mb-0">{{ account.name }}</h6><small class="text-muted">{{ account.username || 'N/A' }}</small></div>
                                                     <div class="d-flex align-items-center gap-2">
-                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span>
+                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span><span class="badge bg-secondary ms-1" ng-if="!account.active">Deactivated</span>
                                                         <div class="dropdown">
                                                             <button class="btn btn-sm btn-link p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                                <li><a class="dropdown-item" href="#" ng-click="accountsCtrl.refreshAccount(account.uuid); $event.preventDefault()"><i class="bi bi-arrow-clockwise me-2"></i> Refresh</a></li>
+                                                                <li><a class="dropdown-item" href="#" ng-click="accountsCtrl.setActiveAccount(account.uuid, !account.active); $event.preventDefault()"><i class="bi bi-pause-circle me-2"></i>{{ account.active ? 'Deactivate' : 'Activate' }}</a></li>
                                                                 <li><a class="dropdown-item text-danger" href="#" ng-click="accountsCtrl.deleteAccount(account.uuid); $event.preventDefault()"><i class="bi bi-trash me-2"></i> Delete</a></li>
                                                             </ul>
                                                         </div>
@@ -201,7 +201,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <button class="btn btn-primary" ng-click="accountsCtrl.connectAccount('twitter')"><i class="bi bi-plus-circle"></i> Connect Twitter Account</button>
+                                        <button class="btn btn-primary" ng-if="!accountsCtrl.hasAuthorizedAccount('twitter')" ng-click="accountsCtrl.connectAccount('twitter')"><i class="bi bi-plus-circle"></i> Connect Twitter Account</button>
                                     </div>
                                     <div class="tab-pane fade" id="acc-twitter-apikeys" role="tabpanel">
                                         <div class="alert alert-info mb-3" role="alert">Authorize connection of your Twitter / X with API keys.</div>
@@ -247,11 +247,11 @@
                                                 <div class="list-group-item d-flex justify-content-between align-items-center" ng-repeat="account in accountsCtrl.getPlatformAccounts('instagram')">
                                                     <div><h6 class="mb-0">{{ account.name }}</h6><small class="text-muted">{{ account.username || 'N/A' }}</small></div>
                                                     <div class="d-flex align-items-center gap-2">
-                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span>
+                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span><span class="badge bg-secondary ms-1" ng-if="!account.active">Deactivated</span>
                                                         <div class="dropdown">
                                                             <button class="btn btn-sm btn-link p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                                <li><a class="dropdown-item" href="#" ng-click="accountsCtrl.refreshAccount(account.uuid); $event.preventDefault()"><i class="bi bi-arrow-clockwise me-2"></i> Refresh</a></li>
+                                                                <li><a class="dropdown-item" href="#" ng-click="accountsCtrl.setActiveAccount(account.uuid, !account.active); $event.preventDefault()"><i class="bi bi-pause-circle me-2"></i>{{ account.active ? 'Deactivate' : 'Activate' }}</a></li>
                                                                 <li><a class="dropdown-item text-danger" href="#" ng-click="accountsCtrl.deleteAccount(account.uuid); $event.preventDefault()"><i class="bi bi-trash me-2"></i> Delete</a></li>
                                                             </ul>
                                                         </div>
@@ -259,7 +259,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <button class="btn btn-primary" ng-click="accountsCtrl.connectAccount('instagram')"><i class="bi bi-plus-circle"></i> Connect Instagram Account</button>
+                                        <button class="btn btn-primary" ng-if="!accountsCtrl.hasAuthorizedAccount('instagram')" ng-click="accountsCtrl.connectAccount('instagram')"><i class="bi bi-plus-circle"></i> Connect Instagram Account</button>
                                     </div>
                                     <div class="tab-pane fade" id="acc-instagram-apikeys" role="tabpanel">
                                         <div class="alert alert-info mb-3" role="alert">Authorize connection of your Instagram with API keys.</div>
@@ -305,11 +305,11 @@
                                                 <div class="list-group-item d-flex justify-content-between align-items-center" ng-repeat="account in accountsCtrl.getPlatformAccounts('tiktok')">
                                                     <div><h6 class="mb-0">{{ account.name }}</h6><small class="text-muted">{{ account.username || 'N/A' }}</small></div>
                                                     <div class="d-flex align-items-center gap-2">
-                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span>
+                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span><span class="badge bg-secondary ms-1" ng-if="!account.active">Deactivated</span>
                                                         <div class="dropdown">
                                                             <button class="btn btn-sm btn-link p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                                <li><a class="dropdown-item" href="#" ng-click="accountsCtrl.refreshAccount(account.uuid); $event.preventDefault()"><i class="bi bi-arrow-clockwise me-2"></i> Refresh</a></li>
+                                                                <li><a class="dropdown-item" href="#" ng-click="accountsCtrl.setActiveAccount(account.uuid, !account.active); $event.preventDefault()"><i class="bi bi-pause-circle me-2"></i>{{ account.active ? 'Deactivate' : 'Activate' }}</a></li>
                                                                 <li><a class="dropdown-item text-danger" href="#" ng-click="accountsCtrl.deleteAccount(account.uuid); $event.preventDefault()"><i class="bi bi-trash me-2"></i> Delete</a></li>
                                                             </ul>
                                                         </div>
@@ -317,7 +317,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <button class="btn btn-primary" ng-click="accountsCtrl.connectAccount('tiktok')"><i class="bi bi-plus-circle"></i> Connect TikTok Account</button>
+                                        <button class="btn btn-primary" ng-if="!accountsCtrl.hasAuthorizedAccount('tiktok')" ng-click="accountsCtrl.connectAccount('tiktok')"><i class="bi bi-plus-circle"></i> Connect TikTok Account</button>
                                     </div>
                                     <div class="tab-pane fade" id="acc-tiktok-apikeys" role="tabpanel">
                                         <div class="alert alert-info mb-3" role="alert">Authorize connection of your TikTok with API keys.</div>
@@ -363,11 +363,11 @@
                                                 <div class="list-group-item d-flex justify-content-between align-items-center" ng-repeat="account in accountsCtrl.getPlatformAccounts('mastodon')">
                                                     <div><h6 class="mb-0">{{ account.name }}</h6><small class="text-muted">{{ account.username || 'N/A' }}</small></div>
                                                     <div class="d-flex align-items-center gap-2">
-                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span>
+                                                        <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span><span class="badge bg-secondary ms-1" ng-if="!account.active">Deactivated</span>
                                                         <div class="dropdown">
                                                             <button class="btn btn-sm btn-link p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                                <li><a class="dropdown-item" href="#" ng-click="accountsCtrl.refreshAccount(account.uuid); $event.preventDefault()"><i class="bi bi-arrow-clockwise me-2"></i> Refresh</a></li>
+                                                                <li><a class="dropdown-item" href="#" ng-click="accountsCtrl.setActiveAccount(account.uuid, !account.active); $event.preventDefault()"><i class="bi bi-pause-circle me-2"></i>{{ account.active ? 'Deactivate' : 'Activate' }}</a></li>
                                                                 <li><a class="dropdown-item text-danger" href="#" ng-click="accountsCtrl.deleteAccount(account.uuid); $event.preventDefault()"><i class="bi bi-trash me-2"></i> Delete</a></li>
                                                             </ul>
                                                         </div>
@@ -375,7 +375,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <button class="btn btn-primary" ng-click="accountsCtrl.connectAccount('mastodon')"><i class="bi bi-plus-circle"></i> Connect Mastodon Account</button>
+                                        <button class="btn btn-primary" ng-if="!accountsCtrl.hasAuthorizedAccount('mastodon')" ng-click="accountsCtrl.connectAccount('mastodon')"><i class="bi bi-plus-circle"></i> Connect Mastodon Account</button>
                                     </div>
                                     <div class="tab-pane fade" id="acc-mastodon-apikeys" role="tabpanel">
                                         <div class="alert alert-info mb-3" role="alert">Authorize connection of your Mastodon with API keys.</div>

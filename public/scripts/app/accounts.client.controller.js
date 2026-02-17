@@ -29,8 +29,10 @@
         vm.getProjectInitials = getProjectInitials;
         vm.refreshAccount = refreshAccount;
         vm.deleteAccount = deleteAccount;
+        vm.setActiveAccount = setActiveAccount;
         vm.connectAccount = connectAccount;
         vm.getPlatformAccounts = getPlatformAccounts;
+        vm.hasAuthorizedAccount = hasAuthorizedAccount;
         vm.getFormFields = getFormFields;
         vm.saveApiKeyConfig = saveApiKeyConfig;
 
@@ -198,20 +200,37 @@
             });
         }
 
-        // Delete account
+        // Delete account (with SweetAlert confirm)
         function deleteAccount(uuid) {
-            utils.confirmAlert('Confirm', 'Are you sure you want to delete this account?', function() {
-                $http.delete('/dashboard/api/accounts/' + uuid).then(function(response) {
-                    if (response.data.success) {
-                        utils.alertSuccess('Success', 'Account deleted successfully');
-                        var pu = (vm.selectedProject && vm.selectedProject.uuid) || vm.selectedProjectUuid;
-                        if (pu) loadAccounts(pu);
-                    } else {
-                        utils.alertError('Error', response.data.message || 'Failed to delete account');
-                    }
-                }).catch(function(error) {
-                    utils.alertError('Error', 'Failed to delete account');
-                });
+            utils.alertConfirm('Confirm', 'Are you sure you want to delete this account?', function(result) {
+                if (result.isConfirmed) {
+                    $http.delete('/dashboard/api/accounts/' + uuid).then(function(response) {
+                        if (response.data.success) {
+                            utils.alertSuccess('Success', 'Account deleted successfully');
+                            var pu = (vm.selectedProject && vm.selectedProject.uuid) || vm.selectedProjectUuid;
+                            if (pu) loadAccounts(pu);
+                        } else {
+                            utils.alertError('Error', response.data.message || 'Failed to delete account');
+                        }
+                    }).catch(function(error) {
+                        utils.alertError('Error', (error.data && error.data.message) || 'Failed to delete account');
+                    });
+                }
+            });
+        }
+
+        // Activate or deactivate account (PUT active true/false)
+        function setActiveAccount(uuid, active) {
+            $http.put('/dashboard/api/accounts/' + uuid, { active: !!active }).then(function(response) {
+                if (response.data && response.data.success) {
+                    utils.alertSuccess('Success', response.data.message || (active ? 'Account activated' : 'Account deactivated'));
+                    var pu = (vm.selectedProject && vm.selectedProject.uuid) || vm.selectedProjectUuid;
+                    if (pu) loadAccounts(pu);
+                } else {
+                    utils.alertError('Error', (response.data && response.data.message) || 'Failed to update account');
+                }
+            }).catch(function(error) {
+                utils.alertError('Error', (error.data && error.data.message) || 'Failed to update account');
             });
         }
 
@@ -232,6 +251,12 @@
             return vm.accounts.filter(function(account) {
                 return account.provider && account.provider.toLowerCase() === (platform || '').toLowerCase();
             });
+        }
+
+        // True if this platform has at least one authorized account
+        function hasAuthorizedAccount(platform) {
+            var accounts = getPlatformAccounts(platform);
+            return accounts.some(function(a) { return a.authorized; });
         }
 
         // Form fields for API key tab (from serviceDefinitions)

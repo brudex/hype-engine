@@ -55,6 +55,7 @@ AccountsController.index = async (req, res) => {
             provider: account.provider,
             providerId: account.providerId,
             authorized: account.authorized,
+            active: account.active,
             projectUuid: account.projectUuid,
             project: account.project ? {
                 uuid: account.project.uuid,
@@ -116,16 +117,17 @@ AccountsController.index = async (req, res) => {
 };
 
 /**
- * Update account
+ * Update account (active only)
  * @route PUT /dashboard/accounts/:uuid
  * @route PUT /api/accounts/:uuid
+ * @body { boolean } active - Set account active (true/false) for Activate/Deactivate
  */
 AccountsController.update = async (req, res) => {
     try {
         const { uuid } = req.params;
-        
+
         const account = await db.Account.findOne({ where: { uuid } });
-        
+
         if (!account) {
             if (req.path.startsWith('/api/')) {
                 return res.status(404).json({
@@ -137,13 +139,8 @@ AccountsController.update = async (req, res) => {
             return res.redirect('back');
         }
 
-        // TODO: Implement account refresh logic with social provider
-        // For now, just update basic info if provided
-        if (req.body.name) {
-            account.name = req.body.name;
-        }
-        if (req.body.username) {
-            account.username = req.body.username;
+        if (typeof req.body.active === 'boolean') {
+            account.active = req.body.active;
         }
 
         await account.save();
@@ -153,12 +150,8 @@ AccountsController.update = async (req, res) => {
                 success: true,
                 message: 'Account updated successfully',
                 data: {
-                    id: account.id,
                     uuid: account.uuid,
-                    name: account.name,
-                    username: account.username,
-                    provider: account.provider,
-                    authorized: account.authorized
+                    active: account.active
                 }
             });
         }
@@ -206,6 +199,7 @@ AccountsController.getAccounts = async (req, res) => {
             provider: account.provider,
             providerId: account.providerId,
             authorized: account.authorized,
+            active: account.active,
             projectUuid: account.projectUuid,
             image: account.media ? (typeof account.media === 'string' ? JSON.parse(account.media).url : account.media.url) || null : null,
             created_at: account.createdAt,
