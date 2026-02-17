@@ -178,14 +178,14 @@
             });
         }
 
-        // Connect account for a platform
+        // Connect account for a platform (opens in new tab)
         function connectAccount(platform) {
             if (!vm.projectUuid) {
                 utils.alertError('Error', 'Project not found');
                 return;
             }
             var p = (platform || '').toLowerCase();
-            window.location.href = '/integrations/' + p + '/connect/' + vm.projectUuid;
+            window.open('/integrations/' + p + '/connect/' + vm.projectUuid, '_blank', 'noopener,noreferrer');
         }
 
         // Capitalize first letter

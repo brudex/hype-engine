@@ -73,26 +73,6 @@ async function handleWebHookVerification(crc_token, nonce) {
 }
 
 /**
- * Log full error details for troubleshooting (no secrets).
- */
-function logXCallbackError(err, context) {
-    const detail = {
-        message: err && err.message,
-        code: err && err.code,
-        name: err && err.name,
-        step: context
-    };
-    if (err && err.response) {
-        detail.httpStatus = err.response.status;
-        detail.responseData = err.response.data;
-    }
-    if (err && err.stack) {
-        detail.stack = err.stack;
-    }
-    logger.error('X OAuth callback error (details for troubleshooting)', detail);
-}
-
-/**
  * X (Twitter) callback – handles:
  * 1. CRC (Challenge-Response Check): ?crc_token=...&nonce=... → { response_token: "sha256=..." }
  *    (nonce is sent by X for their tracking; we do not use it in the response.)
@@ -201,13 +181,13 @@ CallbackController.x = async (req, res) => {
         console.log('Calling exchangeRequestToken with: oauth_token', oauth_token);
         console.log('Calling exchangeRequestToken with: oauth_token_secret', oauth_token_secret);
         console.log('Calling exchangeRequestToken with: oauth_verifier', oauth_verifier);
-        console.log('Calling exchangeRequestToken with: appKey', appKey);
-        console.log('Calling exchangeRequestToken with: appSecret', appSecret);
-        logger.info('Calling exchangeRequestToken with: oauth_token', oauth_token);
-        logger.info('Calling exchangeRequestToken with: oauth_token_secret', oauth_token_secret);
-        logger.info('Calling exchangeRequestToken with: oauth_verifier', oauth_verifier);
-        logger.info('Calling exchangeRequestToken with: appKey', appKey);
-        logger.info('Calling exchangeRequestToken with: appSecret', appSecret);
+        console.log('Calling exchangeRequestToken with: appKey' + appKey);
+        console.log('Calling exchangeRequestToken with: appSecret' + appSecret);
+        logger.info('Calling exchangeRequestToken with: oauth_token' + oauth_token);
+        logger.info('Calling exchangeRequestToken with: oauth_token_secret' + oauth_token_secret);
+        logger.info('Calling exchangeRequestToken with: oauth_verifier' + oauth_verifier);
+        logger.info('Calling exchangeRequestToken with: appKey' + appKey);
+        logger.info('Calling exchangeRequestToken with: appSecret' + appSecret);
         const { accessToken, accessSecret, userId, screenName } = await twitterPlatform.exchangeRequestToken(
             oauth_token,
             oauth_token_secret,
@@ -227,7 +207,7 @@ CallbackController.x = async (req, res) => {
         const name = screenName ? `@${screenName}` : `X ${providerId}`;
         const encryptedApiKey = encryptObject({});
 
-        const updateAccountWithCredentials = (acc) => {
+        const updateAccountWithCredentials = async (acc) => {
             acc.accessToken = accessToken;
             acc.data = acc.data || {};
             acc.data.accessSecret = accessSecret;
@@ -242,12 +222,13 @@ CallbackController.x = async (req, res) => {
             acc.active = true;
             acc.authMethod = 'oauth';
             acc.apiKey = encryptedApiKey;
+            await account.save();
         };
 
         let account = await db.Account.findOne({ where: { uuid: pendingAccountUuid } });
         if (account) {
-            updateAccountWithCredentials(account);
-            await account.save();
+            await updateAccountWithCredentials(account);
+            
         } else {
             account = await db.Account.create({
                 uuid: uuidv4(),
@@ -264,20 +245,22 @@ CallbackController.x = async (req, res) => {
                 data: { accessSecret },
                 media: null
             });
-            updateAccountWithCredentials(account);
-            await account.save();
+            await updateAccountWithCredentials(account);
         }
 
         logger.info('X account connected', { accountUuid: account.uuid, screenName, userId, projectUuid });
+        console.log('X account connected', { accountUuid: account.uuid, screenName, userId, projectUuid });
         req.flash('success', name + ' has been successfully connected to X (Twitter) for this project. You can now use this account to post.');
         return res.redirect(302, '/dashboard/accounts/connect-status/' + account.uuid);
     } catch (err) {
-        logXCallbackError(err, 'exchange_or_save');
+        logger.error('X OAuth callback error', {
+            message: err?.message,
+            step: 'exchange_or_save',
+            ...(err?.response && { httpStatus: err.response.status, responseData: err.response.data })
+        });
         if (isCrcRequest) {
             return sendCrcResponse(null, err.message || 'crc_failed');
         }
-        const httpStatus = err.response && err.response.status;
-        const apiError = err.response && (err.response.data?.error || err.response.data?.errors || err.response.data?.message);
         const errMsg = err.message || String(err);
         const flashMsg = typeof errMsg === 'string' && errMsg.length > 0 ? errMsg : 'X connection failed. Please try again.';
         req.flash('error', flashMsg);

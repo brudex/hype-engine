@@ -215,7 +215,7 @@
             });
         }
 
-        // Connect account: navigate to integration connect route
+        // Connect account: open integration connect route in new tab
         function connectAccount(provider) {
             var projectUuid = (vm.selectedProject && vm.selectedProject.uuid) || vm.selectedProjectUuid;
             if (!projectUuid) {
@@ -223,7 +223,7 @@
                 return;
             }
             var platform = (provider || '').toLowerCase();
-            window.location.href = '/integrations/' + platform + '/connect/' + projectUuid;
+            window.open('/integrations/' + platform + '/connect/' + projectUuid, '_blank', 'noopener,noreferrer');
         }
 
         // Get accounts for a specific platform (for selected project)
