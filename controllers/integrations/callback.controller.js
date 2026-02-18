@@ -285,7 +285,7 @@ CallbackController.x = async (req, res) => {
  */
 CallbackController.linkedIn = async (req, res) => {
     try {
-        const { code, state, error: oauthError, error_description } = req.query;
+        const { code, state, projectUuid: queryProjectUuid, error: oauthError, error_description } = req.query;
 
         if (oauthError || error_description) {
             logger.warn('LinkedIn OAuth callback: user denied or error', { oauthError, error_description });
@@ -300,13 +300,13 @@ CallbackController.linkedIn = async (req, res) => {
         }
 
         const placeholderAccount = await db.Account.findOne({
-            where: { provider: 'linkedin', providerId: 'pending-' + state },
+            where: {projectUuid: queryProjectUuid, provider: 'linkedin'},
             attributes: ['uuid', 'projectUuid', 'data']
         });
         if (!placeholderAccount) {
-            logger.warn('LinkedIn OAuth callback: no placeholder found for state', { stateLength: state.length });
+            logger.warn('LinkedIn OAuth callback: no placeholder found for state (and projectUuid if provided)', { stateLength: state.length, queryProjectUuid: queryProjectUuid || null });
             req.flash('error', 'Invalid or expired state. Please try connecting again.');
-            return res.redirect(302, '/dashboard/accounts');
+            return res.redirect(302, '/dashboard/error');
         }
 
         const projectUuid = placeholderAccount.projectUuid;
@@ -333,24 +333,32 @@ CallbackController.linkedIn = async (req, res) => {
         );
 
         const profile = await linkedinPlatform.getProfile(access_token);
+        logger.info('LinkedIn profile >>>>', { profile });
+        console.log('LinkedIn profile >>>>', profile);
         const providerId = String(profile.id);
         const expiresAt = expires_in ? new Date(Date.now() + expires_in * 1000) : null;
-
+        logger.info('LinkedIn expiresAt >>>>', { expiresAt });
+        console.log('LinkedIn expiresAt >>>>', expiresAt);
         const account = await db.Account.findOne({ where: { uuid: placeholderAccount.uuid } });
         if (!account) {
             req.flash('error', 'Account not found.');
-            return res.redirect(302, '/dashboard/accounts');
+            return res.redirect(302, '/dashboard/error');
         }
-
-        account.accessToken = access_token;
-        account.data = account.data || {};
-        account.data.expires_at = expiresAt ? expiresAt.toISOString() : null;
+        const oauthData = {
+            access_token: access_token,
+            expires_in: expires_in
+        };
+        account.accessToken = JSON.stringify(oauthData);
+        account.data = oauthData;
         account.providerId = providerId;
         account.name = 'LinkedIn ' + providerId;
         account.username = null;
+        account.projectUuid = projectUuid;
+        account.provider = 'linkedin';
+        account.authMethod = 'oauth';
+        account.apiKey = '';
         account.authorized = true;
         account.active = true;
-        account.apiKey = encryptObject({});
         await account.save();
 
         logger.info('LinkedIn account connected', { accountUuid: account.uuid, providerId, projectUuid });
@@ -360,10 +368,13 @@ CallbackController.linkedIn = async (req, res) => {
         logger.error('LinkedIn OAuth callback error', { message: err?.message });
         req.flash('error', err?.message || 'LinkedIn connection failed. Please try again.');
         const state = req.query && req.query.state;
+        const queryProjectUuid = req.query && req.query.projectUuid;
         let redirectUrl = '/dashboard/accounts';
         if (state) {
+            const pendingWhere = { provider: 'linkedin', providerId: 'pending-' + state };
+            if (queryProjectUuid) pendingWhere.projectUuid = queryProjectUuid;
             const pending = await db.Account.findOne({
-                where: { provider: 'linkedin', providerId: 'pending-' + state },
+                where: pendingWhere,
                 attributes: ['uuid']
             });
             if (pending && pending.uuid) redirectUrl = '/dashboard/accounts/connect-status/' + pending.uuid;

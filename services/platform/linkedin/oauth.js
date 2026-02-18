@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const axios = require('axios');
 const logger = require('../../../utils/logger');
 
 /**
@@ -58,19 +59,21 @@ async function exchangeCodeForToken(code, redirectUri, credentials) {
         client_secret: clientSecret
     }).toString();
 
-    const res = await fetch(LINKEDIN_TOKEN_URL, {
-        method: 'POST',
+    const res = await axios.post(LINKEDIN_TOKEN_URL, body, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body
+        validateStatus: () => true
     });
-
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
+    const data = res.data || {};
+    logger.info('LinkedIn token exchange response >>>>', { res });
+    console.log('LinkedIn token exchange response >>>>', res);
+    if (res.status !== 200) {
         logger.error('LinkedIn token exchange failed', { status: res.status, data });
         const errMsg = data.error_description || data.error || res.statusText || 'Token exchange failed';
         throw new Error(errMsg);
     }
     if (!data.access_token) throw new Error('LinkedIn did not return an access_token');
+    logger.info('LinkedIn token exchange success >>>>', { data });
+    console.log('LinkedIn token exchange success >>>>', data);
     return {
         access_token: data.access_token,
         expires_in: data.expires_in != null ? data.expires_in : 5184000
@@ -83,11 +86,14 @@ async function exchangeCodeForToken(code, redirectUri, credentials) {
  * @returns {Promise<{ id: string }>}
  */
 async function getProfile(accessToken) {
-    const res = await fetch(LINKEDIN_ME_URL, {
-        headers: { Authorization: `Bearer ${accessToken}` }
+    const res = await axios.get(LINKEDIN_ME_URL, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        validateStatus: () => true
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
+    const data = res.data || {};
+    logger.info('LinkedIn profile response >>>>', { data });
+    console.log('LinkedIn profile response >>>>', data);
+    if (res.status !== 200) {
         logger.error('LinkedIn /v2/me failed', { status: res.status, data });
         const errMsg = data.message || data.error || res.statusText || 'Profile fetch failed';
         throw new Error(errMsg);
