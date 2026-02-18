@@ -33,9 +33,7 @@ function generateAuthLink(credentials, callbackUrl, scope = DEFAULT_SCOPE) {
         state
     });
     const url = `${LINKEDIN_AUTH_URL}?${params.toString()}`;
-    console.log('LinkedIn auth link:', url);
-    console.log('LinkedIn state:', state);
-    logger.info('LinkedIn auth link:', { url, state });
+    logger.info('LinkedIn auth link', { state: state?.slice(0, 8) + '...' });
     return { url, state };
 }
 
@@ -63,21 +61,43 @@ async function exchangeCodeForToken(code, redirectUri, credentials) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         validateStatus: () => true
     });
-    const data = res.data || {};
-    logger.info('LinkedIn token exchange response >>>>', { data });
-    console.log('LinkedIn token exchange response >>>>', data);
+    const data = res.data && typeof res.data === 'object' ? res.data : {};
+    logger.info('LinkedIn token exchange', { status: res.status, error: data.error, error_description: data.error_description });
     if (res.status !== 200) {
-        logger.error('LinkedIn token exchange failed', { status: res.status, data });
+        logger.error('LinkedIn token exchange failed', { status: res.status, error: data.error, error_description: data.error_description });
         const errMsg = data.error_description || data.error || res.statusText || 'Token exchange failed';
         throw new Error(errMsg);
     }
     if (!data.access_token) throw new Error('LinkedIn did not return an access_token');
-    logger.info('LinkedIn token exchange success >>>>', { data });
-    console.log('LinkedIn token exchange success >>>>', data);
+    logger.info('LinkedIn token exchange success', { hasIdToken: !!data.id_token });
     return {
         access_token: data.access_token,
-        expires_in: data.expires_in != null ? data.expires_in : 5184000
+        expires_in: data.expires_in != null ? data.expires_in : 5184000,
+        refresh_token: data.refresh_token || null,
+        id_token: data.id_token || null
     };
+}
+
+/**
+ * Decode LinkedIn OpenID id_token (JWT) to get member id and name. Avoids calling /v2/me which can return NO_VERSION/ACCESS_DENIED.
+ * @param {string} idToken - id_token from token response (optional)
+ * @returns {{ id: string, name?: string } | null} - id is sub claim; name if present
+ */
+function getProfileFromIdToken(idToken) {
+    if (!idToken || typeof idToken !== 'string') return null;
+    try {
+        const parts = idToken.split('.');
+        if (parts.length !== 3) return null;
+        const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(Buffer.from(b64, 'base64').toString('utf8'));
+        const sub = payload.sub;
+        if (!sub) return null;
+        const name = payload.name || (payload.given_name && payload.family_name ? `${payload.given_name} ${payload.family_name}`.trim() : null) || null;
+        return { id: sub, name: name || undefined };
+    } catch (e) {
+        logger.warn('LinkedIn id_token decode failed', { message: e?.message });
+        return null;
+    }
 }
 
 /**
@@ -87,23 +107,26 @@ async function exchangeCodeForToken(code, redirectUri, credentials) {
  */
 async function getProfile(accessToken) {
     const res = await axios.get(LINKEDIN_ME_URL, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'X-Restli-Protocol-Version': '2.0.0'
+        },
         validateStatus: () => true
     });
-    const data = res.data || {};
-    logger.info('LinkedIn profile response >>>>', { data });
-    console.log('LinkedIn profile response >>>>', data);
+    const data = res.data && typeof res.data === 'object' ? res.data : {};
+    logger.info('LinkedIn /v2/me', { status: res.status });
     if (res.status !== 200) {
-        logger.error('LinkedIn /v2/me failed', { status: res.status, data });
+        logger.error('LinkedIn /v2/me failed', { status: res.status, code: data.code, message: data.message });
         const errMsg = data.message || data.error || res.statusText || 'Profile fetch failed';
         throw new Error(errMsg);
     }
     if (!data.id) throw new Error('LinkedIn profile did not return id');
-    return { id: data.id };
+    return { id: data.id, name: data.localizedFirstName || data.firstName ? [data.localizedFirstName || data.firstName, data.localizedLastName || data.lastName].filter(Boolean).join(' ') : undefined };
 }
 
 module.exports = {
     generateAuthLink,
     exchangeCodeForToken,
-    getProfile
+    getProfile,
+    getProfileFromIdToken
 };

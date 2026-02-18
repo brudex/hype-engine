@@ -326,32 +326,37 @@ CallbackController.linkedIn = async (req, res) => {
 
         const baseUrl = 'https://hypeengine.cachetechs.com';
         const redirectUri = baseUrl + '/integrations/linkedin/callback?projectUuid=' + queryProjectUuid;
-        const { access_token, expires_in } = await linkedinPlatform.exchangeCodeForToken(
+        const tokenResponse = await linkedinPlatform.exchangeCodeForToken(
             code,
             redirectUri,
             { clientId, clientSecret }
         );
+        const { access_token, expires_in, id_token, refresh_token } = tokenResponse;
 
-        const profile = await linkedinPlatform.getProfile(access_token);
-        logger.info('LinkedIn profile >>>>', { profile });
-        console.log('LinkedIn profile >>>>', profile);
+        let profile = linkedinPlatform.getProfileFromIdToken(id_token);
+        if (!profile) {
+            profile = await linkedinPlatform.getProfile(access_token);
+        }
         const providerId = String(profile.id);
-        const expiresAt = expires_in ? new Date(Date.now() + expires_in * 1000) : null;
-        logger.info('LinkedIn expiresAt >>>>', { expiresAt });
-        console.log('LinkedIn expiresAt >>>>', expiresAt);
+        const displayName = profile.name || 'LinkedIn ' + providerId;
+
         const account = await db.Account.findOne({ where: { uuid: placeholderAccount.uuid } });
         if (!account) {
             req.flash('error', 'Account not found.');
             return res.redirect(302, '/dashboard/error');
         }
         const oauthData = {
-            access_token: access_token,
-            expires_in: expires_in
+            access_token,
+            expires_in,
+            id_token,
+            profile,
+            refresh_token: refresh_token || undefined
         };
+        console.log('LinkedIn oauthData after getProfileFromIdToken >>>>', oauthData);
         account.accessToken = JSON.stringify(oauthData);
         account.data = oauthData;
         account.providerId = providerId;
-        account.name = 'LinkedIn ' + providerId;
+        account.name = displayName;
         account.username = null;
         account.projectUuid = projectUuid;
         account.provider = 'linkedin';
