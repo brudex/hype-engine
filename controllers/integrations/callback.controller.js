@@ -325,7 +325,7 @@ CallbackController.linkedIn = async (req, res) => {
         }
 
         const baseUrl = 'https://hypeengine.cachetechs.com';
-        const redirectUri = baseUrl + '/integrations/linkedin/callback';
+        const redirectUri = baseUrl + '/integrations/linkedin/callback?projectUuid=' + queryProjectUuid;
         const { access_token, expires_in } = await linkedinPlatform.exchangeCodeForToken(
             code,
             redirectUri,

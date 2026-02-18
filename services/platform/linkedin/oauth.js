@@ -64,8 +64,8 @@ async function exchangeCodeForToken(code, redirectUri, credentials) {
         validateStatus: () => true
     });
     const data = res.data || {};
-    logger.info('LinkedIn token exchange response >>>>', { res });
-    console.log('LinkedIn token exchange response >>>>', res);
+    logger.info('LinkedIn token exchange response >>>>', { data });
+    console.log('LinkedIn token exchange response >>>>', data);
     if (res.status !== 200) {
         logger.error('LinkedIn token exchange failed', { status: res.status, data });
         const errMsg = data.error_description || data.error || res.statusText || 'Token exchange failed';
