@@ -10,14 +10,14 @@ const LINKEDIN_AUTH_URL = 'https://www.linkedin.com/oauth/v2/authorization';
 const LINKEDIN_TOKEN_URL = 'https://www.linkedin.com/oauth/v2/accessToken';
 const LINKEDIN_ME_URL = 'https://api.linkedin.com/v2/me';
 
-/** Default OAuth scopes: r_liteprofile (basic profile), w_member_social (share). Omit r_emailaddress unless your app has that product in the LinkedIn Developer Portal. */
-const DEFAULT_SCOPE = 'r_liteprofile w_member_social';
+/** Default OAuth scopes: openid + profile (name/photo), w_member_social (share). Must match scopes authorized for your app in LinkedIn Developer Portal. */
+const DEFAULT_SCOPE = 'openid profile w_member_social';
 
 /**
  * Generate OAuth 2.0 authorization URL and CSRF state. Caller must store state (e.g. in placeholder account data) and validate on callback.
  * @param {LinkedInAppCredentials} credentials - { clientId, clientSecret }
  * @param {string} callbackUrl - Full callback URL (must match LinkedIn app redirect_uri)
- * @param {string} [scope] - Optional scope string (default: r_liteprofile w_member_social)
+ * @param {string} [scope] - Optional scope string (default: openid profile w_member_social)
  * @returns {{ url: string, state: string }}
  */
 function generateAuthLink(credentials, callbackUrl, scope = DEFAULT_SCOPE) {
