@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const logger = require('../../utils/logger');
 const { encryptObject } = require('../../utils/encryption');
 const twitterPlatform = require('../../services/platform/twitter');
+const linkedinPlatform = require('../../services/platform/linkedin');
 
 /**
  * Social platform OAuth/integration callbacks.
@@ -270,6 +271,99 @@ CallbackController.x = async (req, res) => {
         if (oauthToken) {
             const pending = await db.Account.findOne({
                 where: { provider: 'twitter', accessToken: oauthToken },
+                attributes: ['uuid']
+            });
+            if (pending && pending.uuid) redirectUrl = '/dashboard/accounts/connect-status/' + pending.uuid;
+        }
+        return res.redirect(302, redirectUrl);
+    }
+};
+
+/**
+ * LinkedIn OAuth 2.0 callback. Validates state (CSRF), exchanges code for token, fetches profile, saves account.
+ * @route GET /integrations/linkedin/callback
+ */
+CallbackController.linkedIn = async (req, res) => {
+    try {
+        const { code, state, error: oauthError, error_description } = req.query;
+
+        if (oauthError || error_description) {
+            logger.warn('LinkedIn OAuth callback: user denied or error', { oauthError, error_description });
+            req.flash('error', error_description || oauthError || 'LinkedIn authorization was denied.');
+            return res.redirect(302, '/dashboard/accounts');
+        }
+
+        if (!code || !state) {
+            logger.warn('LinkedIn OAuth callback: missing code or state', req.query);
+            req.flash('error', 'Missing authorization code or state. Please try connecting again.');
+            return res.redirect(302, '/dashboard/accounts');
+        }
+
+        const placeholderAccount = await db.Account.findOne({
+            where: { provider: 'linkedin', providerId: 'pending-' + state },
+            attributes: ['uuid', 'projectUuid', 'data']
+        });
+        if (!placeholderAccount) {
+            logger.warn('LinkedIn OAuth callback: no placeholder found for state', { stateLength: state.length });
+            req.flash('error', 'Invalid or expired state. Please try connecting again.');
+            return res.redirect(302, '/dashboard/accounts');
+        }
+
+        const projectUuid = placeholderAccount.projectUuid;
+        const oauthService = await db.OauthService.findOne({ where: { name: 'linkedin' } });
+        if (!oauthService || !oauthService.configuration) {
+            req.flash('error', 'LinkedIn OAuth is not configured.');
+            return res.redirect(302, '/dashboard/accounts/connect-status/' + placeholderAccount.uuid);
+        }
+        let config = oauthService.configuration;
+        if (typeof config === 'string') config = JSON.parse(config);
+        const clientId = config.client_id || config.clientId;
+        const clientSecret = config.client_secret || config.clientSecret;
+        if (!clientId || !clientSecret) {
+            req.flash('error', 'LinkedIn OAuth credentials missing.');
+            return res.redirect(302, '/dashboard/accounts/connect-status/' + placeholderAccount.uuid);
+        }
+
+        const baseUrl = 'https://hypeengine.cachetechs.com';
+        const redirectUri = baseUrl + '/integrations/linkedin/callback';
+        const { access_token, expires_in } = await linkedinPlatform.exchangeCodeForToken(
+            code,
+            redirectUri,
+            { clientId, clientSecret }
+        );
+
+        const profile = await linkedinPlatform.getProfile(access_token);
+        const providerId = String(profile.id);
+        const expiresAt = expires_in ? new Date(Date.now() + expires_in * 1000) : null;
+
+        const account = await db.Account.findOne({ where: { uuid: placeholderAccount.uuid } });
+        if (!account) {
+            req.flash('error', 'Account not found.');
+            return res.redirect(302, '/dashboard/accounts');
+        }
+
+        account.accessToken = access_token;
+        account.data = account.data || {};
+        account.data.expires_at = expiresAt ? expiresAt.toISOString() : null;
+        account.providerId = providerId;
+        account.name = 'LinkedIn ' + providerId;
+        account.username = null;
+        account.authorized = true;
+        account.active = true;
+        account.apiKey = encryptObject({});
+        await account.save();
+
+        logger.info('LinkedIn account connected', { accountUuid: account.uuid, providerId, projectUuid });
+        req.flash('success', 'LinkedIn account has been successfully connected for this project. You can now use this account to post.');
+        return res.redirect(302, '/dashboard/accounts/connect-status/' + account.uuid);
+    } catch (err) {
+        logger.error('LinkedIn OAuth callback error', { message: err?.message });
+        req.flash('error', err?.message || 'LinkedIn connection failed. Please try again.');
+        const state = req.query && req.query.state;
+        let redirectUrl = '/dashboard/accounts';
+        if (state) {
+            const pending = await db.Account.findOne({
+                where: { provider: 'linkedin', providerId: 'pending-' + state },
                 attributes: ['uuid']
             });
             if (pending && pending.uuid) redirectUrl = '/dashboard/accounts/connect-status/' + pending.uuid;

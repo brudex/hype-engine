@@ -242,7 +242,7 @@
                 return;
             }
             var platform = (provider || '').toLowerCase();
-            window.open('/integrations/' + platform + '/connect/' + projectUuid, '_blank', 'noopener,noreferrer');
+            window.open('/dashboard/integrations/' + platform + '/connect/' + projectUuid, '_blank', 'noopener,noreferrer');
         }
 
         // Get accounts for a specific platform (for selected project)

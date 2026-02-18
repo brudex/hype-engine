@@ -15,6 +15,7 @@ const CalendarController = require('../controllers/calendar.controller');
 const ReportsController = require('../controllers/reports.controller');
 const ApiDocController = require('../controllers/apidoc.controller');
 const AccessTokenController = require('../controllers/access-token.controller');
+const IntegrationController = require('../controllers/integrations/integration.controller');
 
 // Middleware
 const authMiddleware = require('../middlewares/auth.middleware');
@@ -62,6 +63,9 @@ router.delete('/projects/:uuid', ProjectsController.delete);
 // ============================================
 // Accounts
 // ============================================
+
+// Connect integration (start OAuth / connect flow for a project)
+router.get('/integrations/:platformName/connect/:projectUuid', IntegrationController.connectIntegration);
 
 // Accounts Page Routes
 router.get('/accounts', AccountsController.index);

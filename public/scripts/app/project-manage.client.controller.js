@@ -185,7 +185,7 @@
                 return;
             }
             var p = (platform || '').toLowerCase();
-            window.open('/integrations/' + p + '/connect/' + vm.projectUuid, '_blank', 'noopener,noreferrer');
+            window.open('/dashboard/integrations/' + p + '/connect/' + vm.projectUuid, '_blank', 'noopener,noreferrer');
         }
 
         // Capitalize first letter
