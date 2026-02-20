@@ -1,6 +1,25 @@
 const axios = require('axios');
+const path = require('path');
+const fs = require('fs').promises;
 const logger = require('../../../utils/logger');
 const { createUserClient } = require('./oauth');
+const db = require('../../../models');
+
+/** Max images per tweet (X limit is 4) */
+const MAX_MEDIA_PER_TWEET = 4;
+
+/** Build hashtag string from Tag array (tag.name = hashtag name). X hashtags: letters, numbers, underscore only. */
+function buildHashtagsSuffix(tags) {
+    if (!Array.isArray(tags) || tags.length === 0) return '';
+    const parts = [];
+    for (const tag of tags) {
+        const name = tag?.name;
+        if (name == null || typeof name !== 'string') continue;
+        const clean = String(name).trim().replace(/#/g, '').replace(/[^\w]/g, '');
+        if (clean.length > 0) parts.push('#' + clean);
+    }
+    return parts.length > 0 ? ' ' + parts.join(' ') : '';
+}
 
 /**
  * Test Twitter API credentials
@@ -105,8 +124,60 @@ function parseAccountTokens(account) {
 }
 
 /**
+ * Load Media records by UUIDs (preserves order). Path is relative to public folder.
+ * @param {string[]} mediaUuids - Array of Media UUIDs from postVersion.media
+ * @returns {Promise<import('../../../models').Media[]>}
+ */
+async function loadMediaByUuids(mediaUuids) {
+    if (!Array.isArray(mediaUuids) || mediaUuids.length === 0) return [];
+    const list = [];
+    for (const uuid of mediaUuids) {
+        const media = await db.Media.findOne({ where: { uuid: String(uuid).trim() } });
+        if (media) list.push(media);
+    }
+    return list;
+}
+
+/**
+ * Upload images to X (v1 media API) and return media IDs for v2.tweet. Max 4 images per tweet.
+ * @param {object} client - TwitterApi instance (user client)
+ * @param {object[]} mediaRecords - Media model instances (path relative to public, mimeType)
+ * @param {string} publicRoot - Absolute path to public directory
+ * @returns {Promise<string[]>} - Media IDs
+ */
+async function uploadMediaToTwitter(client, mediaRecords, publicRoot) {
+    const mediaIds = [];
+    const toUpload = mediaRecords.slice(0, MAX_MEDIA_PER_TWEET);
+    for (const media of toUpload) {
+        const filePath = path.join(publicRoot, media.path);
+        let buffer;
+        try {
+            buffer = await fs.readFile(filePath);
+        } catch (err) {
+            logger.warn('Twitter: could not read media file', { path: media.path, error: err?.message });
+            continue;
+        }
+        const mimeType = media.mimeType || 'image/jpeg';
+        try {
+            console.log('Uploading media to Twitter >>>>', media.path);
+            console.log('Mime Type >>>>', mimeType);
+            logger.info('Uploading media to Twitter >>>>'+ media.path);
+            const mediaId = await client.v1.uploadMedia(buffer, { mimeType });
+            console.log('Upload complete Media ID >>>>', mediaId);
+            logger.info('Upload complete Media ID >>>>'+ mediaId);
+            if (mediaId) mediaIds.push(mediaId);
+        } catch (err) {
+            logger.warn('Twitter: media upload failed', { path: media.path, error: err?.message });
+        }
+    }
+    console.log('Returning Media IDs >>>>', mediaIds);
+    logger.info('Returning Media IDs >>>>'+ mediaIds);
+    return mediaIds;
+}
+
+/**
  * Publish a post to X (Twitter) using twitter-api-v2 with user OAuth 1.0a tokens.
- * App credentials (consumer_key, consumer_secret) from OauthService; user tokens from Account.accessToken JSON.
+ * Supports text and images (postVersion.media = array of Media UUIDs; Media.path is relative to public).
  * @param {object} post - Post model instance
  * @param {object} postVersion - PostVersion model instance
  * @param {array} tags - Array of Tag model instances
@@ -115,11 +186,18 @@ function parseAccountTokens(account) {
  */
 async function publishPost(post, postVersion, tags, account) {
     try {
-        const text = (postVersion.content || '').trim();
-        if (!text) {
+        const content = (postVersion.content || '').trim();
+        const hashtagsSuffix = buildHashtagsSuffix(tags || []);
+        logger.info('Hashtags Suffix >>>>', hashtagsSuffix);
+        console.log('Hashtags Suffix >>>>', hashtagsSuffix);
+        const text = content + hashtagsSuffix;
+        console.log('Text >>>>', text); 
+        logger.info('Text >>>>', text);
+        const mediaUuids = Array.isArray(postVersion.media) ? postVersion.media : [];
+        if (!text.trim() && mediaUuids.length === 0) {
             return {
                 success: false,
-                error: 'Post content is empty'
+                error: 'Post must have content or at least one image'
             };
         }
 
@@ -131,7 +209,6 @@ async function publishPost(post, postVersion, tags, account) {
             };
         }
 
-        // see top of file for `const db = require('../../../models');`
         const oauthService = await db.OauthService.findOne({ where: { name: 'twitter' } });
         if (!oauthService || !oauthService.configuration) {
             return {
@@ -151,10 +228,18 @@ async function publishPost(post, postVersion, tags, account) {
 
         const client = createUserClient(appKey, appSecret, userTokens.accessToken, userTokens.accessSecret);
 
-        logger.info(`Publishing to X for account ${account.uuid}`);
+        const publicRoot = path.join(__dirname, '../../../public');
+        const mediaRecords = await loadMediaByUuids(mediaUuids);
+        const mediaIds = await uploadMediaToTwitter(client, mediaRecords, publicRoot);
 
-        const result = await client.v2.tweet(text);
+        logger.info(`Publishing to X for account ${account.uuid}`, { hasText: !!text, mediaCount: mediaIds.length });
 
+        const tweetParams = mediaIds.length > 0 ? { media: { media_ids: mediaIds } } : undefined;
+        console.log('Tweet Params >>>>', tweetParams);
+        logger.info('Tweet Params >>>>'+ tweetParams);
+        const result = await client.v2.tweet(text || undefined, tweetParams);
+        console.log('Tweet Result >>>>', result);
+        logger.info('Tweet Result >>>>'+ result);
         const tweetId = result?.data?.id;
         return {
             success: true,
