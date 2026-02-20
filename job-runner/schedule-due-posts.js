@@ -40,17 +40,17 @@ async function scheduleDuePosts() {
                 });
             },
             
-            // Step 2: Select all due posts (scheduledAt <= now, status=0)
+            // Step 2: Select all due posts (scheduledAt is null OR scheduledAt <= now, status=0)
             function(batch, callback) {
                 logger.info('Fetching due posts...');
                 const now = new Date();
                 
                 db.Post.findAll({
                     where: {
-                        scheduledAt: {
-                            [Op.lte]: now, // scheduledAt is less than or equal to now (time has passed)
-                            [Op.ne]: null  // scheduledAt is not null
-                        },
+                        [Op.or]: [
+                            { scheduledAt: null },
+                            { scheduledAt: { [Op.lte]: now } }
+                        ],
                         status: 0 // DRAFT - only schedule posts that are still in draft
                     }
                 })
