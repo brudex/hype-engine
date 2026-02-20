@@ -110,7 +110,8 @@ async function scheduleDuePosts() {
                                 postCallback();
                                 return;
                             }
-                            
+                            console.log('Calling Platform Services to post on various platforms >>>>',post.dataValues.scheduledAt       );
+                           
                             // Mark as SCHEDULED and PENDING
                             post.status = 1; // SCHEDULED
                             post.scheduleStatus = 0; // PENDING

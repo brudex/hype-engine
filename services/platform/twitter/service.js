@@ -1,5 +1,6 @@
 const axios = require('axios');
 const logger = require('../../../utils/logger');
+const { createUserClient } = require('./oauth');
 
 /**
  * Test Twitter API credentials
@@ -87,42 +88,89 @@ async function testCredentials(configuration) {
 }
 
 /**
- * Publish a post to Twitter
+ * Parse account.accessToken (JSON string or object) to get user tokens for X/Twitter API.
+ * Expected format: { accessToken, accessSecret, userId?, screenName? }
+ */
+function parseAccountTokens(account) {
+    let data = account.accessToken;
+    if (typeof data === 'string') {
+        try {
+            data = JSON.parse(data);
+        } catch (e) {
+            return null;
+        }
+    }
+    if (!data || !data.accessToken || !data.accessSecret) return null;
+    return { accessToken: data.accessToken, accessSecret: data.accessSecret };
+}
+
+/**
+ * Publish a post to X (Twitter) using twitter-api-v2 with user OAuth 1.0a tokens.
+ * App credentials (consumer_key, consumer_secret) from OauthService; user tokens from Account.accessToken JSON.
  * @param {object} post - Post model instance
  * @param {object} postVersion - PostVersion model instance
  * @param {array} tags - Array of Tag model instances
- * @param {object} account - Account model instance
+ * @param {object} account - Account model instance (provider=twitter, accessToken JSON with accessToken/accessSecret)
  * @returns {Promise<object>} - Publish result
  */
 async function publishPost(post, postVersion, tags, account) {
     try {
-        const accessToken = account.accessToken;
-        const text = postVersion.content || '';
-        const mediaUuids = postVersion.media || [];
-
-        if (!accessToken) {
+        const text = (postVersion.content || '').trim();
+        if (!text) {
             return {
                 success: false,
-                error: 'Missing access token for account'
+                error: 'Post content is empty'
             };
         }
 
-        // TODO: Implement actual Twitter API publishing
-        logger.info(`Publishing to Twitter for account ${account.uuid}`);
+        const userTokens = parseAccountTokens(account);
+        if (!userTokens) {
+            return {
+                success: false,
+                error: 'Missing or invalid access token for account (need accessToken and accessSecret in accessToken JSON)'
+            };
+        }
 
+        // see top of file for `const db = require('../../../models');`
+        const oauthService = await db.OauthService.findOne({ where: { name: 'twitter' } });
+        if (!oauthService || !oauthService.configuration) {
+            return {
+                success: false,
+                error: 'Twitter (X) OAuth is not configured. Add consumer_key and consumer_secret in OAuth Connect.'
+            };
+        }
+        const config = typeof oauthService.configuration === 'string' ? JSON.parse(oauthService.configuration) : oauthService.configuration;
+        const appKey = config.consumer_key || config.client_id;
+        const appSecret = config.consumer_secret || config.client_secret;
+        if (!appKey || !appSecret) {
+            return {
+                success: false,
+                error: 'Twitter (X) consumer_key and consumer_secret are required in OAuth Connect.'
+            };
+        }
+
+        const client = createUserClient(appKey, appSecret, userTokens.accessToken, userTokens.accessSecret);
+
+        logger.info(`Publishing to X for account ${account.uuid}`);
+
+        const result = await client.v2.tweet(text);
+
+        const tweetId = result?.data?.id;
         return {
             success: true,
-            providerPostId: `twitter_${Date.now()}`,
+            providerPostId: tweetId ? String(tweetId) : `twitter_${Date.now()}`,
             data: {
                 platform: 'twitter',
-                publishedAt: new Date()
+                publishedAt: new Date(),
+                tweetId: tweetId || null
             }
         };
     } catch (error) {
         logger.error('Twitter publish error:', error);
+        const message = error?.message || error?.code || String(error);
         return {
             success: false,
-            error: error.message || 'Failed to publish to Twitter'
+            error: message || 'Failed to publish to Twitter'
         };
     }
 }

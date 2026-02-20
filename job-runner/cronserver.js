@@ -3,11 +3,13 @@ const logger = require('../utils/logger');
 const scheduleDuePosts = require('./schedule-due-posts');
 const publishScheduledPosts = require('./publish-scheduled');
 const cleanupLogs = require('./cleanup-logs');
+const refreshLinkedInTokens = require('./refresh-linkedin-tokens');
 
 // Module-level state
 let isPublishing = false; // Flag to prevent concurrent publish operations
 let isScheduling = false; // Flag to prevent concurrent schedule operations
 let isCleaning = false; // Flag to prevent concurrent cleanup operations
+let isRefreshingLinkedIn = false; // Flag to prevent concurrent LinkedIn token refresh
 
 /**
  * Schedule due posts job - Run every 3 minutes
@@ -72,6 +74,35 @@ function startPublishScheduledJob() {
 }
 
 /**
+ * Refresh LinkedIn tokens job - Run once a day at 2:00 AM UTC (tokens expiring within 7 days are refreshed)
+ */
+function startRefreshLinkedInTokensJob() {
+    logger.info('Starting refresh LinkedIn tokens cron job (daily at 2:00 AM UTC)...');
+
+    cron.schedule('0 2 * * *', async () => {
+        if (isRefreshingLinkedIn) {
+            logger.warn('Cron: Refresh LinkedIn tokens already running, skipping...');
+            return;
+        }
+        try {
+            isRefreshingLinkedIn = true;
+            logger.info('Cron: Running refresh LinkedIn tokens job...');
+            const result = await refreshLinkedInTokens();
+            logger.info('Cron: Refresh LinkedIn tokens completed', result);
+        } catch (error) {
+            logger.error('Cron: Refresh LinkedIn tokens error:', error);
+        } finally {
+            isRefreshingLinkedIn = false;
+        }
+    }, {
+        scheduled: true,
+        timezone: 'Etc/UTC'
+    });
+
+    logger.info('Refresh LinkedIn tokens cron job started');
+}
+
+/**
  * Cleanup logs job - Run once a day at 12:00 AM (midnight)
  */
 function startCleanupLogsJob() {
@@ -107,12 +138,14 @@ logger.info('Initializing cron server...');
 setTimeout(() => {
     startScheduleDuePostsJob();
     startPublishScheduledJob();
+    startRefreshLinkedInTokensJob();
     startCleanupLogsJob();
 
     logger.info('Cron server initialized with all scheduled jobs');
     logger.info('Cron Schedule Information:');
     logger.info('  - Schedule Due Posts: Every 3 minutes (*/3 * * * *)');
     logger.info('  - Publish Scheduled Posts: Every 1 minute (* * * * *)');
+    logger.info('  - Refresh LinkedIn Tokens: Daily at 2:00 AM UTC (0 2 * * *)');
     logger.info('  - Cleanup Logs: Daily at 12:00 AM (0 0 * * *)');
 }, 10000);
 

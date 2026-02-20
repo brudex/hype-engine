@@ -79,6 +79,44 @@ async function exchangeCodeForToken(code, redirectUri, credentials) {
 }
 
 /**
+ * Refresh access token using refresh_token. Use when access token is expired or expiring soon.
+ * @param {string} refreshToken - Stored refresh_token from initial token response
+ * @param {LinkedInAppCredentials} credentials - { clientId, clientSecret }
+ * @returns {Promise<{ access_token: string, expires_in: number, refresh_token?: string }>}
+ */
+async function refreshAccessToken(refreshToken, credentials) {
+    const clientId = credentials.clientId || credentials.client_id;
+    const clientSecret = credentials.clientSecret || credentials.client_secret;
+    if (!clientId || !clientSecret) throw new Error('LinkedIn client_id and client_secret are required');
+    if (!refreshToken) throw new Error('LinkedIn refresh_token is required');
+
+    const body = new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: clientId,
+        client_secret: clientSecret
+    }).toString();
+
+    const res = await axios.post(LINKEDIN_TOKEN_URL, body, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        validateStatus: () => true
+    });
+    const data = res.data && typeof res.data === 'object' ? res.data : {};
+    logger.info('LinkedIn token refresh', { status: res.status, error: data.error });
+    if (res.status !== 200) {
+        logger.error('LinkedIn token refresh failed', { status: res.status, error: data.error, error_description: data.error_description });
+        const errMsg = data.error_description || data.error || res.statusText || 'Token refresh failed';
+        throw new Error(errMsg);
+    }
+    if (!data.access_token) throw new Error('LinkedIn did not return an access_token');
+    return {
+        access_token: data.access_token,
+        expires_in: data.expires_in != null ? data.expires_in : 5184000,
+        refresh_token: data.refresh_token || refreshToken
+    };
+}
+
+/**
  * Decode LinkedIn OpenID id_token (JWT) to get member id and name. Avoids calling /v2/me which can return NO_VERSION/ACCESS_DENIED.
  * @param {string} idToken - id_token from token response (optional)
  * @returns {{ id: string, name?: string } | null} - id is sub claim; name if present
@@ -127,6 +165,7 @@ async function getProfile(accessToken) {
 module.exports = {
     generateAuthLink,
     exchangeCodeForToken,
+    refreshAccessToken,
     getProfile,
     getProfileFromIdToken
 };

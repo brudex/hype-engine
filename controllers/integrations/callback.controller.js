@@ -345,19 +345,19 @@ CallbackController.linkedIn = async (req, res) => {
             req.flash('error', 'Account not found.');
             return res.redirect(302, '/dashboard/error');
         }
+        const expiresAt = expires_in != null ? new Date(Date.now() + expires_in * 1000).toISOString() : null;
         const oauthData = {
             access_token,
             expires_in,
-            id_token,
-            profile,
+            profile: profile,
+            expires_at: expiresAt,
             refresh_token: refresh_token || undefined
         };
-        console.log('LinkedIn oauthData after getProfileFromIdToken >>>>', oauthData);
         account.accessToken = JSON.stringify(oauthData);
         account.data = oauthData;
         account.providerId = providerId;
         account.name = displayName;
-        account.username = null;
+        account.username = displayName;
         account.projectUuid = projectUuid;
         account.provider = 'linkedin';
         account.authMethod = 'oauth';
