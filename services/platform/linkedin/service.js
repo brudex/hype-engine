@@ -1,5 +1,6 @@
 const axios = require('axios');
 const logger = require('../../../utils/logger');
+const db = require('../../../models');
 const { refreshAccessToken } = require('./oauth');
 
 /** Refresh if token expires in fewer than this many days */
@@ -143,7 +144,7 @@ async function ensureLinkedInTokenFresh(account, credentials) {
  */
 async function publishPost(post, postVersion, tags, account) {
     try {
-        const db = require('../../models');
+        // (moved require to top of file)
         let credentials = null;
         try {
             const oauthService = await db.OauthService.findOne({ where: { name: 'linkedin' } });
