@@ -1,10 +1,14 @@
 const axios = require('axios');
+const path = require('path');
+const fs = require('fs').promises;
 const logger = require('../../../utils/logger');
 const db = require('../../../models');
 const { refreshAccessToken } = require('./oauth');
 
 const LINKEDIN_POSTS_API = 'https://api.linkedin.com/rest/posts';
+const LINKEDIN_IMAGES_INIT_API = 'https://api.linkedin.com/rest/images?action=initializeUpload';
 const LINKEDIN_API_VERSION = '202601';
+const MAX_IMAGES_LINKEDIN = 20;
 
 function stripHtml(html) {
     if (html == null || typeof html !== 'string') return '';
@@ -20,6 +24,49 @@ function buildHashtagsSuffix(tags) {
         if (clean.length > 0) parts.push('#' + clean);
     }
     return parts.length > 0 ? ' ' + parts.join(' ') : '';
+}
+
+function linkedInHeaders(accessToken) {
+    return {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'Linkedin-Version': LINKEDIN_API_VERSION,
+        'X-Restli-Protocol-Version': '2.0.0'
+    };
+}
+
+/** Load Media records by UUIDs (preserves order). Path relative to public. */
+async function loadMediaByUuids(mediaUuids) {
+    if (!Array.isArray(mediaUuids) || mediaUuids.length === 0) return [];
+    const list = [];
+    for (const uuid of mediaUuids) {
+        const media = await db.Media.findOne({ where: { uuid: String(uuid).trim() } });
+        if (media) list.push(media);
+    }
+    return list;
+}
+
+/**
+ * Upload one image to LinkedIn: initializeUpload then PUT binary to uploadUrl. Returns image URN or null.
+ */
+async function uploadOneImageToLinkedIn(accessToken, authorUrn, filePath, mimeType) {
+    const initRes = await axios.post(
+        LINKEDIN_IMAGES_INIT_API,
+        { initializeUploadRequest: { owner: authorUrn } },
+        { headers: linkedInHeaders(accessToken), validateStatus: (s) => s >= 200 && s < 300 }
+    );
+    const value = initRes.data && initRes.data.value;
+    if (!value || !value.uploadUrl || !value.image) return null;
+    const uploadUrl = value.uploadUrl;
+    const imageUrn = value.image;
+    const buffer = await fs.readFile(filePath);
+    await axios.put(uploadUrl, buffer, {
+        headers: { 'Content-Type': mimeType || 'image/jpeg' },
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+        validateStatus: (s) => s >= 200 && s < 300
+    });
+    return imageUrn;
 }
 
 /** Refresh if token expires in fewer than this many days */
@@ -198,11 +245,13 @@ async function publishPost(post, postVersion, tags, account) {
         const rawContent = postVersion.content || '';
         const content = stripHtml(rawContent).trim();
         const hashtagsSuffix = buildHashtagsSuffix(tags || []);
-        const commentary = content + hashtagsSuffix;
-        if (!commentary.trim()) {
+        const commentary = (content + hashtagsSuffix).trim();
+
+        const mediaUuids = Array.isArray(postVersion.media) ? postVersion.media : [];
+        if (!commentary && mediaUuids.length === 0) {
             return {
                 success: false,
-                error: 'Post must have content or hashtags'
+                error: 'Post must have content, hashtags, or at least one image'
             };
         }
 
@@ -210,9 +259,29 @@ async function publishPost(post, postVersion, tags, account) {
             ? providerId
             : `urn:li:person:${providerId}`;
 
+        const publicRoot = path.join(__dirname, '../../../public');
+        const mediaRecords = await loadMediaByUuids(mediaUuids.slice(0, MAX_IMAGES_LINKEDIN));
+        const imageUrns = [];
+        for (const media of mediaRecords) {
+            const filePath = path.join(publicRoot, media.path);
+            try {
+                const urn = await uploadOneImageToLinkedIn(
+                    accessToken,
+                    authorUrn,
+                    filePath,
+                    media.mimeType || 'image/jpeg'
+                );
+                console.log('LinkedIn uploadOneImageToLinkedIn urn >>>>', urn);
+                logger.info('LinkedIn uploadOneImageToLinkedIn urn >>>>'+ urn);
+                if (urn) imageUrns.push({ id: urn, altText: (media.name || '').slice(0, 120) });
+            } catch (err) {
+                logger.warn('LinkedIn: image upload failed', { path: media.path, error: err?.message });
+            }
+        }
+
         const body = {
             author: authorUrn,
-            commentary: commentary.trim(),
+            commentary: commentary || undefined,
             visibility: 'PUBLIC',
             distribution: {
                 feedDistribution: 'MAIN_FEED',
@@ -222,22 +291,33 @@ async function publishPost(post, postVersion, tags, account) {
             lifecycleState: 'PUBLISHED',
             isReshareDisabledByAuthor: false
         };
+        console.log('LinkedIn body >>>>', body);
+        logger.info('LinkedIn body >>>>',body);
 
-        logger.info(`Publishing to LinkedIn for account ${account.uuid}`);
+        if (imageUrns.length === 1) {
+            body.content = {
+                media: { id: imageUrns[0].id, altText: imageUrns[0].altText || 'Image' }
+            };
+        } else if (imageUrns.length >= 2) {
+            body.content = {
+                multiImage: {
+                    images: imageUrns.map((i) => ({ id: i.id, altText: i.altText || 'Image' }))
+                }
+            };
+        }
+
+        logger.info(`Publishing to LinkedIn for account ${account.uuid}`, { hasCommentary: !!commentary, imageCount: imageUrns.length });
 
         const response = await axios.post(LINKEDIN_POSTS_API, body, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-                'Linkedin-Version': LINKEDIN_API_VERSION,
-                'X-Restli-Protocol-Version': '2.0.0'
-            },
+            headers: linkedInHeaders(accessToken),
             validateStatus: (status) => status >= 200 && status < 300
         });
-
+        console.log('LinkedIn response >>>>', response);
+        logger.info('LinkedIn response >>>>'+ response);
         const postId = response.headers && (response.headers['x-restli-id'] || response.headers['X-Restli-Id']);
         const providerPostId = postId ? String(postId) : `linkedin_${Date.now()}`;
-
+        console.log('LinkedIn providerPostId >>>>', providerPostId);
+        logger.info('LinkedIn providerPostId >>>>'+ providerPostId);
         return {
             success: true,
             providerPostId,
