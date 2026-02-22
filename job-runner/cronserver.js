@@ -28,7 +28,10 @@ function startScheduleDuePostsJob() {
             isScheduling = true;
             logger.info('Cron: Running schedule due posts job...');
             const result = await scheduleDuePosts();
-            logger.info('Cron: Schedule due posts completed', result);
+            logger.info('Cron: Schedule due posts completed', {
+                batchUuid: result.batch?.uuid ?? null,
+                results: result.results
+            });
         } catch (error) {
             logger.error('Cron: Schedule due posts error:', error);
         } finally {
@@ -59,7 +62,10 @@ function startPublishScheduledJob() {
             isPublishing = true;
             logger.info('Cron: Running publish scheduled posts job...');
             const result = await publishScheduledPosts();
-            logger.info('Cron: Publish scheduled posts completed', result);
+            logger.info('Cron: Publish scheduled posts completed', {
+                batchUuid: result.batch?.uuid ?? null,
+                results: result.results
+            });
         } catch (error) {
             logger.error('Cron: Publish scheduled posts error:', error);
         } finally {

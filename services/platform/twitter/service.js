@@ -8,6 +8,18 @@ const db = require('../../../models');
 /** Max images per tweet (X limit is 4) */
 const MAX_MEDIA_PER_TWEET = 4;
 
+/** Strip HTML tags and decode common entities for plain-text posting (e.g. Twitter). */
+function stripHtml(html) {
+    if (html == null || typeof html !== 'string') return '';
+    let text = String(html)
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const entities = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&nbsp;': ' ' };
+    Object.keys(entities).forEach((key) => { text = text.split(key).join(entities[key]); });
+    return text;
+}
+
 /** Build hashtag string from Tag array (tag.name = hashtag name). X hashtags: letters, numbers, underscore only. */
 function buildHashtagsSuffix(tags) {
     if (!Array.isArray(tags) || tags.length === 0) return '';
@@ -186,10 +198,9 @@ async function uploadMediaToTwitter(client, mediaRecords, publicRoot) {
  */
 async function publishPost(post, postVersion, tags, account) {
     try {
-        const content = (postVersion.content || '').trim();
+        const rawContent = postVersion.content || '';
+        const content = stripHtml(rawContent).trim();
         const hashtagsSuffix = buildHashtagsSuffix(tags || []);
-        logger.info('Hashtags Suffix >>>>', hashtagsSuffix);
-        console.log('Hashtags Suffix >>>>', hashtagsSuffix);
         const text = content + hashtagsSuffix;
         console.log('Text >>>>', text); 
         logger.info('Text >>>>', text);

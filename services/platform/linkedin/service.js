@@ -3,6 +3,25 @@ const logger = require('../../../utils/logger');
 const db = require('../../../models');
 const { refreshAccessToken } = require('./oauth');
 
+const LINKEDIN_POSTS_API = 'https://api.linkedin.com/rest/posts';
+const LINKEDIN_API_VERSION = '202402';
+
+function stripHtml(html) {
+    if (html == null || typeof html !== 'string') return '';
+    return String(html).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function buildHashtagsSuffix(tags) {
+    if (!Array.isArray(tags) || tags.length === 0) return '';
+    const parts = [];
+    for (const tag of tags) {
+        const name = tag?.name;
+        if (name == null || typeof name !== 'string') continue;
+        const clean = String(name).trim().replace(/#/g, '').replace(/[^\w]/g, '');
+        if (clean.length > 0) parts.push('#' + clean);
+    }
+    return parts.length > 0 ? ' ' + parts.join(' ') : '';
+}
+
 /** Refresh if token expires in fewer than this many days */
 const REFRESH_DAYS_BEFORE = 7;
 const REFRESH_MS_BEFORE = REFRESH_DAYS_BEFORE * 24 * 60 * 60 * 1000;
@@ -37,6 +56,7 @@ async function testCredentials(configuration) {
                 timeout: 10000
             }
         );
+      
 
         if (response.data && response.data.access_token) {
             return {
@@ -140,11 +160,10 @@ async function ensureLinkedInTokenFresh(account, credentials) {
 }
 
 /**
- * Publish a post to LinkedIn
+ * Publish a post to LinkedIn via Posts API (REST). Text-only; author is member (urn:li:person:{providerId}). Uses w_member_social.
  */
 async function publishPost(post, postVersion, tags, account) {
     try {
-        // (moved require to top of file)
         let credentials = null;
         try {
             const oauthService = await db.OauthService.findOne({ where: { name: 'linkedin' } });
@@ -160,7 +179,7 @@ async function publishPost(post, postVersion, tags, account) {
             ? await ensureLinkedInTokenFresh(account, credentials)
             : (typeof account.accessToken === 'string' ? (() => { try { return JSON.parse(account.accessToken).access_token; } catch { return account.accessToken; } })() : account.accessToken?.access_token);
 
-        const personUrn = account.providerId;
+        const providerId = account.providerId;
 
         if (!accessToken) {
             return {
@@ -169,28 +188,71 @@ async function publishPost(post, postVersion, tags, account) {
             };
         }
 
-        if (!personUrn) {
+        if (!providerId) {
             return {
                 success: false,
                 error: 'Missing person URN for account'
             };
         }
 
+        const rawContent = postVersion.content || '';
+        const content = stripHtml(rawContent).trim();
+        const hashtagsSuffix = buildHashtagsSuffix(tags || []);
+        const commentary = content + hashtagsSuffix;
+        if (!commentary.trim()) {
+            return {
+                success: false,
+                error: 'Post must have content or hashtags'
+            };
+        }
+
+        const authorUrn = String(providerId).startsWith('urn:li:person:')
+            ? providerId
+            : `urn:li:person:${providerId}`;
+
+        const body = {
+            author: authorUrn,
+            commentary: commentary.trim(),
+            visibility: 'PUBLIC',
+            distribution: {
+                feedDistribution: 'MAIN_FEED',
+                targetEntities: [],
+                thirdPartyDistributionChannels: []
+            },
+            lifecycleState: 'PUBLISHED',
+            isReshareDisabledByAuthor: false
+        };
+
         logger.info(`Publishing to LinkedIn for account ${account.uuid}`);
+
+        const response = await axios.post(LINKEDIN_POSTS_API, body, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'Linkedin-Version': LINKEDIN_API_VERSION,
+                'X-Restli-Protocol-Version': '2.0.0'
+            },
+            validateStatus: (status) => status >= 200 && status < 300
+        });
+
+        const postId = response.headers && (response.headers['x-restli-id'] || response.headers['X-Restli-Id']);
+        const providerPostId = postId ? String(postId) : `linkedin_${Date.now()}`;
 
         return {
             success: true,
-            providerPostId: `linkedin_${Date.now()}`,
+            providerPostId,
             data: {
                 platform: 'linkedin',
-                publishedAt: new Date()
+                publishedAt: new Date(),
+                postId: postId || null
             }
         };
     } catch (error) {
         logger.error('LinkedIn publish error:', error);
+        const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to publish to LinkedIn';
         return {
             success: false,
-            error: error.message || 'Failed to publish to LinkedIn'
+            error: message
         };
     }
 }
