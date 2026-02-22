@@ -14,33 +14,8 @@ async function publishScheduledPosts() {
         let jobBatch = null;
         
         async.waterfall([
-            // Step 1: Create job batch
+            // Step 1: Fetch scheduled posts (status=1, scheduleStatus=0)
             function(callback) {
-                logger.info('Creating job batch for scheduled posts...');
-                
-                db.JobBatch.create({
-                    name: 'Publish Scheduled Posts',
-                    totalJobs: 0,
-                    pendingJobs: 0,
-                    failedJobs: 0,
-                    options: {
-                        type: 'publish-scheduled',
-                        startedAt: new Date()
-                    }
-                })
-                .then(batch => {
-                    jobBatch = batch;
-                    logger.info(`Job batch created: ${batch.uuid}`);
-                    callback(null, batch);
-                })
-                .catch(error => {
-                    logger.error('Error creating job batch:', error);
-                    callback(error);
-                });
-            },
-            
-            // Step 2: Select all scheduled posts (status=1, scheduleStatus=0)
-            function(batch, callback) {
                 logger.info('Fetching scheduled posts...');
                 
                 db.Post.findAll({
@@ -68,13 +43,7 @@ async function publishScheduledPosts() {
                 })
                 .then(posts => {
                     logger.info(`Found ${posts.length} scheduled posts to process`);
-                    
-                    // Update batch with total jobs count
-                    batch.totalJobs = posts.length;
-                    batch.pendingJobs = posts.length;
-                    return batch.save().then(() => {
-                        callback(null, batch, posts);
-                    });
+                    callback(null, posts);
                 })
                 .catch(error => {
                     logger.error('Error fetching scheduled posts:', error);
@@ -82,16 +51,38 @@ async function publishScheduledPosts() {
                 });
             },
             
-            // Step 3: Process each post
-            function(batch, posts, callback) {
+            // Step 2: Create job batch only if there are posts to process
+            function(posts, callback) {
                 if (posts.length === 0) {
                     logger.info('No scheduled posts to process');
-                    // Mark batch as finished
-                    batch.finishedAt = new Date();
-                    batch.pendingJobs = 0;
-                    return batch.save().then(() => {
-                        return callback(null, batch, { processed: 0, successful: 0, failed: 0 });
-                    });
+                    return callback(null, null, []);
+                }
+                logger.info('Creating job batch for scheduled posts...');
+                db.JobBatch.create({
+                    name: 'Publish Scheduled Posts',
+                    totalJobs: posts.length,
+                    pendingJobs: posts.length,
+                    failedJobs: 0,
+                    options: {
+                        type: 'publish-scheduled',
+                        startedAt: new Date()
+                    }
+                })
+                .then(batch => {
+                    jobBatch = batch;
+                    logger.info(`Job batch created: ${batch.uuid}`);
+                    callback(null, batch, posts);
+                })
+                .catch(error => {
+                    logger.error('Error creating job batch:', error);
+                    callback(error);
+                });
+            },
+            
+            // Step 3: Process each post
+            function(batch, posts, callback) {
+                if (!batch || posts.length === 0) {
+                    return callback(null, batch, { processed: 0, successful: 0, failed: 0 });
                 }
                 
                 const results = {

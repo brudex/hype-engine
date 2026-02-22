@@ -15,33 +15,8 @@ async function scheduleDuePosts() {
         let jobBatch = null;
         
         async.waterfall([
-            // Step 1: Create job batch
+            // Step 1: Fetch due posts (scheduledAt is null OR scheduledAt <= now, status=0)
             function(callback) {
-                logger.info('Creating job batch for scheduling due posts...');
-                
-                db.JobBatch.create({
-                    name: 'Schedule Due Posts',
-                    totalJobs: 0,
-                    pendingJobs: 0,
-                    failedJobs: 0,
-                    options: {
-                        type: 'schedule-due-posts',
-                        startedAt: new Date()
-                    }
-                })
-                .then(batch => {
-                    jobBatch = batch;
-                    logger.info(`Job batch created: ${batch.uuid}`);
-                    callback(null, batch);
-                })
-                .catch(error => {
-                    logger.error('Error creating job batch:', error);
-                    callback(error);
-                });
-            },
-            
-            // Step 2: Select all due posts (scheduledAt is null OR scheduledAt <= now, status=0)
-            function(batch, callback) {
                 logger.info('Fetching due posts...');
                 const now = new Date();
                 
@@ -56,13 +31,7 @@ async function scheduleDuePosts() {
                 })
                 .then(posts => {
                     logger.info(`Found ${posts.length} posts with due scheduledAt times`);
-                    
-                    // Update batch with total jobs count
-                    batch.totalJobs = posts.length;
-                    batch.pendingJobs = posts.length;
-                    return batch.save().then(() => {
-                        callback(null, batch, posts);
-                    });
+                    callback(null, posts);
                 })
                 .catch(error => {
                     logger.error('Error fetching due posts:', error);
@@ -70,16 +39,38 @@ async function scheduleDuePosts() {
                 });
             },
             
-            // Step 3: Process each post
-            function(batch, posts, callback) {
+            // Step 2: Create job batch only if there are posts to process
+            function(posts, callback) {
                 if (posts.length === 0) {
                     logger.info('No due posts to schedule');
-                    // Mark batch as finished
-                    batch.finishedAt = new Date();
-                    batch.pendingJobs = 0;
-                    return batch.save().then(() => {
-                        return callback(null, batch, { checked: 0, scheduled: 0 });
-                    });
+                    return callback(null, null, []);
+                }
+                logger.info('Creating job batch for scheduling due posts...');
+                db.JobBatch.create({
+                    name: 'Schedule Due Posts',
+                    totalJobs: posts.length,
+                    pendingJobs: posts.length,
+                    failedJobs: 0,
+                    options: {
+                        type: 'schedule-due-posts',
+                        startedAt: new Date()
+                    }
+                })
+                .then(batch => {
+                    jobBatch = batch;
+                    logger.info(`Job batch created: ${batch.uuid}`);
+                    callback(null, batch, posts);
+                })
+                .catch(error => {
+                    logger.error('Error creating job batch:', error);
+                    callback(error);
+                });
+            },
+            
+            // Step 3: Process each post
+            function(batch, posts, callback) {
+                if (!batch || posts.length === 0) {
+                    return callback(null, batch, { checked: 0, scheduled: 0 });
                 }
                 
                 const results = {
