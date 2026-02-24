@@ -35,18 +35,45 @@
     <link rel="stylesheet" type="text/css" href="/css/dashboard.css">
     <link rel="stylesheet" type="text/css" href="/vendor/spinjs/spin.css">
     <%- typeof style !== 'undefined' ? style : '' %>
+    <!-- Hide uncompiled Angular templates and show loader until app is ready -->
+    <style>
+        #pcoded { transition: opacity 0.2s ease; }
+        body.dashboard-loading #pcoded { opacity: 0; visibility: hidden; }
+        body.dashboard-loading .dashboard-app-loader { display: block !important; }
+        body:not(.dashboard-loading) .dashboard-app-loader { display: none !important; }
+        .dashboard-app-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--theme-secondary, #1F1F23);
+            z-index: 9999;
+            overflow: hidden;
+        }
+        .dashboard-app-loader::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 30%;
+            background: linear-gradient(90deg, var(--theme-accent-cyan, #00EFFF), var(--theme-accent-purple, #BC00FF));
+            animation: dashboard-loader 1.2s ease-in-out infinite;
+        }
+        @keyframes dashboard-loader {
+            0% { left: -30%; }
+            100% { left: 100%; }
+        }
+        [ng\:cloak], [ng-cloak], [data-ng-cloak], .ng-cloak { display: none !important; }
+    </style>
 </head>
 
-<body>
+<body class="dashboard-loading">
     <div id="spinnerContainer" class="myspinner"></div>
-    <!-- Pre-loader start -->
+    <!-- App loading progress bar (hidden when Angular has bootstrapped) -->
+    <div class="dashboard-app-loader" aria-hidden="true"></div>
     <input type="hidden" id="___applicationbaseUrl" value="/">
-    <div class="theme-loader">
-        <div class="ball-scale">
-            <div></div>
-        </div>
-    </div>
-    <!-- Pre-loader end -->
     <div id="pcoded" class="pcoded" data-ng-app="app">
         <!-- Sidebar -->
         <%- include('./_sidebar') %>
