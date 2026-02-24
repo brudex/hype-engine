@@ -147,6 +147,7 @@
     background: linear-gradient(180deg, #1F1F23 0%, #0B0B0D 100%);
     overflow: visible !important;
     position: relative;
+    z-index: 1;
 }
 
 .project-list-card:hover {
@@ -154,6 +155,7 @@
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 239, 255, 0.1);
     transform: translateY(-2px);
+    z-index: 20;
 }
 
 .project-list-card .card-body {

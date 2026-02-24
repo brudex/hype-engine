@@ -8,7 +8,6 @@ const AccountsController = require('../controllers/accounts.controller');
 const PostsController = require('../controllers/posts.controller');
 const MediaController = require('../controllers/media.controller');
 const TagsController = require('../controllers/tags.controller');
-const ServicesController = require('../controllers/services.controller');
 const OauthConfigAdminController = require('../controllers/admin/oauth-config.admin.controller');
 const SettingsController = require('../controllers/settings.controller');
 const CalendarController = require('../controllers/calendar.controller');
@@ -144,20 +143,7 @@ router.get('/reports/:projectUuid', ReportsController.index);
 router.get('/api/reports', ReportsController.index);
 router.post('/api/reports/project/:projectUuid', ReportsController.getReports);
 
-// ============================================
-// Services
-// ============================================
 
-// Services Page Routes
-// router.get('/services', ServicesController.index);
-// router.get('/services/project/:projectUuid', ServicesController.indexForProject);
-// router.get('/services/configure/:platformName', ServicesController.configurePage);
-// router.post('/services/configure/:platformName', ServicesController.configure);
-
-// // Services API Routes
-// router.get('/api/services', ServicesController.list);
-// router.get('/api/services/:name', ServicesController.getService);
-// router.post('/api/services/:name/test', ServicesController.testCredentials);
 
 // ============================================
 // OAuth Connect (app-wide, no project)

@@ -23,7 +23,7 @@ OauthConfigAdminController.index = async (req, res) => {
             configured: !!service.configuration
         }));
 
-        res.render('dashboard/oauth-connect/index', {
+        res.render('admin/oauth-config/index', {
             services: formattedServices,
             currentPage: 'oauth-connect',
             layout: 'layouts/dashboard/index'
@@ -65,7 +65,7 @@ OauthConfigAdminController.configurePage = async (req, res) => {
         // Form fields from definition (call with serviceDef so form() can use this.versions() etc.)
         const formFields = serviceDef.form.call(serviceDef);
 
-        res.render('dashboard/oauth-connect/configure', {
+        res.render('admin/oauth-config/configure', {
             serviceName: name,
             service: service ? {
                 ...service.toJSON(),

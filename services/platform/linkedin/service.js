@@ -312,8 +312,8 @@ async function publishPost(post, postVersion, tags, account) {
             headers: linkedInHeaders(accessToken),
             validateStatus: (status) => status >= 200 && status < 300
         });
-        console.log('LinkedIn response >>>>', response);
-        logger.info('LinkedIn response >>>>'+ response);
+        console.log('LinkedIn response >>>>', response.data);
+        logger.info('LinkedIn response >>>>'+ response.data);
         const postId = response.headers && (response.headers['x-restli-id'] || response.headers['X-Restli-Id']);
         const providerPostId = postId ? String(postId) : `linkedin_${Date.now()}`;
         console.log('LinkedIn providerPostId >>>>', providerPostId);
