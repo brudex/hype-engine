@@ -35,12 +35,12 @@ async function handleTwitterLinkGeneration(projectUuid) {
     const baseUrl = 'https://hypeengine.cachetechs.com';
     const callbackUrl = baseUrl + '/integrations/x/callback';
     logger.info('X connect: generating auth link', { callbackUrl, baseUrl });
-    const placeholderProviderId = 'pending-' + oauth_token;
-    const placeholderName = 'X (pending)';
     const { url, oauth_token, oauth_token_secret } = await twitterPlatform.generateAuthLink(
         { appKey, appSecret },
         callbackUrl
     );
+    const placeholderProviderId = 'pending-' + oauth_token;
+    const placeholderName = 'X (pending)';
     return {
         redirectUrl: url,
         provider: 'twitter',
