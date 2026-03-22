@@ -4,12 +4,14 @@ const scheduleDuePosts = require('./schedule-due-posts');
 const publishScheduledPosts = require('./publish-scheduled');
 const cleanupLogs = require('./cleanup-logs');
 const refreshLinkedInTokens = require('./refresh-linkedin-tokens');
+const terminateIdlePgSessions = require('./terminate-idle-pg-sessions');
 
 // Module-level state
 let isPublishing = false; // Flag to prevent concurrent publish operations
 let isScheduling = false; // Flag to prevent concurrent schedule operations
 let isCleaning = false; // Flag to prevent concurrent cleanup operations
 let isRefreshingLinkedIn = false; // Flag to prevent concurrent LinkedIn token refresh
+let isTerminatingIdlePg = false; // Flag to prevent concurrent idle PG session cleanup
 
 /**
  * Schedule due posts job - Run every 3 minutes
@@ -139,6 +141,35 @@ function startCleanupLogsJob() {
     logger.info('Cleanup logs cron job started');
 }
 
+/**
+ * Terminate idle PostgreSQL sessions for the app database - Run every 30 minutes
+ */
+function startTerminateIdlePgSessionsJob() {
+    logger.info('Starting terminate idle PostgreSQL sessions cron job (every 30 minutes)...');
+
+    cron.schedule('*/30 * * * *', async () => {
+        if (isTerminatingIdlePg) {
+            logger.warn('Cron: Terminate idle PG sessions already running, skipping...');
+            return;
+        }
+        try {
+            isTerminatingIdlePg = true;
+            logger.info('Cron: Running terminate idle PostgreSQL sessions job...');
+            const result = await terminateIdlePgSessions();
+            logger.info('Cron: Terminate idle PostgreSQL sessions completed', result);
+        } catch (error) {
+            logger.error('Cron: Terminate idle PostgreSQL sessions error:', error);
+        } finally {
+            isTerminatingIdlePg = false;
+        }
+    }, {
+        scheduled: true,
+        timezone: 'Etc/UTC'
+    });
+
+    logger.info('Terminate idle PostgreSQL sessions cron job started');
+}
+
 // Auto-start all cron jobs when this file is required
 logger.info('Initializing cron server...');
 setTimeout(() => {
@@ -146,6 +177,7 @@ setTimeout(() => {
     startPublishScheduledJob();
     startRefreshLinkedInTokensJob();
     startCleanupLogsJob();
+    startTerminateIdlePgSessionsJob();
 
     logger.info('Cron server initialized with all scheduled jobs');
     logger.info('Cron Schedule Information:');
@@ -153,6 +185,7 @@ setTimeout(() => {
     logger.info('  - Publish Scheduled Posts: Every 1 minute (* * * * *)');
     logger.info('  - Refresh LinkedIn Tokens: Daily at 2:00 AM UTC (0 2 * * *)');
     logger.info('  - Cleanup Logs: Daily at 12:00 AM (0 0 * * *)');
+    logger.info('  - Terminate Idle PG Sessions: Every 30 minutes (*/30 * * * *)');
 }, 10000);
 
 
