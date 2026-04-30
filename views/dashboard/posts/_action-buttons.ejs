@@ -1,7 +1,7 @@
-<!-- Bottom Action Bar -->
+<!-- Bottom Action Bar: create uses vm.currentProject only; edit may use vm.post || vm.currentProject -->
 <div ng-if="vm.post || vm.currentProject" class="action-buttons-bar">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <!-- Left Side: Labels & Selected Tags -->
+        <!-- Left Side: Tags, Labels, Pick Time / schedule -->
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <!-- Selected Tags -->
             <div ng-if="vm.form.tags && vm.form.tags.length > 0" class="d-flex align-items-center gap-2 flex-wrap">
@@ -18,11 +18,8 @@
                     ng-click="vm.openLabelsModal()">
                 <i class="bi bi-tag"></i> LABELS
             </button>
-        </div>
 
-        <!-- Right Side: Schedule Time & Post Now -->
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-            <!-- Schedule Time Display or Pick Time Button -->
+            <!-- Schedule Time Display or Pick Time (next to Labels) -->
             <div ng-if="vm.form.date && vm.form.time" class="action-schedule-display">
                 <i class="bi bi-calendar me-2"></i>
                 <span>{{ vm.formatScheduleTime() }}</span>
@@ -40,16 +37,64 @@
                     ng-click="vm.openTimePicker()">
                 <i class="bi bi-calendar"></i> PICK TIME
             </button>
-
-            <!-- Post Now Button -->
-            <button type="button" 
-                    class="btn action-btn action-btn-post"
-                    ng-click="vm.postNow()"
-                    ng-disabled="vm.saving || !vm.hasContent()">
-                <i class="bi" ng-class="vm.saving ? 'bi-arrow-repeat bi-spin' : 'bi-send'"></i> 
-                <%= text || 'POST NOW' %>
-            </button>
         </div>
+
+        <% if (isEdit) { %>
+            <!-- Right Side: Post Now -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                    
+                <!-- Post Now + Save as Draft (horizontal button group) -->
+                <div class="btn-group action-post-group" role="group" aria-label="Post actions">
+                    <% if (postStatus === 'draft') { %>
+                    <button type="button"
+                            class="btn action-btn action-btn-post"
+                            ng-click="vm.postNow('publish')"
+                            ng-disabled="vm.saving || !vm.hasContent()">
+                        <i class="bi" ng-class="vm.saving ? 'bi-arrow-repeat bi-spin' : 'bi-send'"></i>
+                        SAVE & POST
+                    </button>
+                    <button type="button"
+                            class="btn action-btn action-btn-draft"
+                            ng-click="vm.postNow('draft')"
+                            ng-disabled="vm.saving">
+                        <i class="bi" ng-class="vm.saving ? 'bi-arrow-repeat bi-spin' : 'bi-save'"></i>
+                        SAVE AS DRAFT
+                    </button>
+                </div>
+                <% } else { %>
+                    <button type="button"
+                            class="btn action-btn action-btn-post"
+                            ng-click="vm.postNow('reschedule')"
+                            ng-disabled="vm.saving || !vm.hasContent()">
+                        <i class="bi" ng-class="vm.saving ? 'bi-arrow-repeat bi-spin' : 'bi-send'"></i>
+                        RE-SCHEDULE 
+                    </button>
+                   
+                <% } %>
+ 
+            </div>
+        <% } else { %>
+        <!-- Create post only (isEdit false): post-create.client.controller.js -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <!-- Post Now + Save as Draft (horizontal button group) -->
+            <div class="btn-group action-post-group" role="group" aria-label="Post actions">
+                <button type="button"
+                        class="btn action-btn action-btn-post"
+                        ng-click="vm.postNow()"
+                        ng-disabled="vm.saving || !vm.hasContent()">
+                    <i class="bi" ng-class="vm.saving ? 'bi-arrow-repeat bi-spin' : 'bi-send'"></i>
+                    SAVE & POST
+                </button>
+                <button type="button"
+                        class="btn action-btn action-btn-draft"
+                        ng-click="vm.postNow(0)"
+                        ng-disabled="vm.saving">
+                    <i class="bi" ng-class="vm.saving ? 'bi-arrow-repeat bi-spin' : 'bi-save'"></i>
+                    SAVE AS DRAFT
+                </button>
+            </div>
+        </div>
+        <% } %>
     </div>
 </div>
 

@@ -31,12 +31,14 @@ const services = {
         name: 'facebook',
         nameLocalized: 'Facebook',
         exposedFormAttributes: ['api_version'],
-        versions: () => ['v24.0', 'v23.0', 'v22.0', 'v21.0', 'v20.0', 'v19.0', 'v18.0', 'v17.0', 'v16.0'],
+        secretFormAttributes: ['app_secret'],
+        versions: () => ['v25.0', 'v24.0', 'v23.0', 'v22.0', 'v21.0', 'v20.0', 'v19.0', 'v18.0', 'v17.0', 'v16.0'],
         form: function () {
             return [
                 { fieldLabel: 'App ID', fieldName: 'app_id', fieldType: 'text' },
                 { fieldLabel: 'App Secret', fieldName: 'app_secret', fieldType: 'password' },
-                { fieldLabel: 'API Version', fieldName: 'api_version', fieldType: 'select', options: this.versions() }
+                { fieldLabel: 'API Version', fieldName: 'api_version', fieldType: 'select', options: this.versions() },
+                { fieldLabel: 'Redirect URI', fieldName: 'redirect_uri', fieldType: 'text' }
             ];
         },
         schema: () => Joi.object({
@@ -48,7 +50,12 @@ const services = {
                 'string.empty': 'The App Secret is required.',
                 'any.required': 'The App Secret is required.'
             }),
-            api_version: Joi.string().valid('v24.0', 'v23.0', 'v22.0', 'v21.0', 'v20.0', 'v19.0', 'v18.0', 'v17.0', 'v16.0').required().messages({
+            redirect_uri: Joi.string().uri().required().messages({
+                'string.empty': 'The Redirect URI is required.',
+                'string.uri': 'The Redirect URI must be a valid URL.',
+                'any.required': 'The Redirect URI is required.'
+            }),
+            api_version: Joi.string().valid('v25.0', 'v24.0', 'v23.0', 'v22.0', 'v21.0', 'v20.0', 'v19.0', 'v18.0', 'v17.0', 'v16.0').required().messages({
                 'any.only': 'API Version must be one of the supported versions',
                 'any.required': 'The API Version is required.'
             })
@@ -59,6 +66,7 @@ const services = {
         name: 'instagram',
         nameLocalized: 'Instagram',
         exposedFormAttributes: [],
+        secretFormAttributes: ['client_secret'],
         form: () => [
             { fieldLabel: 'Client ID', fieldName: 'client_id', fieldType: 'text' },
             { fieldLabel: 'Client Secret', fieldName: 'client_secret', fieldType: 'password' }
@@ -99,6 +107,7 @@ const services = {
         name: 'mastodon',
         nameLocalized: 'Mastodon',
         exposedFormAttributes: ['instance_url'],
+        secretFormAttributes: ['client_secret'],
         form: () => [
             { fieldLabel: 'Client ID', fieldName: 'client_id', fieldType: 'text' },
             { fieldLabel: 'Client Secret', fieldName: 'client_secret', fieldType: 'password' },
@@ -125,6 +134,7 @@ const services = {
         name: 'tiktok',
         nameLocalized: 'TikTok',
         exposedFormAttributes: [],
+        secretFormAttributes: ['client_secret'],
         form: () => [
             { fieldLabel: 'Client ID', fieldName: 'client_id', fieldType: 'text' },
             { fieldLabel: 'Client Secret', fieldName: 'client_secret', fieldType: 'password' }
@@ -145,6 +155,7 @@ const services = {
         name: 'unsplash',
         nameLocalized: 'Unsplash',
         exposedFormAttributes: [],
+        secretFormAttributes: [],
         form: () => [
             { fieldLabel: 'API Key', fieldName: 'client_id', fieldType: 'text' }
         ],
@@ -160,6 +171,7 @@ const services = {
         name: 'tenor',
         nameLocalized: 'Tenor',
         exposedFormAttributes: [],
+        secretFormAttributes: [],
         form: () => [
             { fieldLabel: 'API Key', fieldName: 'client_id', fieldType: 'text' }
         ],
@@ -235,6 +247,21 @@ function getExposedConfiguration(serviceName, configuration) {
     return exposed;
 }
 
+function getConfigurationWithoutSecrets(serviceName, configuration) {
+    const service = getService(serviceName);
+    if (!service || !configuration || typeof configuration !== 'object') {
+        return {};
+    }
+    const secretFields = Array.isArray(service.secretFormAttributes) ? service.secretFormAttributes : [];
+    const result = { ...configuration };
+    for (const field of secretFields) {
+        if (Object.prototype.hasOwnProperty.call(result, field)) {
+            delete result[field];
+        }
+    }
+    return result;
+}
+
 function isServiceConfigured(serviceName, configuration) {
     const validation = validateServiceConfiguration(serviceName, configuration);
     return !validation.error;
@@ -247,5 +274,6 @@ module.exports = {
     isServiceRegistered,
     validateServiceConfiguration,
     isServiceConfigured,
-    getExposedConfiguration
+    getExposedConfiguration,
+    getConfigurationWithoutSecrets
 };

@@ -1266,27 +1266,121 @@
     box-shadow: 0 2px 8px rgba(0, 239, 255, 0.2);
 }
 
-.action-btn-post {
-    background: linear-gradient(135deg, #BC00FF 0%, #8B00CC 100%);
+/* Horizontal post actions: neon green primary (Save & Post / Re-schedule) + theme outline draft */
+.action-buttons-bar .action-post-group > .btn.action-btn-post {
+    --bs-btn-color: var(--theme-primary);
+    --bs-btn-hover-color: var(--theme-primary);
+    --bs-btn-active-color: var(--theme-primary);
+    --bs-btn-disabled-color: rgba(11, 11, 13, 0.45);
+    --bs-btn-bg: transparent;
+    --bs-btn-hover-bg: transparent;
+    --bs-btn-active-bg: transparent;
+    --bs-btn-disabled-bg: transparent;
+    --bs-btn-border-color: transparent;
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-active-border-color: transparent;
+    --bs-btn-disabled-border-color: transparent;
+    color: var(--theme-primary);
+    font-weight: 700;
+    letter-spacing: 0.02em;
     border: none;
-    color: #FFFFFF;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(188, 0, 255, 0.3);
+    background-color: transparent;
+    background-image: linear-gradient(
+        135deg,
+        var(--theme-neon-green) 0%,
+        var(--theme-neon-green-mid) 45%,
+        var(--theme-neon-green-deep) 100%
+    );
+    background-repeat: no-repeat;
+    box-shadow:
+        0 2px 12px rgba(57, 255, 20, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-.action-btn-post:hover:not(:disabled) {
-    background: linear-gradient(135deg, #CC00FF 0%, #9B00DC 100%);
-    box-shadow: 0 4px 12px rgba(188, 0, 255, 0.5);
+.action-buttons-bar .action-post-group > .btn.action-btn-post:hover:not(:disabled),
+.action-buttons-bar .action-post-group > .btn.action-btn-post:focus-visible,
+.action-buttons-bar .action-post-group > .btn.action-btn-post:active {
+    color: var(--theme-primary);
+    background-color: transparent;
+    background-image: linear-gradient(
+        135deg,
+        #5dff3a 0%,
+        var(--theme-neon-green) 40%,
+        #00c853 100%
+    );
+    border: none;
+}
+
+.action-buttons-bar .action-post-group > .btn.action-btn-post:hover:not(:disabled) {
+    box-shadow:
+        0 4px 18px rgba(57, 255, 20, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
     transform: translateY(-2px);
-    color: #FFFFFF;
 }
 
-.action-btn-post:disabled {
+.action-buttons-bar .action-post-group > .btn.action-btn-post:focus-visible {
+    box-shadow:
+        0 0 0 0.25rem rgba(57, 255, 20, 0.4),
+        0 2px 12px rgba(57, 255, 20, 0.35);
+}
+
+.action-buttons-bar .action-post-group > .btn.action-btn-post:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
 }
 
-.action-btn-post i.bi-spin {
+.action-buttons-bar .action-post-group > .btn.action-btn-post .bi {
+    color: inherit;
+    opacity: 1;
+}
+
+.action-buttons-bar .action-post-group > .btn.action-btn-post i.bi-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Matches theme .btn-outline-purple — secondary “Save as draft” */
+.action-buttons-bar .action-post-group > .btn.action-btn-draft {
+    --bs-btn-color: var(--theme-accent-purple);
+    --bs-btn-hover-color: var(--theme-text-primary);
+    --bs-btn-active-color: var(--theme-text-primary);
+    --bs-btn-bg: transparent;
+    --bs-btn-hover-bg: var(--theme-accent-purple);
+    --bs-btn-active-bg: #a000e6;
+    --bs-btn-border-color: rgba(188, 0, 255, 0.55);
+    --bs-btn-hover-border-color: var(--theme-accent-purple);
+    --bs-btn-active-border-color: #a000e6;
+    color: var(--theme-accent-purple);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-width: 1px;
+    border-style: solid;
+    background-color: transparent;
+    box-shadow: inset 0 0 0 1px rgba(188, 0, 255, 0.15);
+}
+
+.action-buttons-bar .action-post-group > .btn.action-btn-draft:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+        0 0 18px rgba(188, 0, 255, 0.35),
+        0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.action-buttons-bar .action-post-group > .btn.action-btn-draft:focus-visible {
+    box-shadow: 0 0 0 0.2rem rgba(188, 0, 255, 0.35);
+}
+
+.action-buttons-bar .action-post-group > .btn.action-btn-draft .bi {
+    color: inherit;
+}
+
+.action-buttons-bar .action-post-group > .btn.action-btn-draft:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.action-buttons-bar .action-post-group > .btn.action-btn-draft i.bi-spin {
     animation: spin 1s linear infinite;
 }
 
@@ -1809,8 +1903,9 @@
     margin-bottom: 0;
 }
 
-/* Checkbox Styling */
-.posts-table input[type="checkbox"] {
+/* Checkbox Styling (posts table + tag management list) */
+.posts-table input[type="checkbox"],
+.tags-manage-list input[type="checkbox"] {
     background-color: #1F1F23 !important;
     border: 1px solid #2F2F33 !important;
     border-radius: 4px;
@@ -1824,12 +1919,14 @@
     position: relative;
 }
 
-.posts-table input[type="checkbox"]:hover {
+.posts-table input[type="checkbox"]:hover,
+.tags-manage-list input[type="checkbox"]:hover {
     border-color: #00EFFF !important;
     box-shadow: 0 0 0 2px rgba(0, 239, 255, 0.2);
 }
 
-.posts-table input[type="checkbox"]:checked {
+.posts-table input[type="checkbox"]:checked,
+.tags-manage-list input[type="checkbox"]:checked {
     background-color: #00EFFF !important;
     border-color: #00EFFF !important;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230B0B0D' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
@@ -1838,10 +1935,25 @@
     background-size: contain;
 }
 
-.posts-table input[type="checkbox"]:focus {
+.posts-table input[type="checkbox"]:focus,
+.tags-manage-list input[type="checkbox"]:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(0, 239, 255, 0.25);
     border-color: #00EFFF !important;
+}
+
+.tags-manage-check-cell {
+    width: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.project-list-card.tags-manage-row-selected {
+    background-color: rgba(0, 239, 255, 0.12);
+    border-left: 2px solid #00EFFF;
+    box-shadow: inset 0 0 12px rgba(0, 239, 255, 0.08);
 }
 
 

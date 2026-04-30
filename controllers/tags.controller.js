@@ -5,6 +5,41 @@ const logger = require('../utils/logger');
 const TagsController = {};
 
 /**
+ * Tag management page for a project
+ * @route GET /dashboard/projects/:projectUuid/tags
+ */
+TagsController.index = async (req, res) => {
+    try {
+        const { projectUuid } = req.params;
+        const userUuid = req.user?.uuid;
+
+        const project = await db.Project.findOne({
+            where: {
+                uuid: projectUuid,
+                userUuid: userUuid
+            }
+        });
+
+        if (!project) {
+            req.flash('error', 'Project not found');
+            return res.redirect('/dashboard/projects');
+        }
+
+        res.render('dashboard/tags/index', {
+            projectUuid,
+            projectName: project.name,
+            currentPage: 'tags',
+            title: 'Tags',
+            layout: 'layouts/dashboard/index'
+        });
+    } catch (error) {
+        logger.error('Tag management index error:', error);
+        req.flash('error', 'Failed to load tag management');
+        res.redirect('/dashboard/projects');
+    }
+};
+
+/**
  * Get tags for a project
  * @route GET /api/tags/project/:projectUuid
  */

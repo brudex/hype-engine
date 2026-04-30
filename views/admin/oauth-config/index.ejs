@@ -35,7 +35,7 @@
             <p class="text-secondary small mb-3">Configure OAuth applications for social media platforms (app-wide)</p>
 
             <div class="row">
-                <div class="col-md-6 mb-4" ng-repeat="service in oauthConnectCtrl.services">
+                <div class="col-md-6 mb-4" ng-repeat="service in oauthConnectCtrl.services" ng-if="service.name !== 'instagram'">
                     <div class="card h-100">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">

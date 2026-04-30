@@ -89,12 +89,36 @@ async function testCredentials(configuration) {
 /**
  * Publish a post to Facebook
  */
+function resolvePageTokenAndId(account) {
+    const pageId = account.providerId;
+    let raw = account.accessToken;
+    if (raw == null) return { pageId, token: null };
+    if (typeof raw === 'string') {
+        const trimmed = raw.trim();
+        if (trimmed.startsWith('{')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                return {
+                    pageId: parsed.page_id || pageId,
+                    token: parsed.access_token || null
+                };
+            } catch (_) {
+                return { pageId, token: raw };
+            }
+        }
+        return { pageId, token: raw };
+    }
+    if (typeof raw === 'object' && raw.access_token) {
+        return { pageId: raw.page_id || pageId, token: raw.access_token };
+    }
+    return { pageId, token: null };
+}
+
 async function publishPost(post, postVersion, tags, account) {
     try {
-        const accessToken = account.accessToken;
         const text = postVersion.content || '';
         const mediaUuids = postVersion.media || [];
-        const pageId = account.providerId;
+        const { pageId, token: accessToken } = resolvePageTokenAndId(account);
 
         if (!accessToken) {
             return {

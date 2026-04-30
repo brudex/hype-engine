@@ -262,6 +262,66 @@ AccountsController.getAccount = async (req, res) => {
 };
 
 /**
+ * Remove a linked Facebook account (OAuth Page connection).
+ * Public path so it can be linked from Meta / bookmarks; requires login and ownership.
+ * @route GET /delete-account/facebook?accountUuid=...
+ */
+AccountsController.deleteFacebookAccount = async (req, res) => {
+    try {
+        const accountUuid = req.query.accountUuid || req.query.uuid;
+        const userUuid = req.user?.uuid;
+
+        if (!userUuid) {
+            req.flash('error', 'Please log in to remove your Facebook connection.');
+            return res.redirect('/auth/login');
+        }
+
+        if (!accountUuid) {
+            req.flash('error', 'Missing accountUuid. Open Accounts and use the remove link for your Facebook Page.');
+            return res.redirect('/dashboard/accounts');
+        }
+
+        const account = await db.Account.findOne({
+            where: { uuid: accountUuid, provider: 'facebook' }
+        });
+
+        if (!account) {
+            req.flash('error', 'Facebook account not found or it is not a Facebook connection.');
+            return res.redirect('/dashboard/accounts');
+        }
+
+        const project = await db.Project.findOne({
+            where: { uuid: account.projectUuid, userUuid }
+        });
+
+        if (!project) {
+            req.flash('error', 'You do not have permission to remove this account.');
+            return res.redirect('/dashboard/accounts');
+        }
+
+        const projectUuid = account.projectUuid;
+        const removedUuid = account.uuid;
+
+        await db.PostAccount.destroy({ where: { accountUuid: removedUuid } });
+
+        await account.destroy();
+
+        logger.info('Facebook account deleted', {
+            accountUuid: removedUuid,
+            projectUuid,
+            userUuid
+        });
+
+        req.flash('success', 'Facebook account has been disconnected and removed.');
+        return res.redirect('/dashboard/accounts/' + projectUuid);
+    } catch (error) {
+        logger.error('deleteFacebookAccount error:', error);
+        req.flash('error', 'Failed to remove Facebook account.');
+        return res.redirect('/dashboard/accounts');
+    }
+};
+
+/**
  * Delete account
  * @route DELETE /dashboard/accounts/:uuid
  * @route DELETE /api/accounts/:uuid

@@ -14,6 +14,10 @@
     --theme-accent-cyan: #00EFFF;
     --theme-accent-purple: #BC00FF;
     --theme-cta-lime: #C6FF00;
+    /* Neon green (primary post actions — Save & Post) */
+    --theme-neon-green: #39FF14;
+    --theme-neon-green-mid: #00E676;
+    --theme-neon-green-deep: #00A844;
     --theme-text-primary: #FFFFFF;
     --theme-text-secondary: #B0B0B0;
     --theme-border: #2F2F33;

@@ -49,7 +49,7 @@ OauthConfigAdminController.configurePage = async (req, res) => {
 
         const service = await db.OauthService.findOne({ where: { name } });
         const serviceDef = oauthConfigDefinitions.getService(name);
-
+        
         if (!serviceDef) {
             req.flash('error', 'Service not found');
             return res.redirect('/dashboard/oauth-connect');
@@ -61,6 +61,7 @@ OauthConfigAdminController.configurePage = async (req, res) => {
                 ? JSON.parse(service.configuration)
                 : service.configuration;
         }
+        const safeConfiguration = oauthConfigDefinitions.getConfigurationWithoutSecrets(name, configuration);
 
         // Form fields from definition (call with serviceDef so form() can use this.versions() etc.)
         const formFields = serviceDef.form.call(serviceDef);
@@ -69,7 +70,7 @@ OauthConfigAdminController.configurePage = async (req, res) => {
             serviceName: name,
             service: service ? {
                 ...service.toJSON(),
-                configuration
+                configuration: safeConfiguration
             } : null,
             formFields,
             currentPage: 'oauth-connect',
@@ -224,6 +225,7 @@ OauthConfigAdminController.getService = async (req, res) => {
                 : service.configuration;
         }
         const isConfigured = oauthConfigDefinitions.isServiceConfigured(req.params.name, configuration);
+        const safeConfiguration = oauthConfigDefinitions.getConfigurationWithoutSecrets(req.params.name, configuration);
 
         res.json({
             success: true,
@@ -233,7 +235,7 @@ OauthConfigAdminController.getService = async (req, res) => {
                 name: service.name,
                 active: service.active,
                 configured: isConfigured,
-                configuration
+                configuration: safeConfiguration
             }
         });
     } catch (error) {

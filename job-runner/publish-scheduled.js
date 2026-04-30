@@ -17,11 +17,15 @@ async function publishScheduledPosts() {
             // Step 1: Fetch scheduled posts (status=1, scheduleStatus=0)
             function(callback) {
                 logger.info('Fetching scheduled posts...');
-                
+                const now = new Date();
                 db.Post.findAll({
                     where: {
                         status: 1, // SCHEDULED
-                        scheduleStatus: 0 // PENDING
+                        scheduleStatus: 0, // PENDING,
+                        [Op.or]: [
+                            { scheduledAt: null },
+                            { scheduledAt: { [Op.lte]: now } }
+                        ],
                     },
                     include: [
                         {

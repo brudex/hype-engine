@@ -253,13 +253,13 @@
             loadPosts();
         }
 
-        // Toggle post selection
-        function togglePostSelection(postId) {
-            var index = vm.selectedPosts.indexOf(postId);
+        // Toggle post selection (uses uuid; API list payload does not include numeric id)
+        function togglePostSelection(postUuid) {
+            var index = vm.selectedPosts.indexOf(postUuid);
             if (index > -1) {
                 vm.selectedPosts.splice(index, 1);
             } else {
-                vm.selectedPosts.push(postId);
+                vm.selectedPosts.push(postUuid);
             }
         }
 
@@ -269,7 +269,7 @@
                 vm.selectedPosts = [];
             } else {
                 vm.selectedPosts = vm.posts.map(function(post) {
-                    return post.id;
+                    return post.uuid;
                 });
             }
         }
@@ -321,7 +321,7 @@
             utils.alertConfirm('Confirm Delete', message, function(result) {
                 if (result.isConfirmed) {
                 var postUuids = vm.posts.filter(function(post) {
-                    return vm.selectedPosts.indexOf(post.id) > -1;
+                    return vm.selectedPosts.indexOf(post.uuid) > -1;
                 }).map(function(post) {
                     return post.uuid;
                 });

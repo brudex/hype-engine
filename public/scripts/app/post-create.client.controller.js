@@ -18,7 +18,6 @@
         vm.currentProject = null;
         vm.loading = false;
         vm.saving = false;
-        vm.saved = false;
         vm.hasError = false;
         vm.showPreview = true;
         vm.activeTab = 'preview';
@@ -52,7 +51,6 @@
         vm.switchAccountVersion = switchAccountVersion;
         vm.togglePreview = togglePreview;
         vm.setTab = setTab;
-        vm.save = save;
         vm.schedule = schedule;
         vm.postNow = postNow;
         vm.addMedia = addMedia;
@@ -96,9 +94,9 @@
         // ============================================
         // INITIALIZATION
         // ============================================
+        /** First arg is legacy; create.ejs always passes null — editing is post-edit.client.controller.js */
         function init(post, accounts, tags, scheduleAt, prefill, currentProject) {
             console.log('PostCreateController.init called with:', {
-                hasPost: !!post,
                 accountsCount: (accounts || []).length,
                 tagsCount: (tags || []).length,
                 currentProject: currentProject,
@@ -144,17 +142,11 @@
                 // The redirect will happen in timeout if still no project
             }
             
-            // Continue with initialization regardless of project check
-            // The view will hide content if project is missing via ng-if
-            if (post) {
-                initializeEditMode(post);
-            } else {
-                initializeCreateMode(scheduleAt, prefill);
-            }
+            // Create page always passes post=null (see create.ejs); edit uses post-edit controller.
+            initializeCreateMode(scheduleAt, prefill);
             
             updateSelectedAccounts();
             startPreviewUpdateInterval();
-            setupAutoSave();
             
             // Close popover when clicking outside
             $timeout(function() {
@@ -171,39 +163,6 @@
                     }
                 });
             }, 0);
-        }
-
-        function initializeEditMode(post) {
-            vm.post = post;
-            vm.form.accounts = post.accounts.map(function(account) {
-                return account.id;
-            });
-            
-            vm.form.versions = (post.versions || []).map(function(version) {
-                return {
-                    accountId: version.accountId || version.account_id || 0,
-                    account_id: version.accountId || version.account_id || 0,
-                    isOriginal: version.isOriginal !== undefined ? version.isOriginal : (version.is_original !== undefined ? version.is_original : false),
-                    is_original: version.isOriginal !== undefined ? version.isOriginal : (version.is_original !== undefined ? version.is_original : false),
-                    content: version.content || []
-                };
-            });
-            
-            vm.form.tags = post.tags || [];
-            
-            if (post.scheduledAt) {
-                var scheduledDate = new Date(post.scheduledAt);
-                vm.form.date = scheduledDate.toISOString().split('T')[0];
-                vm.form.time = scheduledDate.toTimeString().split(' ')[0].substring(0, 5);
-            }
-            
-            if (vm.form.versions.length > 0) {
-                var firstAccountVersion = vm.form.versions.find(function(v) {
-                    return v.accountId !== 0 && !v.isOriginal;
-                });
-                vm.activeVersion = firstAccountVersion ? firstAccountVersion.accountId : (vm.form.accounts.length > 0 ? vm.form.accounts[0] : 0);
-                updateCurrentContent();
-            }
         }
 
         function initializeCreateMode(scheduleAt, prefill) {
@@ -227,19 +186,6 @@
             }
             
             vm.currentContent = vm.form.versions[0].content[0];
-        }
-
-
-        function setupAutoSave() {
-            var saveTimeout;
-            $scope.$watch('postEditCtrl.form', function() {
-                if (vm.post && !vm.saving) {
-                    clearTimeout(saveTimeout);
-                    saveTimeout = setTimeout(function() {
-                        vm.save(true);
-                    }, 1000);
-                }
-            }, true);
         }
 
         // ============================================
@@ -565,44 +511,6 @@
         // ============================================
         // POST CRUD OPERATIONS
         // ============================================
-        function save(autoSave) {
-            if (!vm.post) {
-                createPost();
-                return;
-            }
-            
-            vm.saving = true;
-            vm.hasError = false;
-            
-            var data = buildPostData();
-            
-            console.log('Updating post ' + vm.post.uuid + ' with payload:', JSON.stringify(data, null, 2));
-            
-            services.updatePost(vm.post.uuid, data, function(response) {
-                vm.saving = false;
-                if (response.success) {
-                    vm.saved = true;
-                    vm.hasError = false;
-                    if (!autoSave) {
-                        utils.alertSuccess('Success', 'Post saved successfully');
-                        // Redirect to posts list with projectUuid
-                        if (vm.currentProject && vm.currentProject.uuid) {
-                            window.location.href = '/dashboard/posts/' + vm.currentProject.uuid;
-                        } else {
-                            window.location.href = '/dashboard/posts';
-                        }
-                    } else {
-                        $timeout(function() {
-                            vm.saved = false;
-                        }, 2000);
-                    }
-                } else {
-                    vm.hasError = true;
-                    utils.alertError('Error', response.message || 'Failed to save post');
-                }
-            });
-        }
-
         function createPost() {
             if (!vm.currentProject) {
                 utils.alertError('Error', 'Project is required');
@@ -612,14 +520,17 @@
             vm.saving = true;
             vm.hasError = false;
             
-            var data = buildPostData();
+            var data = buildPostData(0);
             
             console.log('Creating post with payload:', JSON.stringify(data, null, 2));
             
             services.createPost(data, function(response) {
                 vm.saving = false;
                 if (response.success) {
-                    window.location.href = '/dashboard/posts/' + response.data.uuid + '/edit';
+                    utils.alertSuccess('Success','Post saved successfully');
+                    $timeout(function() {
+                        window.location.href = '/dashboard/posts/' + vm.currentProject.uuid;
+                    }, 4000);
                 } else {
                     vm.hasError = true;
                     utils.alertError('Error', response.message || 'Failed to create post');
@@ -632,50 +543,36 @@
                 utils.alertError('Error', 'Please select a schedule time');
                 return;
             }
-            
-            if (!vm.post) {
-                createPostAndSchedule();
-                return;
-            }
-            
-            vm.saving = true;
-            var scheduledAt = vm.form.date + ' ' + vm.form.time + ':00';
-            
-            services.schedulePost(vm.post.uuid, scheduledAt, function(response) {
-                vm.saving = false;
-                if (response.success) {
-                    utils.alertSuccess('Success', 'Post scheduled successfully');
-                    // Redirect to posts list with projectUuid
-                    if (vm.currentProject && vm.currentProject.uuid) {
-                        window.location.href = '/dashboard/posts/' + vm.currentProject.uuid;
-                    } else {
-                        window.location.href = '/dashboard/posts';
-                    }
-                } else {
-                    utils.alertError('Error', response.message || 'Failed to schedule post');
-                }
-            });
+            createPostAndSchedule();
         }
 
-        function postNow() {
-            if (!vm.post && !vm.currentProject) {
+        /**
+         * Create page only (vm.post is always null).
+         * @param {number} [draftStatus] - 0 = save draft via {@link createPost}; omit = SAVE & POST via {@link createPostAndPublish} after confirm.
+         */
+        function postNow(draftStatus) {
+            var asDraft = draftStatus === 0;
+
+            if (!vm.currentProject) {
                 utils.alertError('Error', 'Project is required');
                 return;
             }
-            
-            // Validate account selection
+
             if (vm.form.accounts.length === 0) {
                 utils.alertInfo('Account Selection', 'Please select at least one account');
                 return;
             }
-            
-            // Validate content
+
             if (!hasContent()) {
                 utils.alertInfo('Content', 'Please enter some content for your post');
                 return;
             }
-            
-            // Build confirmation message with scheduled time if available
+
+            if (asDraft) {
+                createPost();
+                return;
+            }
+
             var confirmMessage = 'This post will be immediately published.';
             if (vm.form.date && vm.form.time) {
                 var scheduledTime = vm.formatScheduleTime();
@@ -687,14 +584,10 @@
             } else {
                 confirmMessage = 'This post will be immediately published. Are you sure?';
             }
-            
+ 
             utils.alertConfirm('Confirm', confirmMessage, function(result) {
                 if (result.isConfirmed) {
-                    if (!vm.post) {
-                        createPostAndPublish();
-                    } else {
-                        publishExistingPost();
-                    }
+                    createPostAndPublish();
                 }
             });
         }
@@ -709,7 +602,7 @@
             vm.hasError = false;
             
             var scheduledAt = vm.form.date + ' ' + vm.form.time + ':00';
-            var data = buildPostData();
+            var data = buildPostData(1);
             data.scheduled_at = scheduledAt;
             
             console.log('Creating and scheduling post with payload:', JSON.stringify(data, null, 2));
@@ -717,10 +610,12 @@
             services.createPost(data, function(response) {
                 vm.saving = false;
                 if (response.success) {
-                    utils.alertSuccess('Success', 'Post scheduled successfully');
+                    utils.alertSuccess('Success', 'Post scheduled successfully!!');
                     // Redirect to posts list with projectUuid
                     if (vm.currentProject && vm.currentProject.uuid) {
-                        window.location.href = '/dashboard/posts/' + vm.currentProject.uuid;
+                        $timeout(function() {
+                            window.location.href = '/dashboard/posts/' + vm.currentProject.uuid;
+                        }, 4000);
                     } else {
                         window.location.href = '/dashboard/posts';
                     }
@@ -737,7 +632,7 @@
             
             var now = new Date();
             var scheduledAt = now.toISOString();
-            var data = buildPostData();
+            var data = buildPostData(1);
             data.scheduled_at = scheduledAt;
             
             console.log('Creating and publishing post with payload:', JSON.stringify(data, null, 2));
@@ -748,7 +643,9 @@
                     utils.alertSuccess('Success', 'Post published successfully');
                     // Redirect to posts list with projectUuid
                     if (vm.currentProject && vm.currentProject.uuid) {
-                        window.location.href = '/dashboard/posts/' + vm.currentProject.uuid;
+                        $timeout(function() {
+                            window.location.href = '/dashboard/posts/' + vm.currentProject.uuid;
+                        }, 4000);
                     } else {
                         window.location.href = '/dashboard/posts';
                     }
@@ -759,28 +656,10 @@
             });
         }
 
-        function publishExistingPost() {
-            vm.saving = true;
-            var now = new Date();
-            var scheduledAt = now.toISOString();
-            
-            services.schedulePost(vm.post.uuid, scheduledAt, function(response) {
-                vm.saving = false;
-                if (response.success) {
-                    utils.alertSuccess('Success', 'Post published successfully');
-                    // Redirect to posts list with projectUuid
-                    if (vm.currentProject && vm.currentProject.uuid) {
-                        window.location.href = '/dashboard/posts/' + vm.currentProject.uuid;
-                    } else {
-                        window.location.href = '/dashboard/posts';
-                    }
-                } else {
-                    utils.alertError('Error', response.message || 'Failed to publish post');
-                }
-            });
-        }
-
-        function buildPostData() {
+        /**
+         * @param {number} [status] - 0 draft, 1 scheduled (omit for create-and-schedule flows that rely on server default)
+         */
+        function buildPostData(status) {
             // Collect account UUIDs from selected accounts
             var accountUuids = vm.form.accounts.map(function(accountId) {
                 var account = vm.accounts.find(function(acc) { return acc.id === accountId; });
@@ -828,6 +707,10 @@
                 time: vm.form.time || null,
                 projectUuid: vm.currentProject ? (vm.currentProject.uuid || null) : null
             };
+
+            if (status === 0 || status === 1) {
+                payload.status = status;
+            }
             
             // Verify media is included in payload
             var hasMedia = false;
@@ -1321,9 +1204,6 @@
         }
 
         function getPostAccounts() {
-            if (vm.post && vm.post.status === 2) {
-                return vm.post.accounts;
-            }
             return vm.selectedAccounts;
         }
 

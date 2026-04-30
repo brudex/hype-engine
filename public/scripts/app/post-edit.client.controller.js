@@ -209,7 +209,7 @@
                         }
                     }
                 });
-            }, 0);
+            }, 20);
         }
 
         // ============================================
@@ -451,23 +451,85 @@
         // POST OPERATIONS
         // ============================================
         function save() {
-            
+            postNow('draft');
+        }
+
+        function isScheduledTimeInFuture(dateStr, timeStr) {
+            if (!dateStr || !timeStr) {
+                return false;
+            }
+            var parsed = new Date(dateStr + ' ' + timeStr + ':00');
+            if (isNaN(parsed.getTime())) {
+                return false;
+            }
+            return parsed.getTime() > Date.now();
+        }
+
+        /**
+         * @param {string} mode - 'draft' (status 0, scheduleStatus 0) | 'publish' (1, 0) | 'reschedule' (1, 0)
+         */
+        function postNow(mode) {
+            if (!vm.post) {
+                utils.alertError('Error', 'Post not found. Cannot publish.');
+                return;
+            }
+
+            if (mode === 'draft') {
+                vm.saving = true;
+                vm.hasError = false;
+                var draftPayload = buildPostData(0, { scheduleStatus: 0 });
+                services.updatePost(draftPayload, function(response) {
+                    vm.saving = false;
+                    if (response.success) {
+                        utils.alertSuccess('Success', 'Post saved successfully');
+                        applyPostUpdateResponse(response);
+                    } else {
+                        vm.hasError = true;
+                        utils.alertError('Error', response.message || 'Failed to save post');
+                    }
+                });
+                return;
+            }
+
+            if (mode !== 'publish' && mode !== 'reschedule') {
+                utils.alertError('Error', 'Invalid action');
+                return;
+            }
+
+            if (vm.form.accounts.length === 0) {
+                utils.alertInfo('Account Selection', 'Please select at least one account');
+                return;
+            }
+
+            if (!hasContent()) {
+                utils.alertInfo('Content', 'Please enter some content for your post');
+                return;
+            }
+
+            if (!vm.form.date || !vm.form.time) {
+                utils.alertInfo('Schedule', 'Please select a date and time.');
+                return;
+            }
+            if (!isScheduledTimeInFuture(vm.form.date, vm.form.time)) {
+                utils.alertError('Schedule', 'Scheduled time must be in the future.');
+                return;
+            }
+
             vm.saving = true;
             vm.hasError = false;
-            var data = buildPostData();
-            // Log payload for troubleshooting
-            console.log('PostEditController.save - Sending update payload:', {
-                postUuid: vm.post.uuid,
-                payload: JSON.stringify(data, null, 2),
-                payloadObject: data
-            });
-            
-            // Call updatePost with full payload (uuid is included in data)
+            var data = buildPostData(1, { scheduleStatus: 0 });
             services.updatePost(data, function(response) {
                 vm.saving = false;
                 if (response.success) {
-                    utils.alertSuccess('Success', 'Post saved successfully');
-                    // Stay on the page after successful update
+                    applyPostUpdateResponse(response);
+                    if (mode === 'reschedule') {
+                        utils.alertInfo('Success', 'Post scheduled successfully. Redirecting to posts list ...');
+                        $timeout(function() {
+                            window.location.href = postsListUrl();
+                        }, 4000);
+                    } else {
+                        utils.alertSuccess('Success', 'Post saved successfully');
+                    }
                 } else {
                     vm.hasError = true;
                     utils.alertError('Error', response.message || 'Failed to save post');
@@ -475,30 +537,30 @@
             });
         }
 
-        
+        function postsListUrl() {
+            if (vm.currentProject && vm.currentProject.uuid) {
+                return '/dashboard/posts/' + vm.currentProject.uuid;
+            }
+            return '/dashboard/posts';
+        }
 
-        function postNow() {
-            if (!vm.post) {
-                utils.alertError('Error', 'Post not found. Cannot publish.');
-                return;
+        function applyPostUpdateResponse(response) {
+            if (vm.post && response.data && response.data.status !== undefined) {
+                vm.post.status = response.data.status;
             }
-            
-            if (vm.form.accounts.length === 0) {
-                utils.alertInfo('Account Selection', 'Please select at least one account');
-                return;
+            if (vm.post && response.data && response.data.scheduleStatus !== undefined) {
+                vm.post.scheduleStatus = response.data.scheduleStatus;
             }
-            
-            if (!hasContent()) {
-                utils.alertInfo('Content', 'Please enter some content for your post');
-                return;
-            }
-            save(); //no need to confirm, just save
-        
         }
 
        
 
-        function buildPostData() {
+        /**
+         * @param {number} [status] - 0 draft, 1 scheduled
+         * @param {{ scheduleStatus?: number }} [options] - e.g. scheduleStatus 0 when re-scheduling published/failed posts
+         */
+        function buildPostData(status, options) {
+            options = options || {};
             // Collect account UUIDs from selected accounts
             var accountUuids = vm.form.accounts.map(function(accountId) {
                 var account = vm.accounts.find(function(acc) { return acc.id === accountId; });
@@ -547,6 +609,13 @@
                 time: vm.form.time || null,
                 projectUuid: vm.currentProject ? (vm.currentProject.uuid || null) : null
             };
+
+            if (status === 0 || status === 1) {
+                payload.status = status;
+            }
+            if (options.scheduleStatus !== undefined && options.scheduleStatus !== null) {
+                payload.scheduleStatus = options.scheduleStatus;
+            }
             
             return payload;
         }

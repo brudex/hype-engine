@@ -77,54 +77,54 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Development: Inject dummy user if no user is logged in
-if (process.env.NODE_ENV === 'development' || app.get('env') === 'development') {
-    app.use(async (req, res, next) => {
-        // Only inject dummy user if no user is authenticated
-        if (!req.user) {
-            try {
-                // Try to find or create a dummy test user
-                let dummyUser = await db.User.findOne({
-                    where: {
-                        email: 'test@mixpost.dev'
-                    }
-                });
-
-                if (!dummyUser) {
-                    // Create dummy user if it doesn't exist
-                    dummyUser = await db.User.create({
-                        uuid: uuidv4(),
-                        fullName: 'Test User',
-                        email: 'test@mixpost.dev',
-                        role: 'admin',
-                        isActive: true,
-                        provider: 'local'
-                    });
-                    logger.info('Created dummy test user for development');
-                }
-
-                // Attach dummy user to request
-                req.user = {
-                    uuid: dummyUser.uuid,
-                    fullName: dummyUser.fullName,
-                    email: dummyUser.email,
-                    role: dummyUser.role,
-                    isActive: dummyUser.isActive,
-                    provider: dummyUser.provider,
-                    role: 'admin'
-                };
-
-                // Also set it in session for passport
-                req.session.passport = req.session.passport || {};
-                req.session.passport.user = dummyUser.uuid;
-                req.session.passport.user.role = 'admin';
-            } catch (error) {
-                logger.error('Error creating/finding dummy user:', error);
-                // Continue without dummy user if there's an error
-            }
-        }
-        next();
-    });
-}
+// if (process.env.NODE_ENV === 'development' || app.get('env') === 'development') {
+//     app.use(async (req, res, next) => {
+//         // Only inject dummy user if no user is authenticated
+//         if (!req.user) {
+//             try {
+//                 // Try to find or create a dummy test user
+//                 let dummyUser = await db.User.findOne({
+//                     where: {
+//                         email: 'test@mixpost.dev'
+//                     }
+//                 });
+//
+//                 if (!dummyUser) {
+//                     // Create dummy user if it doesn't exist
+//                     dummyUser = await db.User.create({
+//                         uuid: uuidv4(),
+//                         fullName: 'Test User',
+//                         email: 'test@mixpost.dev',
+//                         role: 'admin',
+//                         isActive: true,
+//                         provider: 'local'
+//                     });
+//                     logger.info('Created dummy test user for development');
+//                 }
+//
+//                 // Attach dummy user to request
+//                 req.user = {
+//                     uuid: dummyUser.uuid,
+//                     fullName: dummyUser.fullName,
+//                     email: dummyUser.email,
+//                     role: dummyUser.role,
+//                     isActive: dummyUser.isActive,
+//                     provider: dummyUser.provider,
+//                     role: 'admin'
+//                 };
+//
+//                 // Also set it in session for passport
+//                 req.session.passport = req.session.passport || {};
+//                 req.session.passport.user = dummyUser.uuid;
+//                 req.session.passport.user.role = 'admin';
+//             } catch (error) {
+//                 logger.error('Error creating/finding dummy user:', error);
+//                 // Continue without dummy user if there's an error
+//             }
+//         }
+//         next();
+//     });
+// }
 
 app.use((req, res, next) => {
     res.locals.user = req.user;

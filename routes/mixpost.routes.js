@@ -70,6 +70,7 @@ router.get('/integrations/:platformName/connect/:projectUuid', IntegrationContro
 router.get('/accounts', AccountsController.index);
 router.get('/accounts/:projectUuid', AccountsController.index);
 router.get('/projects/:projectUuid/accounts', AccountsController.index);
+router.get('/projects/:projectUuid/tags', TagsController.index);
 
 // Accounts API Routes
 router.get('/api/accounts/project/:projectUuid', AccountsController.getAccounts);

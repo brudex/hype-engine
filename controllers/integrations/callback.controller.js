@@ -5,6 +5,10 @@ const logger = require('../../utils/logger');
 const { encryptObject } = require('../../utils/encryption');
 const twitterPlatform = require('../../services/platform/twitter');
 const linkedinPlatform = require('../../services/platform/linkedin');
+const facebookPlatform = require('../../services/platform/facebook');
+
+/** Must match `integration.controller.js` — same string used in authorize `redirect_uri` and token exchange. */
+const siteUrl = (process.env.SITEURL || 'https://hypeengine.cachetechs.com').replace(/\/+$/, '');
 
 /**
  * Social platform OAuth/integration callbacks.
@@ -324,8 +328,8 @@ CallbackController.linkedIn = async (req, res) => {
             return res.redirect(302, '/dashboard/accounts/connect-status/' + placeholderAccount.uuid);
         }
 
-        const baseUrl = 'https://hypeengine.cachetechs.com';
-        const redirectUri = baseUrl + '/integrations/linkedin/callback?projectUuid=' + queryProjectUuid;
+        const redirectUri =
+            siteUrl + '/integrations/linkedin/callback?projectUuid=' + encodeURIComponent(queryProjectUuid);
         const tokenResponse = await linkedinPlatform.exchangeCodeForToken(
             code,
             redirectUri,
@@ -380,6 +384,205 @@ CallbackController.linkedIn = async (req, res) => {
             if (queryProjectUuid) pendingWhere.projectUuid = queryProjectUuid;
             const pending = await db.Account.findOne({
                 where: pendingWhere,
+                attributes: ['uuid']
+            });
+            if (pending && pending.uuid) redirectUrl = '/dashboard/accounts/connect-status/' + pending.uuid;
+        }
+        return res.redirect(302, redirectUrl);
+    }
+};
+
+/**
+ * Facebook OAuth callback.
+ * Stores each connected Facebook Page as provider=facebook and each linked IG business account as provider=instagram.
+ * @route GET /integrations/facebook/callback
+ */
+CallbackController.facebook = async (req, res) => {
+    const redirectUri = siteUrl + '/integrations/facebook/callback';
+
+    try {
+        const { code, state, error: oauthError, error_description, error_reason } = req.query;
+
+        if (oauthError || error_reason) {
+            logger.warn('Facebook OAuth callback: denied or error', { oauthError, error_reason, error_description });
+            req.flash('error', error_description || oauthError || 'Facebook authorization was denied.');
+            return res.redirect(302, '/dashboard/accounts');
+        }
+        if (!code || !state) {
+            logger.warn('Facebook OAuth callback: missing code or state', req.query);
+            req.flash('error', 'Missing authorization code or state. Please try connecting again.');
+            return res.redirect(302, '/dashboard/accounts');
+        }
+
+        const placeholderAccount = await db.Account.findOne({
+            where: { provider: 'facebook', providerId: 'pending-' + state },
+            attributes: ['uuid', 'projectUuid']
+        });
+        if (!placeholderAccount) {
+            req.flash('error', 'Invalid or expired state. Please try connecting again.');
+            return res.redirect(302, '/dashboard/error');
+        }
+
+        const projectUuid = placeholderAccount.projectUuid;
+        const oauthService = await db.OauthService.findOne({ where: { name: 'facebook' } });
+        if (!oauthService || !oauthService.configuration) {
+            req.flash('error', 'Facebook OAuth is not configured.');
+            return res.redirect(302, '/dashboard/accounts/connect-status/' + placeholderAccount.uuid);
+        }
+        let config = oauthService.configuration;
+        if (typeof config === 'string') config = JSON.parse(config);
+        const appId = String(config.app_id || config.client_id || '').trim();
+        const appSecret = String(config.app_secret || config.client_secret || '').trim();
+        const apiVersion = String(config.api_version || 'v19.0').trim();
+        if (!appId || !appSecret) {
+            req.flash('error', 'Facebook App ID or App Secret missing.');
+            return res.redirect(302, '/dashboard/accounts/connect-status/' + placeholderAccount.uuid);
+        }
+
+        const shortLived = await facebookPlatform.exchangeCodeForToken(code, redirectUri, appId, appSecret, apiVersion);
+        const longLived = await facebookPlatform.exchangeToLongLivedUserToken(
+            shortLived.access_token,
+            appId,
+            appSecret,
+            apiVersion
+        );
+        const pages = await facebookPlatform.getManagedPages(longLived.access_token, apiVersion);
+        if (!pages.length) {
+            req.flash('error', 'No Facebook Pages found for this account.');
+            return res.redirect(302, '/dashboard/accounts/connect-status/' + placeholderAccount.uuid);
+        }
+
+        const userExpiresAt =
+            longLived.expires_in != null ? new Date(Date.now() + longLived.expires_in * 1000).toISOString() : null;
+
+        const connectedAccounts = [];
+        let reusedPlaceholder = false;
+
+        for (const page of pages) {
+            const pageId = String(page.id);
+            const pageName = page.name || ('Facebook Page ' + pageId);
+            const pageAccessToken = page.access_token;
+
+            let fbAccount = await db.Account.findOne({ where: { provider: 'facebook', providerId: pageId } });
+            if (!fbAccount && !reusedPlaceholder) {
+                fbAccount = await db.Account.findOne({ where: { uuid: placeholderAccount.uuid } });
+                reusedPlaceholder = true;
+            }
+            if (!fbAccount) {
+                fbAccount = await db.Account.create({
+                    uuid: uuidv4(),
+                    projectUuid,
+                    name: pageName,
+                    username: pageName,
+                    provider: 'facebook',
+                    providerId: pageId,
+                    authMethod: 'oauth',
+                    accessToken: '',
+                    apiKey: '',
+                    authorized: false,
+                    active: false,
+                    data: null,
+                    media: null
+                });
+            }
+
+            const fbData = {
+                access_token: pageAccessToken,
+                page_id: pageId,
+                page_name: pageName,
+                user_access_token: longLived.access_token,
+                user_expires_at: userExpiresAt,
+                api_version: apiVersion
+            };
+            fbAccount.projectUuid = projectUuid;
+            fbAccount.provider = 'facebook';
+            fbAccount.providerId = pageId;
+            fbAccount.name = pageName;
+            fbAccount.username = pageName;
+            fbAccount.authMethod = 'oauth';
+            fbAccount.accessToken = JSON.stringify(fbData);
+            fbAccount.data = fbData;
+            fbAccount.apiKey = '';
+            fbAccount.authorized = true;
+            fbAccount.active = true;
+            await fbAccount.save();
+            connectedAccounts.push({ provider: 'facebook', uuid: fbAccount.uuid, name: pageName });
+
+            let igBusiness = null;
+            try {
+                igBusiness = await facebookPlatform.getInstagramBusinessAccount(pageId, pageAccessToken, apiVersion);
+            } catch (igLookupErr) {
+                logger.warn('IG lookup for page failed', { pageId, message: igLookupErr.message });
+            }
+
+            if (igBusiness && igBusiness.id) {
+                const instagramId = String(igBusiness.id);
+                const igName = igBusiness.username || igBusiness.name || ('Instagram ' + instagramId);
+
+                let igAccount = await db.Account.findOne({ where: { provider: 'instagram', providerId: instagramId } });
+                if (!igAccount) {
+                    igAccount = await db.Account.create({
+                        uuid: uuidv4(),
+                        projectUuid,
+                        name: igName,
+                        username: igBusiness.username || null,
+                        provider: 'instagram',
+                        providerId: instagramId,
+                        authMethod: 'oauth',
+                        accessToken: '',
+                        apiKey: '',
+                        authorized: false,
+                        active: false,
+                        data: null,
+                        media: null
+                    });
+                }
+
+                const igData = {
+                    access_token: pageAccessToken,
+                    instagram_id: instagramId,
+                    instagram_username: igBusiness.username || null,
+                    page_id: pageId,
+                    page_name: pageName,
+                    user_access_token: longLived.access_token,
+                    user_expires_at: userExpiresAt,
+                    api_version: apiVersion
+                };
+                igAccount.projectUuid = projectUuid;
+                igAccount.provider = 'instagram';
+                igAccount.providerId = instagramId;
+                igAccount.name = igName;
+                igAccount.username = igBusiness.username || null;
+                igAccount.authMethod = 'oauth';
+                igAccount.accessToken = JSON.stringify(igData);
+                igAccount.data = igData;
+                igAccount.apiKey = '';
+                igAccount.authorized = true;
+                igAccount.active = true;
+                await igAccount.save();
+                connectedAccounts.push({ provider: 'instagram', uuid: igAccount.uuid, name: igName });
+            }
+        }
+
+        if (!connectedAccounts.length) {
+            req.flash('error', 'No Facebook or Instagram accounts were connected.');
+            return res.redirect(302, '/dashboard/accounts/connect-status/' + placeholderAccount.uuid);
+        }
+
+        const firstAccountUuid = connectedAccounts[0].uuid;
+        req.flash('success', `Connected ${connectedAccounts.length} account(s): ${connectedAccounts.map((a) => a.provider).join(', ')}.`);
+        return res.redirect(302, '/dashboard/accounts/connect-status/' + firstAccountUuid);
+    } catch (err) {
+        logger.error('Facebook OAuth callback error', {
+            message: err?.message,
+            ...(err?.response && { httpStatus: err.response.status, responseData: err.response.data })
+        });
+        req.flash('error', err?.message || 'Facebook connection failed. Please try again.');
+        const state = req.query && req.query.state;
+        let redirectUrl = '/dashboard/accounts';
+        if (state) {
+            const pending = await db.Account.findOne({
+                where: { provider: 'facebook', providerId: 'pending-' + state },
                 attributes: ['uuid']
             });
             if (pending && pending.uuid) redirectUrl = '/dashboard/accounts/connect-status/' + pending.uuid;

@@ -503,7 +503,15 @@ const postSaveSchema = Joi.object({
         'string.guid': 'Each account UUID must be a valid UUID'
     }),
     date: Joi.string().allow(null, '').optional().default(null),
-    time: Joi.string().allow(null, '').optional().default(null)
+    time: Joi.string().allow(null, '').optional().default(null),
+    status: Joi.number().integer().valid(0, 1).optional().messages({
+        'number.base': 'Status must be a number',
+        'any.only': 'Status must be 0 (draft) or 1 (scheduled)'
+    }),
+    scheduleStatus: Joi.number().integer().valid(0, 1, 2).optional().messages({
+        'number.base': 'scheduleStatus must be a number',
+        'any.only': 'scheduleStatus must be 0 (PENDING), 1 (PROCESSING), or 2 (PROCESSED)'
+    })
 });
 
 /**
@@ -556,7 +564,7 @@ PostsController.save = async (req, res) => {
             });
         }
         // Use validated and sanitized values
-        const { projectUuid, versions, tags, accountUuids, date, time } = value;
+        const { projectUuid, versions, tags, accountUuids, date, time, status: statusFromBody } = value;
         // Build scheduledAt from date and time
         let scheduledAt = null;
         if (date && time) {
@@ -607,10 +615,12 @@ PostsController.save = async (req, res) => {
             scheduledAt: scheduledAt || null
         });
 
-        // Create post
+        const initialStatus = statusFromBody !== undefined && statusFromBody !== null ? statusFromBody : 0;
+
+        // Create post (0=DRAFT, 1=SCHEDULED per model)
         const post = await db.Post.create({
             uuid: uuidv4(),
-            status: 0, // DRAFT
+            status: initialStatus,
             scheduleStatus: 0, // PENDING
             scheduledAt: scheduledAt,
             userUuid: userUuid,
@@ -804,7 +814,7 @@ PostsController.edit = async (req, res) => {
                     attributes: ['uuid', 'name', 'description', 'imageUrl']
                 }
             ],
-            attributes: ['uuid'] // Only need UUID for verification
+            attributes: ['uuid', 'status'] // Only need UUID for verification
         });
 
         if (!post) {
@@ -851,11 +861,17 @@ PostsController.edit = async (req, res) => {
             },
             order: [['createdAt', 'DESC']]
         });
+        logger.info('PostsController.edit - Post status:>>>>>>>>>>>>>>>>>>>>>>>>>', {
+            status: post.status,
+            statusString: (post.status < 1) ? 'draft' : (post.status == 1) ? 'scheduled' : (post.status == 2) ? 'published' : 'failed'
+        });
 
         // Render page with minimal data - full post data will be fetched via API
         res.render('dashboard/posts/edit', {
             post: {
-                uuid: post.uuid // Only pass UUID - frontend will fetch full data via API
+                uuid: post.uuid, // Only pass UUID - frontend will fetch full data via API
+                status: post.status,
+                statusString: (post.status < 1) ? 'draft' : (post.status == 1) ? 'scheduled' : (post.status == 2) ? 'published' : 'failed'
             },
             accounts: formattedAccounts,
             tags: tags,
@@ -868,7 +884,6 @@ PostsController.edit = async (req, res) => {
             projectUuid: currentProject.uuid || null,
             schedule_at: { date: null, time: null }, // Will be loaded from API
             prefill: { body: '' }, // Will be loaded from API
-            is_configured_service: true, // TODO: Check actual service status
             layout: 'layouts/dashboard/index'
         });
     } catch (error) {
@@ -1149,10 +1164,12 @@ PostsController.update = async (req, res) => {
         }
 
         // Use validated and sanitized values
-        const { versions, tags, accountUuids, date, time } = value;
+        const { versions, tags, accountUuids, date, time, status: statusFromBody, scheduleStatus: scheduleStatusFromBody } = value;
         
         logger.info('PostsController.update - Validated payload:', {
             postUuid: uuid,
+            status: statusFromBody,
+            scheduleStatus: scheduleStatusFromBody,
             versionsCount: versions ? versions.length : 0,
             accountUuidsCount: accountUuids ? accountUuids.length : 0,
             tagsCount: tags ? tags.length : 0,
@@ -1195,8 +1212,21 @@ PostsController.update = async (req, res) => {
             }
         }
 
+        if (statusFromBody === 1 && scheduledAt && scheduledAt.getTime() <= Date.now()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Scheduled time must be in the future'
+            });
+        }
+
         // Update post fields
         post.scheduledAt = scheduledAt;
+        if (statusFromBody !== undefined && statusFromBody !== null) {
+            post.status = statusFromBody;
+        }
+        if (scheduleStatusFromBody !== undefined && scheduleStatusFromBody !== null) {
+            post.scheduleStatus = scheduleStatusFromBody;
+        }
         await post.save();
 
         logger.info('PostsController.update - Post updated:', {
@@ -1376,6 +1406,7 @@ PostsController.update = async (req, res) => {
                 data: {
                     uuid: post.uuid,
                     status: post.status,
+                    scheduleStatus: post.scheduleStatus,
                     scheduledAt: post.scheduledAt
                 }
             });

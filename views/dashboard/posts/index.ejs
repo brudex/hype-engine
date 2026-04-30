@@ -162,13 +162,13 @@
                             <tbody>
                                 <tr ng-repeat="post in postsCtrl.posts" 
                                     class="posts-table-row"
-                                    ng-class="{'selected': postsCtrl.selectedPosts.indexOf(post.id) > -1}"
+                                    ng-class="{'selected': postsCtrl.selectedPosts.indexOf(post.uuid) > -1}"
                                     ng-click="postsCtrl.openPreview(post)">
                                     <td ng-click="$event.stopPropagation()" class="posts-table-cell">
                                         <input type="checkbox" 
                                                class="form-check-input"
-                                               ng-checked="postsCtrl.selectedPosts.indexOf(post.id) > -1"
-                                               ng-click="postsCtrl.togglePostSelection(post.id); $event.stopPropagation()">
+                                               ng-checked="postsCtrl.selectedPosts.indexOf(post.uuid) > -1"
+                                               ng-click="postsCtrl.togglePostSelection(post.uuid); $event.stopPropagation()">
                                     </td>
                                     <td ng-click="$event.stopPropagation()" class="posts-table-cell">
                                         <div>
