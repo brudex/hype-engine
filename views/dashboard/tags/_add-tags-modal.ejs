@@ -1,0 +1,45 @@
+<!-- Add tags: comma-separated names -->
+<div class="modal fade"
+     id="tagManageAddModal"
+     tabindex="-1"
+     aria-labelledby="tagManageAddModalLabel"
+     aria-hidden="true"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="tagManageAddModalLabel">Add tags</h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-white small mb-2">Enter tag names separated by commas. Duplicates in this project are skipped.</p>
+                <label for="tagManageBulkTagsInput" class="form-label">Tag names</label>
+                <textarea class="form-control"
+                          id="tagManageBulkTagsInput"
+                          rows="4"
+                          ng-model="tagCtrl.bulkTagInput"
+                          placeholder="e.g. Promo, Q1 Campaign, Launch"
+                          ng-disabled="tagCtrl.saving"></textarea>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                        ng-disabled="tagCtrl.saving">
+                    Cancel
+                </button>
+                <button type="button"
+                        class="btn btn-primary"
+                        ng-click="tagCtrl.submitBulkTags()"
+                        ng-disabled="tagCtrl.saving || !tagCtrl.bulkTagInput || tagCtrl.bulkTagInput.trim() === ''">
+                    <span ng-if="tagCtrl.saving" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    Add tags
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

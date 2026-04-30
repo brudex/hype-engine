@@ -1,0 +1,145 @@
+<link rel="stylesheet" href="/css/post.css">
+
+<div class="page-header mb-0">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary">Tags — <%= projectName %></h4>
+                    <p class="text-theme-secondary mb-0">Create and organize labels for posts in this project</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/projects">Projects</a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/projects/<%= projectUuid %>"><%= projectName %></a></li>
+                    <li class="breadcrumb-item active">Tags</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body mt-0" ng-controller="TagManageController as tagCtrl" ng-init='tagCtrl.init(<%- JSON.stringify(projectUuid) %>, <%- JSON.stringify(projectName) %>)'>
+    <div class="page-wrapper">
+        <div class="row mb-3">
+            <div class="col-md-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <a href="/dashboard/projects" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back to projects
+                </a>
+                <button type="button" class="btn btn-primary posts-create-btn" ng-click="tagCtrl.openAddTagsModal()">
+                    <i class="bi bi-plus-circle"></i> Add tags
+                </button>
+            </div>
+        </div>
+
+        <%- include('./_add-tags-modal') %>
+
+        <div ng-if="tagCtrl.loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <div ng-if="!tagCtrl.loading && tagCtrl.tags.length === 0" class="card posts-table-card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-tags text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3 text-theme-primary">No tags yet</h5>
+                <p class="text-muted mb-0">Use <strong>Add tags</strong> to create labels, then use them when creating or editing posts.</p>
+            </div>
+        </div>
+
+        <div ng-if="!tagCtrl.loading && tagCtrl.tags.length > 0" class="tags-manage-list">
+        <div class="card posts-table-card mb-4">
+            <div class="card-body py-2 d-flex flex-wrap align-items-center gap-3"
+                 ng-class="{'posts-selected-bar': tagCtrl.selectedCount() > 0}">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex justify-content-center flex-shrink-0 posts-table-checkbox">
+                        <input type="checkbox"
+                               class="form-check-input"
+                               id="tagsSelectAll"
+                               ng-checked="tagCtrl.allSelected()"
+                               ng-click="tagCtrl.toggleSelectAll()">
+                    </div>
+                    <label class="mb-0 posts-selected-text" for="tagsSelectAll" style="cursor: pointer;">Select all</label>
+                </div>
+                <div class="d-flex align-items-center flex-grow-1 flex-wrap gap-2" ng-show="tagCtrl.selectedCount() > 0">
+                    <strong class="posts-selected-count">{{ tagCtrl.selectedCount() }}</strong>
+                    <span class="posts-selected-text">tag(s) selected</span>
+                </div>
+                <div class="d-flex gap-2 ms-auto">
+                    <button type="button" class="btn btn-sm posts-delete-selected-btn"
+                            ng-disabled="tagCtrl.selectedCount() === 0 || tagCtrl.saving"
+                            ng-click="tagCtrl.confirmDeleteSelected()">
+                        <i class="bi bi-trash"></i> Delete Selected
+                    </button>
+                    <button type="button" class="btn btn-sm posts-clear-selected-btn"
+                            ng-show="tagCtrl.selectedCount() > 0"
+                            ng-click="tagCtrl.clearSelection()">
+                        <i class="bi bi-x"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-12" ng-repeat="tag in tagCtrl.tags">
+                <div class="card project-list-card mb-0"
+                     ng-class="{'tags-manage-row-selected': tagCtrl.selection[tag.uuid]}">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                                <div class="tags-manage-check-cell">
+                                    <input type="checkbox"
+                                           class="form-check-input"
+                                           id="tag-check-{{ tag.uuid }}"
+                                           ng-model="tagCtrl.selection[tag.uuid]">
+                                </div>
+                                <label class="visually-hidden" for="tag-check-{{ tag.uuid }}">Select {{ tag.name }}</label>
+                                <span class="rounded-circle flex-shrink-0 tag-color-swatch" ng-style="{ 'background-color': tagCtrl.displayHex(tag.hex_color) }" style="width: 24px; height: 24px; border: 2px solid rgba(255,255,255,0.2);"></span>
+                                <span class="fw-semibold text-theme-primary mb-0 text-truncate">{{ tag.name }}</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" ng-click="tagCtrl.openEdit(tag)">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" ng-click="tagCtrl.confirmDelete(tag)">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editTagModal" tabindex="-1" aria-labelledby="editTagModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTagModalLabel">Edit tag</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" ng-model="tagCtrl.editForm.name" maxlength="120" required>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">Color</label>
+                        <input type="color" class="form-control form-control-color w-100" ng-model="tagCtrl.editForm.hex_color" title="Pick tag color">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" ng-click="tagCtrl.saveEdit()" ng-disabled="tagCtrl.saving">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/scripts/app/tag.client.controller.js"></script>
