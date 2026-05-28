@@ -1,0 +1,133 @@
+<link rel="stylesheet" href="/css/post.css">
+<link rel="stylesheet" href="/css/social-preview.css">
+
+<div class="main-body mt-0" ng-controller="PostHistoryController as historyCtrl" ng-init='historyCtrl.init(<%- JSON.stringify(post) %>, <%- JSON.stringify(currentProject) %>)'>
+    <div class="page-header mb-0">
+        <div class="page-block">
+            <div class="row align-items-center">
+                <div class="col-md-12">
+                    <div class="page-header-title">
+                        <h4 class="m-b-5 text-theme-primary">Post history</h4>
+                        <p class="text-theme-secondary mb-0" ng-if="historyCtrl.post">
+                            Publish log for post <span class="text-theme-primary">{{ historyCtrl.truncateContent(historyCtrl.getPostContent(historyCtrl.post), 40) }}</span>
+                        </p>
+                    </div>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                        <li class="breadcrumb-item"><a href="/dashboard/posts">Projects</a></li>
+                        <% if (currentProject) { %>
+                        <li class="breadcrumb-item"><a href="/dashboard/posts/<%= currentProject.uuid %>"><%= currentProject.name %></a></li>
+                        <% } %>
+                        <li class="breadcrumb-item"><a href="/dashboard/posts/edit/<%= post.uuid %>">Edit post</a></li>
+                        <li class="breadcrumb-item active">History</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-wrapper">
+        <div ng-if="historyCtrl.loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <div ng-if="!historyCtrl.loading" class="card posts-table-card">
+            <div class="card-body p-0 posts-table-card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 posts-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 180px;">Published</th>
+                                <th style="width: 110px;">Status</th>
+                                <th style="width: 80px;">Account</th>
+                                <th>Content</th>
+                                <th style="width: 110px;">Media</th>
+                                <th style="width: 72px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="item in historyCtrl.items" class="posts-table-row">
+                                <td class="posts-table-cell">{{ historyCtrl.formatDate(item.publishedAt) }}</td>
+                                <td class="posts-table-cell">
+                                    <span class="badge posts-status-badge posts-history-status-badge"
+                                          ng-style="historyCtrl.getHistoryStatusBadgeStyle(item.status)">
+                                        {{ historyCtrl.getHistoryStatusText(item.status) }}
+                                    </span>
+                                </td>
+                                <td class="posts-table-cell">
+                                    <div ng-if="item.account" class="d-flex align-items-center">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center posts-account-placeholder"
+                                             title="{{ item.account.name }}"
+                                             ng-style="{'color': historyCtrl.getAccountProviderColor(item.account.provider)}">
+                                            <i class="bi" ng-class="historyCtrl.getAccountProviderIcon(item.account.provider)"></i>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="posts-table-cell">
+                                    <span class="posts-content-cell">{{ historyCtrl.truncateContent(item.content, 20) }}</span>
+                                </td>
+                                <td class="posts-table-cell">
+                                    <div ng-if="item.media && item.media.length > 0" class="position-relative posts-media-wrapper posts-history-media-wrapper">
+                                        <img ng-src="{{ item.media[0].url }}"
+                                             alt="Media"
+                                             class="posts-media-thumb posts-history-media-thumb">
+                                        <span ng-if="item.media_count > 1"
+                                              class="badge position-absolute posts-media-count-badge">
+                                            +{{ item.media_count - 1 }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="posts-table-cell">
+                                    <button type="button"
+                                            class="btn btn-sm btn-link posts-history-preview-btn"
+                                            title="Preview post"
+                                            ng-click="historyCtrl.openPreview(historyCtrl.post)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr ng-if="historyCtrl.items.length === 0">
+                                <td colspan="6" class="text-center posts-empty-state py-5">
+                                    <i class="bi bi-clock-history posts-empty-icon d-block mb-2"></i>
+                                    No publish history yet for this post.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div ng-if="historyCtrl.getTotalPages() > 1" class="mt-3">
+            <nav>
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" ng-class="{'disabled': historyCtrl.getCurrentPage() === 1}">
+                        <a class="page-link" href="javascript:void(0)"
+                           ng-click="historyCtrl.getCurrentPage() > 1 && historyCtrl.setCurrentPage(historyCtrl.getCurrentPage() - 1)">Previous</a>
+                    </li>
+                    <li class="page-item" ng-repeat="page in historyCtrl.getPages()"
+                        ng-class="{'active': page === historyCtrl.getCurrentPage()}">
+                        <a class="page-link" href="javascript:void(0)"
+                           ng-click="historyCtrl.setCurrentPage(page)">{{ page }}</a>
+                    </li>
+                    <li class="page-item" ng-class="{'disabled': historyCtrl.getCurrentPage() === historyCtrl.getTotalPages()}">
+                        <a class="page-link" href="javascript:void(0)"
+                           ng-click="historyCtrl.getCurrentPage() < historyCtrl.getTotalPages() && historyCtrl.setCurrentPage(historyCtrl.getCurrentPage() + 1)">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <%- include('./_preview-modal', { previewCtrl: 'historyCtrl' }) %>
+</div>
+
+<script src="/scripts/app/twitter-preview.directive.js"></script>
+<script src="/scripts/app/facebook-preview.directive.js"></script>
+<script src="/scripts/app/instagram-preview.directive.js"></script>
+<script src="/scripts/app/linkedin-preview.directive.js"></script>
+<script src="/scripts/app/tiktok-preview.directive.js"></script>
+<script src="/scripts/app/mastodon-preview.directive.js"></script>
+<script src="/scripts/app/post-history.client.controller.js"></script>

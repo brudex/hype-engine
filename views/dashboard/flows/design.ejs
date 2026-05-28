@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flow designer – <%= flow.name %></title>
+    <link rel="stylesheet" href="/bootstrap-5.3.8/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" type="text/css" href="/modules/flow-builder/flow-builder.css">
+    <style>
+        body { min-height: 100vh; background: var(--bs-gray-100, #f4f6f8); }
+        .flow-designer-header {
+            background: linear-gradient(135deg, #1a1d24 0%, #12151a 50%, #0d0f12 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+        }
+        .flow-designer-header .navbar-brand {
+            color: #fff;
+        }
+        .flow-designer-header .navbar-brand:hover {
+            color: rgba(255, 255, 255, 0.85);
+        }
+        .flow-designer-header .flow-headline-row {
+            min-width: 0;
+            text-align: center;
+        }
+        .flow-designer-header .flow-headline {
+            display: inline-block;
+            max-width: 100%;
+            font-size: clamp(0.95rem, 2vw, 1.2rem);
+            line-height: 1.35;
+            margin: 0;
+        }
+        .flow-designer-header .flow-headline-name {
+            font-weight: 700;
+            color: #f4f5f7;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .flow-designer-header .flow-headline-sep {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.45);
+        }
+        .flow-designer-header .flow-headline-desc {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.72);
+            text-transform: none;
+            letter-spacing: normal;
+        }
+        .flow-designer-header .flow-designer-label {
+            flex-shrink: 0;
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(0, 239, 255, 0.8);
+            white-space: nowrap;
+        }
+        @media (max-width: 768px) {
+            .flow-designer-header .flow-headline {
+                display: block;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                text-align: center;
+            }
+        }
+        #flow-builder-root { min-height: calc(100vh - 4.25rem); }
+    </style>
+</head>
+<body>
+    <header class="flow-designer-header">
+        <div class="container-fluid py-2 py-md-3 px-3 px-lg-4">
+            <div class="d-flex align-items-center gap-2 gap-md-3">
+                <a class="navbar-brand mb-0 flex-shrink-0" href="/dashboard/flows"><i class="bi bi-arrow-left"></i> Flows</a>
+                <div class="flex-grow-1 flow-headline-row px-1">
+                    <p class="flow-headline mb-0" title="<%= flow.name %>">
+                        <span class="flow-headline-name"><%= String(flow.name || '').toUpperCase() %></span>
+                        <% if (flow.description && String(flow.description).trim()) { %>
+                        <span class="flow-headline-sep"> : </span>
+                        <span class="flow-headline-desc"><%= flow.description %></span>
+                        <% } %>
+                    </p>
+                </div>
+                <span class="flow-designer-label">Flow designer</span>
+            </div>
+        </div>
+    </header>
+    <input id="x-flow-uuid" type="hidden" value="<%= flow.uuid %>" />
+    <input id="x-user-uuid" type="hidden" value="<%= userUuid %>" />
+    <input id="x-base-url" type="hidden" value="<%= apiFlowBaseUrl %>" />
+    <div id="flow-builder-root" class="container-fluid p-0"></div>
+    <script src="/modules/flow-builder/flow-builder.umd.cjs"></script>
+    <script>
+(function () {
+    var root = document.getElementById('flow-builder-root');
+    if (typeof window.FlowBuilder !== 'undefined' && window.FlowBuilder.mount) {
+        window.FlowBuilder.mount('#flow-builder-root', {});
+    } else {
+        root.innerHTML = '<div class="p-5 m-3 card"><h5>Flow builder assets not installed</h5>' +
+            '<p class="mb-2">Run <code>npm run build:mixpost</code> in <code>social-flow-builder</code>, or <code>npm run build:lib</code> and copy assets to:</p>' +
+            '<ul><li><code>public/modules/flow-builder/flow-builder.css</code></li>' +
+            '<li><code>public/modules/flow-builder/flow-builder.umd.cjs</code></li></ul>' +
+            '<p class="mb-0">The API is available at <code>/api/flow</code> (session cookie or Bearer API key).</p></div>';
+    }
+})();
+    </script>
+</body>
+</html>

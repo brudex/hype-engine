@@ -1,0 +1,171 @@
+<div class="page-header mb-0">
+    <div class="page-block">
+        <div class="row align-items-center">
+            <div class="col-md-12">
+                <div class="page-header-title">
+                    <h4 class="m-b-5 text-theme-primary">Social Flows</h4>
+                    <p class="text-theme-secondary mb-0">Build and run user-owned automation workflows</p>
+                </div>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item active">Flows</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-body mt-0" ng-controller="FlowListController as flowCtrl" ng-init="flowCtrl.init()">
+    <div class="page-wrapper">
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div></div>
+                    <div>
+                        <button type="button" class="btn btn-primary posts-create-btn" ng-click="flowCtrl.openCreateModal()">
+                            <i class="bi bi-plus-circle"></i> New flow
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div ng-if="flowCtrl.loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading</span>
+            </div>
+        </div>
+
+        <div ng-if="!flowCtrl.loading && flowCtrl.flows.length > 0">
+            <div class="row">
+                <div class="col-md-12 mb-3" ng-repeat="flow in flowCtrl.flows">
+                    <div class="card project-selection-card project-list-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 me-3">
+                                    <div class="project-dropdown-initials">
+                                        {{ flowCtrl.getFlowInitials(flow.name) }}
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold text-theme-primary mb-1">{{ flow.name }}</div>
+                                    <small class="project-dropdown-description text-theme-secondary" ng-if="flow.description">
+                                        {{ flow.description }}
+                                    </small>
+                                    <small class="project-dropdown-description text-theme-secondary" ng-if="!flow.description">
+                                        No description
+                                    </small>
+                                    <small class="d-block text-theme-secondary mt-1" style="font-size: 12px;">
+                                        {{ flow.version }} · {{ flow.triggerType }} · {{ flowCtrl.statusLabel(flow.status) }}
+                                    </small>
+                                    <div class="d-flex align-items-center gap-4 mt-2">
+                                        <span class="text-theme-secondary small">
+                                            <i class="bi bi-clock-history me-1"></i>
+                                            Updated {{ flow.updatedAt | date:'medium' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                    <button type="button" class="btn btn-sm btn-primary" ng-click="flowCtrl.goToDesign(flow)" title="Open designer">
+                                        <i class="bi bi-diagram-3 me-1"></i> Design
+                                    </button>
+                                    <button class="btn btn-sm btn-link project-action-btn"
+                                            type="button"
+                                            ng-click="flowCtrl.openEditModal(flow)"
+                                            title="Edit">
+                                        <i class="bi bi-pencil" style="font-size: 16px;"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-link project-action-btn project-action-btn-delete"
+                                            type="button"
+                                            ng-click="flowCtrl.deleteFlow(flow)"
+                                            title="Delete">
+                                        <i class="bi bi-trash" style="font-size: 16px;"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div ng-if="!flowCtrl.loading && flowCtrl.flows.length === 0">
+            <div class="card posts-table-card">
+                <div class="card-body text-center empty-state flows-empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-diagram-3" aria-hidden="true"></i></div>
+                    <h5 class="flows-empty-title">No flows yet</h5>
+                    <p class="flows-empty-copy">Create a flow to open the visual builder and start automating posts.</p>
+                    <button type="button" class="btn btn-primary posts-create-btn" ng-click="flowCtrl.openCreateModal()">
+                        <i class="bi bi-plus-circle me-1"></i> New flow
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create flow modal -->
+    <div class="modal fade" id="createFlowModal" tabindex="-1" aria-labelledby="createFlowModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createFlowModalLabel">New flow</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="createFlowName" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="createFlowName" ng-model="flowCtrl.createForm.name" placeholder="Daily Social Pulse" required>
+                    </div>
+                    <div class="mb-0">
+                        <label for="createFlowDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="createFlowDescription" ng-model="flowCtrl.createForm.description" rows="3" maxlength="5000" placeholder="What this flow automates (optional)"></textarea>
+                        <small class="form-text text-muted">Shown on your flows list. You can change this later.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" ng-click="flowCtrl.submitCreate()">
+                        <i class="bi bi-check-circle"></i> Create and open designer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit flow modal -->
+    <div class="modal fade" id="editFlowModal" tabindex="-1" aria-labelledby="editFlowModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editFlowModalLabel">Edit flow</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editFlowForm">
+                        <div class="mb-3">
+                            <label for="editFlowName" class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editFlowName" ng-model="flowCtrl.editForm.name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editFlowDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editFlowDescription" ng-model="flowCtrl.editForm.description" rows="3" maxlength="5000" placeholder="Short summary"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editFlowStatus" class="form-label">Status</label>
+                            <select class="form-select" id="editFlowStatus" ng-model="flowCtrl.editForm.status"
+                                ng-options="opt.value as opt.label for opt in flowCtrl.statusOptions"></select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" ng-click="flowCtrl.updateFlow()">
+                        <i class="bi bi-check-circle"></i> Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/scripts/app/flow-list.client.controller.js"></script>
