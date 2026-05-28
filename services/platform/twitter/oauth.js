@@ -1,5 +1,6 @@
 const { TwitterApi } = require('twitter-api-v2');
 const logger = require('../../../utils/logger');
+const { createXApiLoggerPlugin } = require('./x-api-logger');
 
 /**
  * Credentials object: { appKey, appSecret } (Consumer Key / Consumer Secret).
@@ -56,14 +57,17 @@ async function exchangeRequestToken(oauthToken, oauthTokenSecret, oauthVerifier,
  * @param {string} appSecret - Consumer Secret
  * @param {string} accessToken - User access token (from Account.accessToken)
  * @param {string} accessSecret - User access secret (from Account.data.accessSecret)
+ * @param {{ accountUuid?: string, postUuid?: string }} [logContext] - Included in X API request/response logs
  * @returns {import('twitter-api-v2').TwitterApi}
  */
-function createUserClient(appKey, appSecret, accessToken, accessSecret) {
+function createUserClient(appKey, appSecret, accessToken, accessSecret, logContext) {
     return new TwitterApi({
         appKey,
         appSecret,
         accessToken,
         accessSecret
+    }, {
+        plugins: [createXApiLoggerPlugin(logContext)]
     });
 }
 

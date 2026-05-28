@@ -1839,6 +1839,37 @@
     border-radius: 4px;
 }
 
+.posts-history-status-btn {
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.posts-history-status-btn:hover {
+    opacity: 0.9;
+    transform: scale(1.03);
+}
+
+.posts-history-data-modal .modal-content {
+    background: #1a1a1e;
+    border: 1px solid #2f2f33;
+    color: #e8e8e8;
+}
+
+.posts-history-data-json {
+    background: #121216;
+    border: 1px solid #2f2f33;
+    border-radius: 6px;
+    padding: 1rem;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #c6ff00;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 60vh;
+    overflow: auto;
+}
+
 .posts-history-media-wrapper {
     width: 64px;
     height: 64px;

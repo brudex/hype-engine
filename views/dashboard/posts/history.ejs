@@ -51,10 +51,13 @@
                             <tr ng-repeat="item in historyCtrl.items" class="posts-table-row">
                                 <td class="posts-table-cell">{{ historyCtrl.formatDate(item.publishedAt) }}</td>
                                 <td class="posts-table-cell">
-                                    <span class="badge posts-status-badge posts-history-status-badge"
-                                          ng-style="historyCtrl.getHistoryStatusBadgeStyle(item.status)">
+                                    <button type="button"
+                                            class="badge posts-status-badge posts-history-status-badge posts-history-status-btn"
+                                            ng-style="historyCtrl.getHistoryStatusBadgeStyle(item.status)"
+                                            title="View response data"
+                                            ng-click="historyCtrl.openStatusDataModal(item, $event)">
                                         {{ historyCtrl.getHistoryStatusText(item.status) }}
-                                    </span>
+                                    </button>
                                 </td>
                                 <td class="posts-table-cell">
                                     <div ng-if="item.account" class="d-flex align-items-center">
@@ -122,6 +125,50 @@
     </div>
 
     <%- include('./_preview-modal', { previewCtrl: 'historyCtrl' }) %>
+
+    <!-- History status / response data modal -->
+    <div class="modal fade posts-history-data-modal"
+         tabindex="-1"
+         aria-labelledby="historyStatusDataModalLabel"
+         aria-hidden="true"
+         ng-class="{'show': historyCtrl.showStatusDataModal, 'd-block': historyCtrl.showStatusDataModal}"
+         ng-style="{'display': historyCtrl.showStatusDataModal ? 'block' : 'none'}"
+         style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-theme-primary" id="historyStatusDataModalLabel">
+                        Publish details
+                        <span ng-if="historyCtrl.statusDataItem"
+                              class="badge ms-2 posts-history-status-badge"
+                              ng-style="historyCtrl.getHistoryStatusBadgeStyle(historyCtrl.statusDataItem.status)">
+                            {{ historyCtrl.getHistoryStatusText(historyCtrl.statusDataItem.status) }}
+                        </span>
+                    </h5>
+                    <button type="button"
+                            class="btn-close"
+                            ng-click="historyCtrl.closeStatusDataModal()"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body" ng-if="historyCtrl.statusDataItem">
+                    <p class="text-theme-secondary small mb-2" ng-if="historyCtrl.statusDataItem.account">
+                        {{ historyCtrl.statusDataItem.account.name }}
+                        <span ng-if="historyCtrl.statusDataItem.publishedAt">
+                            · {{ historyCtrl.formatDate(historyCtrl.statusDataItem.publishedAt) }}
+                        </span>
+                    </p>
+                    <pre class="posts-history-data-json mb-0">{{ historyCtrl.statusDataJson }}</pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            ng-click="historyCtrl.closeStatusDataModal()">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="/scripts/app/twitter-preview.directive.js"></script>

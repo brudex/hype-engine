@@ -16,6 +16,9 @@
         vm.loading = false;
         vm.previewPost = null;
         vm.showPreview = false;
+        vm.showStatusDataModal = false;
+        vm.statusDataItem = null;
+        vm.statusDataJson = '';
         vm.pagination = {
             currentPage: 1,
             totalPages: 1,
@@ -33,6 +36,9 @@
         vm.getAccountProviderColor = getAccountProviderColor;
         vm.openPreview = openPreview;
         vm.closePreview = closePreview;
+        vm.openStatusDataModal = openStatusDataModal;
+        vm.closeStatusDataModal = closeStatusDataModal;
+        vm.formatHistoryDataJson = formatHistoryDataJson;
         vm.editPost = editPost;
         vm.getStatusText = getStatusText;
         vm.getStatusClass = getStatusClass;
@@ -196,6 +202,44 @@
         function closePreview() {
             vm.previewPost = null;
             vm.showPreview = false;
+        }
+
+        function formatHistoryDataJson(data) {
+            if (data === null || data === undefined) {
+                return 'null';
+            }
+            if (typeof data === 'string') {
+                var trimmed = data.trim();
+                if (!trimmed) {
+                    return 'null';
+                }
+                try {
+                    return JSON.stringify(JSON.parse(trimmed), null, 2);
+                } catch (e) {
+                    return data;
+                }
+            }
+            try {
+                return JSON.stringify(data, null, 2);
+            } catch (e2) {
+                return String(data);
+            }
+        }
+
+        function openStatusDataModal(item, $event) {
+            if ($event) {
+                $event.preventDefault();
+                $event.stopPropagation();
+            }
+            vm.statusDataItem = item || null;
+            vm.statusDataJson = item ? formatHistoryDataJson(item.data) : 'null';
+            vm.showStatusDataModal = true;
+        }
+
+        function closeStatusDataModal() {
+            vm.showStatusDataModal = false;
+            vm.statusDataItem = null;
+            vm.statusDataJson = '';
         }
 
         function editPost(postUuid) {

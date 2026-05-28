@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const logger = require('../../../utils/logger');
 const { createUserClient } = require('./oauth');
+const { serializeTwitterApiError, safeSerialize, logX } = require('./x-api-logger');
 const db = require('../../../models');
 
 /** Max images per tweet (X limit is 4) */
@@ -166,24 +167,26 @@ async function uploadMediaToTwitter(client, mediaRecords, publicRoot) {
         try {
             buffer = await fs.readFile(filePath);
         } catch (err) {
-            logger.warn('Twitter: could not read media file', { path: media.path, error: err?.message });
+            logX('warn', 'X: could not read media file', { path: media.path, error: err?.message });
             continue;
         }
         const mimeType = media.mimeType || 'image/jpeg';
         try {
-            console.log('Uploading media to Twitter >>>>', media.path);
-            console.log('Mime Type >>>>', mimeType);
-            logger.info('Uploading media to Twitter >>>>'+ media.path);
+            logX('info', 'X: uploading media', {
+                path: media.path,
+                mimeType,
+                byteLength: buffer.length
+            });
             const mediaId = await client.v1.uploadMedia(buffer, { mimeType });
-            console.log('Upload complete Media ID >>>>', mediaId);
-            logger.info('Upload complete Media ID >>>>'+ mediaId);
+            logX('info', 'X: media upload finished', { path: media.path, mediaId });
             if (mediaId) mediaIds.push(mediaId);
         } catch (err) {
-            logger.warn('Twitter: media upload failed', { path: media.path, error: err?.message });
+            logX('warn', 'X: media upload failed', {
+                path: media.path,
+                ...serializeTwitterApiError(err)
+            });
         }
     }
-    console.log('Returning Media IDs >>>>', mediaIds);
-    logger.info('Returning Media IDs >>>>'+ mediaIds);
     return mediaIds;
 }
 
@@ -202,8 +205,6 @@ async function publishPost(post, postVersion, tags, account) {
         const content = stripHtml(rawContent).trim();
         const hashtagsSuffix = buildHashtagsSuffix(tags || []);
         const text = content + hashtagsSuffix;
-        console.log('Text >>>>', text); 
-        logger.info('Text >>>>', text);
         const mediaUuids = Array.isArray(postVersion.media) ? postVersion.media : [];
         if (!text.trim() && mediaUuids.length === 0) {
             return {
@@ -237,21 +238,39 @@ async function publishPost(post, postVersion, tags, account) {
             };
         }
 
-        const client = createUserClient(appKey, appSecret, userTokens.accessToken, userTokens.accessSecret);
+        const logContext = { accountUuid: account.uuid, postUuid: post.uuid };
+        const client = createUserClient(
+            appKey,
+            appSecret,
+            userTokens.accessToken,
+            userTokens.accessSecret,
+            logContext
+        );
 
         const publicRoot = path.join(__dirname, '../../../public');
         const mediaRecords = await loadMediaByUuids(mediaUuids);
         const mediaIds = await uploadMediaToTwitter(client, mediaRecords, publicRoot);
 
-        logger.info(`Publishing to X for account ${account.uuid}`, { hasText: !!text, mediaCount: mediaIds.length });
+        const tweetBody = {
+            ...(text.trim() ? { text: text.trim() } : {}),
+            ...(mediaIds.length > 0 ? { media: { media_ids: mediaIds } } : {})
+        };
 
-        const tweetParams = mediaIds.length > 0 ? { media: { media_ids: mediaIds } } : undefined;
-        console.log('Tweet Params >>>>', tweetParams);
-        logger.info('Tweet Params >>>>'+ tweetParams);
-        const result = await client.v2.tweet(text || undefined, tweetParams);
-        console.log('Tweet Result >>>>', result);
-        logger.info('Tweet Result >>>>'+ result);
+        logX('info', 'X: creating tweet', {
+            ...logContext,
+            endpoint: 'POST https://api.twitter.com/2/tweets',
+            requestPayload: safeSerialize(tweetBody)
+        });
+
+        const result = await client.v2.tweet(tweetBody);
         const tweetId = result?.data?.id;
+
+        logX('info', 'X: tweet created', {
+            ...logContext,
+            endpoint: 'POST https://api.twitter.com/2/tweets',
+            httpStatus: 201,
+            responseJson: safeSerialize(result?.data)
+        });
         return {
             success: true,
             providerPostId: tweetId ? String(tweetId) : `twitter_${Date.now()}`,
@@ -262,7 +281,11 @@ async function publishPost(post, postVersion, tags, account) {
             }
         };
     } catch (error) {
-        logger.error('Twitter publish error:', error);
+        logX('error', 'Twitter publish error', {
+            accountUuid: account?.uuid,
+            postUuid: post?.uuid,
+            ...serializeTwitterApiError(error)
+        });
         const message = error?.message || error?.code || String(error);
         return {
             success: false,
