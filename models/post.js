@@ -109,7 +109,8 @@ module.exports = (sequelize, DataTypes) => {
         Post.hasMany(models.PostHistory, {
             foreignKey: 'postUuid',
             sourceKey: 'uuid',
-            as: 'history'
+            as: 'history',
+            constraints: false
         });
     };
 

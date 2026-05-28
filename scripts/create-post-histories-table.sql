@@ -33,6 +33,10 @@ COMMENT ON COLUMN post_histories.status IS '0=SUCCESS, 1=FAILED';
 COMMENT ON COLUMN post_histories."recurringType" IS '0=ONE_TIME, 1=DAILY, 2=WEEKLY at publish time';
 COMMENT ON COLUMN post_histories.data IS 'Platform metadata on success; { error, response? } on failure';
 
+-- No FOREIGN KEY on postUuid/accountUuid (audit log; accounts may be deleted/relinked).
+-- If constraints exist from an older Sequelize sync, run:
+--   scripts/drop-post-histories-account-fkey.sql
+
 SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'public'

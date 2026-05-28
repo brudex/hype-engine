@@ -65,15 +65,18 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     PostHistory.associate = function (models) {
+        // No DB foreign keys: publish history is an audit log; accounts/posts may be deleted/relinked.
         PostHistory.belongsTo(models.Post, {
             foreignKey: 'postUuid',
             targetKey: 'uuid',
-            as: 'post'
+            as: 'post',
+            constraints: false
         });
         PostHistory.belongsTo(models.Account, {
             foreignKey: 'accountUuid',
             targetKey: 'uuid',
-            as: 'account'
+            as: 'account',
+            constraints: false
         });
     };
 

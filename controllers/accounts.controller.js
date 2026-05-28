@@ -8,6 +8,36 @@ const socialaccountApiDefinitions = require('../services/socialaccount-api-defin
 const AccountsController = {};
 
 /**
+ * Clear dependent rows before account delete. Keeps post_histories (audit log).
+ * @param {string} accountUuid
+ * @param {import('sequelize').Transaction} [transaction]
+ */
+async function removeAccountDependencies(accountUuid, transaction) {
+    const opts = transaction ? { transaction } : {};
+
+    await db.PostAccount.destroy({ where: { accountUuid }, ...opts });
+
+    if (db.Metric) {
+        await db.Metric.destroy({ where: { accountUuid }, ...opts });
+    }
+    if (db.Audience) {
+        await db.Audience.destroy({ where: { accountUuid }, ...opts });
+    }
+    if (db.FacebookInsight) {
+        await db.FacebookInsight.destroy({ where: { accountUuid }, ...opts });
+    }
+    if (db.ImportedPost) {
+        await db.ImportedPost.destroy({ where: { accountUuid }, ...opts });
+    }
+    if (db.PostVersion) {
+        await db.PostVersion.update(
+            { accountUuid: '' },
+            { where: { accountUuid }, ...opts }
+        );
+    }
+}
+
+/**
  * Get all accounts (optionally filtered by project)
  * @route GET /dashboard/accounts
  * @route GET /dashboard/projects/:projectUuid/accounts
@@ -302,7 +332,7 @@ AccountsController.deleteFacebookAccount = async (req, res) => {
         const projectUuid = account.projectUuid;
         const removedUuid = account.uuid;
 
-        await db.PostAccount.destroy({ where: { accountUuid: removedUuid } });
+        await removeAccountDependencies(removedUuid);
 
         await account.destroy();
 
@@ -344,7 +374,10 @@ AccountsController.delete = async (req, res) => {
         }
 
         // TODO: Revoke token if provider supports it
-        
+
+        const accountUuid = account.uuid;
+        await removeAccountDependencies(accountUuid);
+
         await account.destroy();
 
         if (req.path.startsWith('/api/')) {
