@@ -77,7 +77,8 @@ async function publishRecurringPosts() {
 
             function (posts, callback) {
                 if (posts.length === 0) {
-                    return callback(null, null, { processed: 0, successful: 0, failed: 0, skipped: 0 });
+                    logger.info('No recurring posts due now');
+                    return callback(null, null, []);
                 }
 
                 db.JobBatch.create({
@@ -102,12 +103,20 @@ async function publishRecurringPosts() {
             },
 
             function (batch, posts, callback) {
+                if (!batch || !Array.isArray(posts) || posts.length === 0) {
+                    return callback(null, batch, { processed: 0, successful: 0, failed: 0, skipped: 0 });
+                }
+
                 const results = { processed: 0, successful: 0, failed: 0, skipped: 0 };
                 const failedJobIds = [];
 
                 async.eachSeries(posts, (post, postCallback) => {
                     (async () => {
                         try {
+                            if (!post || typeof post.save !== 'function') {
+                                throw new Error('Invalid post instance in publish recurring batch');
+                            }
+
                             post.scheduleStatus = 1; // PROCESSING
                             await post.save();
 
@@ -137,28 +146,35 @@ async function publishRecurringPosts() {
                             results.processed++;
                             postCallback();
                         } catch (error) {
-                            logger.error(`Error processing recurring post ${post.uuid}:`, error);
+                            const postUuid = post && post.uuid ? post.uuid : 'unknown';
+                            logger.error(`Error processing recurring post ${postUuid}:`, error);
 
                             try {
-                                post.status = 3;
-                                post.scheduleStatus = 2;
-                                await post.save();
+                                if (post && typeof post.save === 'function') {
+                                    post.status = 3;
+                                    post.scheduleStatus = 2;
+                                    await post.save();
+                                }
                             } catch (saveError) {
-                                logger.error(`Error saving failed recurring post ${post.uuid}:`, saveError);
+                                logger.error(`Error saving failed recurring post ${postUuid}:`, saveError);
                             }
 
                             results.failed++;
-                            failedJobIds.push(post.uuid);
+                            if (post && post.uuid) {
+                                failedJobIds.push(post.uuid);
+                            }
                             results.processed++;
 
-                            batch.pendingJobs = Math.max(0, batch.pendingJobs - 1);
-                            batch.failedJobs = failedJobIds.length;
-                            batch.failedJobIds = failedJobIds;
-                            await batch.save();
+                            if (batch) {
+                                batch.pendingJobs = Math.max(0, batch.pendingJobs - 1);
+                                batch.failedJobs = failedJobIds.length;
+                                batch.failedJobIds = failedJobIds;
+                                await batch.save();
+                            }
 
                             postCallback();
                         }
-                    })();
+                    })().catch((err) => postCallback(err));
                 }, async (error) => {
                     if (error) {
                         if (jobBatch) {
