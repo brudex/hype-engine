@@ -31,7 +31,6 @@
         vm.previewPost = null;
         vm.showPreview = false;
         vm.searchTimeout = null;
-        vm.searchTimeout = null;
 
         // Methods
         vm.init = init;
@@ -57,6 +56,9 @@
         vm.editPost = editPost;
         vm.getAccountVersion = getAccountVersion;
         vm.getPlainText = getPlainText;
+        vm.truncateContent = truncateContent;
+        vm.getRecurringScheduleLabel = getRecurringScheduleLabel;
+        vm.openPreviewFromMenu = openPreviewFromMenu;
 
         // Initialize
         function init(projects, currentProject, projectUuid) {
@@ -274,6 +276,71 @@
             }
         }
 
+        function truncateContent(text, maxLength) {
+            maxLength = maxLength || 20;
+            if (!text) {
+                return '';
+            }
+            var plain = String(text).replace(/<[^>]*>/g, '').trim();
+            if (plain.length <= maxLength) {
+                return plain;
+            }
+            return plain.substring(0, maxLength) + '...';
+        }
+
+        function formatRecurringTime(timeVal) {
+            if (!timeVal) {
+                return '';
+            }
+            var str = String(timeVal);
+            var parts = str.split(':');
+            var hour = parseInt(parts[0], 10);
+            var minute = parseInt(parts[1], 10);
+            if (isNaN(hour) || isNaN(minute)) {
+                return '';
+            }
+            var hour12 = hour === 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+            var ampm = hour >= 12 ? 'pm' : 'am';
+            return hour12 + ':' + String(minute).padStart(2, '0') + ampm;
+        }
+
+        function getRecurringScheduleLabel(post) {
+            if (!post || !post.recurringType) {
+                return '';
+            }
+            var timeLabel = formatRecurringTime(post.recurringTime);
+            if (post.recurringType === 1) {
+                return timeLabel ? 'Daily ' + timeLabel : 'Daily';
+            }
+            if (post.recurringType === 2) {
+                var dayMap = { MON: 'Mon', TUE: 'Tue', WED: 'Wed', THU: 'Thu', FRI: 'Fri', SAT: 'Sat', SUN: 'Sun' };
+                var days = '';
+                if (post.recurringDays) {
+                    days = String(post.recurringDays).split(',')
+                        .map(function (d) { return dayMap[d.trim().toUpperCase()] || d.trim(); })
+                        .filter(Boolean)
+                        .join(', ');
+                }
+                var label = 'Weekly';
+                if (days) {
+                    label += ' ' + days;
+                }
+                if (timeLabel) {
+                    label += ' ' + timeLabel;
+                }
+                return label;
+            }
+            return '';
+        }
+
+        function openPreviewFromMenu(post, $event) {
+            if ($event) {
+                $event.preventDefault();
+                $event.stopPropagation();
+            }
+            openPreview(post);
+        }
+
         // Open post preview modal
         function openPreview(post) {
             vm.previewPost = post;
@@ -439,6 +506,17 @@
             });
         }
 
+        function formatCreatedDate(dateString) {
+            if (!dateString) return '';
+            var date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+        vm.formatCreatedDate = formatCreatedDate;
+
         // Edit post
         function editPost(postUuid) {
             window.location.href = '/dashboard/posts/edit/' + postUuid;
@@ -545,6 +623,19 @@
             return pages;
         }
         vm.getPages = getPages;
+
+        vm.getCurrentPage = function () {
+            return vm.pagination.currentPage;
+        };
+
+        vm.setCurrentPage = function (page) {
+            vm.pagination.currentPage = page;
+            loadPosts();
+        };
+
+        vm.getTotalPages = function () {
+            return vm.pagination.totalPages;
+        };
     }
 })();
 

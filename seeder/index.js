@@ -7,9 +7,10 @@ const seeders = [
    
     // 'account.seeder.js',
     // 'post-account.seeder.js',
+    'post-history.seeder.js',
     // 'metric.seeder.js',
     // 'audience.seeder.js',
-    'job-batch.seeder.js'
+    // 'job-batch.seeder.js'
 ];
 
 

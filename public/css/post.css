@@ -467,6 +467,74 @@
     color: #E5E5E5;
 }
 
+/* Schedule modal – recurrence type (Daily / Weekly) */
+.recurring-type-group .recurring-type-toggle {
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background-color: transparent;
+    color: var(--theme-text-primary, #E5E5E5);
+    font-weight: 500;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recurring-type-group .recurring-type-toggle:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.06);
+    color: var(--theme-text-primary, #E5E5E5);
+}
+
+.recurring-type-group .btn-check:checked + .recurring-type-toggle {
+    background-color: var(--theme-accent-cyan, #00EFFF);
+    border-color: var(--theme-accent-cyan, #00EFFF);
+    color: var(--theme-primary, #0D0D10);
+    box-shadow: 0 0 12px rgba(0, 239, 255, 0.35);
+}
+
+.recurring-type-group .btn-check:checked + .recurring-type-toggle:hover {
+    background-color: var(--theme-accent-cyan, #00EFFF);
+    border-color: var(--theme-accent-cyan, #00EFFF);
+    color: var(--theme-primary, #0D0D10);
+}
+
+/* Schedule modal – recurring day toggles */
+.recurring-day-toggle {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: transparent;
+    color: var(--theme-text-primary, #E5E5E5);
+    min-width: 2.75rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recurring-day-toggle:hover:not(.recurring-day-toggle--selected) {
+    border-color: rgba(255, 255, 255, 0.35);
+    background-color: rgba(255, 255, 255, 0.06);
+    color: var(--theme-text-primary, #E5E5E5);
+}
+
+.recurring-day-toggle--selected {
+    background-color: var(--theme-accent-cyan, #00EFFF);
+    border-color: var(--theme-accent-cyan, #00EFFF);
+    color: var(--theme-primary, #0D0D10);
+    box-shadow: 0 0 12px rgba(0, 239, 255, 0.35);
+}
+
+.recurring-day-toggle--selected:hover {
+    background-color: var(--theme-accent-cyan, #00EFFF);
+    border-color: var(--theme-accent-cyan, #00EFFF);
+    color: var(--theme-primary, #0D0D10);
+}
+
+.schedule-tabs .nav-link {
+    color: var(--theme-text-secondary, #A0A0A8);
+    border-color: transparent;
+}
+
+.schedule-tabs .nav-link.active {
+    color: var(--theme-accent-cyan, #00EFFF);
+    border-color: rgba(255, 255, 255, 0.1) rgba(255, 255, 255, 0.1) transparent;
+    background: transparent;
+}
+
 /* Labels/Tags */
 .tag-badge {
     padding: 4px 8px;
@@ -490,6 +558,21 @@
 }
 
 /* Posts Index Page Styles */
+
+.posts-content-cell--clickable {
+    cursor: pointer;
+}
+
+.posts-content-cell--clickable:hover {
+    color: var(--theme-accent-cyan, #00EFFF);
+}
+
+.posts-created-cell,
+.posts-created-date {
+    white-space: nowrap;
+    font-size: 0.875rem;
+    color: #FFFFFF !important;
+}
 
 /* Search Input */
 .posts-search-input {
@@ -1638,6 +1721,9 @@
     margin-bottom: 0;
     background: linear-gradient(180deg, #1F1F23 0%, #0B0B0D 100%);
     color: #FFFFFF;
+    --bs-table-color: #FFFFFF;
+    --bs-table-color-state: #FFFFFF;
+    --bs-table-hover-color: #FFFFFF;
 }
 
 .posts-table thead {
@@ -1710,6 +1796,17 @@
 .posts-table-cell {
     padding: 16px;
     background: inherit;
+    color: #FFFFFF;
+}
+
+.posts-table > :not(caption) > tbody > tr > td.posts-created-cell,
+.posts-table.table-hover > tbody > tr:hover > td.posts-created-cell {
+    color: #FFFFFF !important;
+}
+
+.posts-table.table-hover > tbody > tr:hover > * {
+    --bs-table-hover-color: #FFFFFF;
+    color: #FFFFFF;
 }
 
 /* Status Badge */
@@ -1735,6 +1832,37 @@
 }
 
 /* Media Thumbnail */
+.posts-history-status-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.posts-history-media-wrapper {
+    width: 64px;
+    height: 64px;
+}
+
+.posts-history-media-thumb {
+    width: 64px;
+    height: 64px;
+}
+
+.posts-history-preview-btn {
+    color: #B0B0B0;
+    padding: 4px 8px;
+    border: none;
+    background: none;
+    font-size: 18px;
+    line-height: 1;
+    transition: color 0.3s ease;
+}
+
+.posts-history-preview-btn:hover {
+    color: #00EFFF;
+}
+
 .posts-media-wrapper {
     width: 80px;
     height: 80px;

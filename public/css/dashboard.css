@@ -808,6 +808,30 @@
     margin: 0 auto;
 }
 
+/* Flows list empty state: posts-table-card uses a dark gradient; boost contrast */
+.flows-empty-state .flows-empty-title {
+    color: #f4f4f8;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.flows-empty-state .flows-empty-copy {
+    color: #c8c8d0;
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 28rem;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1.75rem;
+}
+
+.flows-empty-state .btn.btn-primary.posts-create-btn {
+    position: relative;
+    z-index: 1;
+}
+
 /* Badge Styles */
 .badge {
     padding: 6px 12px;

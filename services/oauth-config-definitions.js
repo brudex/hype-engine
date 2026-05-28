@@ -31,7 +31,7 @@ const services = {
         name: 'facebook',
         nameLocalized: 'Facebook',
         exposedFormAttributes: ['api_version'],
-        secretFormAttributes: ['app_secret'],
+        secretFormAttributes: [],
         versions: () => ['v25.0', 'v24.0', 'v23.0', 'v22.0', 'v21.0', 'v20.0', 'v19.0', 'v18.0', 'v17.0', 'v16.0'],
         form: function () {
             return [
@@ -66,7 +66,7 @@ const services = {
         name: 'instagram',
         nameLocalized: 'Instagram',
         exposedFormAttributes: [],
-        secretFormAttributes: ['client_secret'],
+        secretFormAttributes: [],
         form: () => [
             { fieldLabel: 'Client ID', fieldName: 'client_id', fieldType: 'text' },
             { fieldLabel: 'Client Secret', fieldName: 'client_secret', fieldType: 'password' }

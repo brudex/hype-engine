@@ -225,6 +225,10 @@ PostsController.list = async (req, res) => {
                 scheduleStatus: post.scheduleStatus,
                 scheduledAt: post.scheduledAt,
                 publishedAt: post.publishedAt,
+                recurringType: post.recurringType ?? 0,
+                recurringDays: post.recurringDays,
+                recurringTime: post.recurringTime,
+                recurringEndAt: post.recurringEndAt,
                 accounts: (post.accounts || []).map(acc => ({
                     uuid: acc.uuid,
                     name: acc.name,
@@ -281,6 +285,291 @@ PostsController.list = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'Failed to fetch posts',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Format a post with versions/accounts for dashboard preview modals.
+ */
+function formatPostForDashboardPreview(post, mediaMap = {}) {
+    const originalVersion = post.versions?.find((v) => v.isOriginal) || post.versions?.[0];
+    let contentExcerpt = '';
+    let media = [];
+
+    if (originalVersion) {
+        if (originalVersion.content) {
+            const plainText = originalVersion.content.replace(/<[^>]*>/g, '').trim();
+            contentExcerpt = plainText.length > 150 ? plainText.substring(0, 150) + '...' : plainText;
+        }
+        if (originalVersion.media && Array.isArray(originalVersion.media)) {
+            media = originalVersion.media
+                .filter((mediaUuid) => typeof mediaUuid === 'string')
+                .map((mediaUuid) => mediaMap[mediaUuid])
+                .filter(Boolean);
+        }
+    }
+
+    return {
+        uuid: post.uuid,
+        status: post.status,
+        scheduleStatus: post.scheduleStatus,
+        scheduledAt: post.scheduledAt,
+        publishedAt: post.publishedAt,
+        recurringType: post.recurringType ?? 0,
+        recurringDays: post.recurringDays,
+        recurringTime: post.recurringTime,
+        recurringEndAt: post.recurringEndAt,
+        accounts: (post.accounts || []).map((acc) => ({
+            uuid: acc.uuid,
+            name: acc.name,
+            username: acc.username,
+            provider: acc.provider,
+            image: acc.media
+                ? (typeof acc.media === 'string' ? JSON.parse(acc.media).url : acc.media.url)
+                : null
+        })),
+        tags: (post.tags || []).map((tag) => ({
+            uuid: tag.uuid,
+            name: tag.name,
+            hex_color: tag.hexColor
+        })),
+        versions: post.versions || [],
+        content: {
+            excerpt: contentExcerpt,
+            media,
+            media_count: media.length
+        },
+        created_at: post.createdAt,
+        updated_at: post.updatedAt
+    };
+}
+
+/**
+ * Post publish history page
+ * @route GET /dashboard/posts/history/:postUuid
+ */
+PostsController.history = async (req, res) => {
+    try {
+        const { postUuid } = req.params;
+        const userUuid = req.user?.uuid;
+
+        const post = await db.Post.findOne({
+            where: { uuid: postUuid },
+            include: [
+                {
+                    model: db.Account,
+                    as: 'accounts',
+                    through: { attributes: [] }
+                },
+                {
+                    model: db.PostVersion,
+                    as: 'versions'
+                },
+                {
+                    model: db.Tag,
+                    as: 'tags',
+                    through: { attributes: [] }
+                }
+            ]
+        });
+
+        if (!post) {
+            req.flash('error', 'Post not found');
+            return res.redirect('/dashboard/posts');
+        }
+
+        const project = await db.Project.findOne({
+            where: {
+                uuid: post.projectUuid,
+                userUuid
+            }
+        });
+
+        if (!project) {
+            req.flash('error', 'Access denied');
+            return res.redirect('/dashboard/posts');
+        }
+
+        const previewPost = formatPostForDashboardPreview(post);
+
+        res.render('dashboard/posts/history', {
+            post: previewPost,
+            currentProject: {
+                uuid: project.uuid,
+                name: project.name
+            },
+            layout: 'layouts/dashboard/index'
+        });
+    } catch (error) {
+        logger.error('PostsController.history - Error:', error);
+        req.flash('error', 'Failed to load post history');
+        return res.redirect('/dashboard/posts');
+    }
+};
+
+/**
+ * Resolve post history media JSON (UUIDs or objects) to URLs for the dashboard.
+ */
+async function resolveHistoryMediaForRows(rows) {
+    const mediaUuids = [];
+    rows.forEach((row) => {
+        let raw = row.media;
+        if (!raw) {
+            return;
+        }
+        if (typeof raw === 'string') {
+            try {
+                raw = JSON.parse(raw);
+            } catch {
+                return;
+            }
+        }
+        if (!Array.isArray(raw)) {
+            return;
+        }
+        raw.forEach((item) => {
+            if (typeof item === 'string' && /^[0-9a-f-]{36}$/i.test(item) && !mediaUuids.includes(item)) {
+                mediaUuids.push(item);
+            }
+        });
+    });
+
+    const mediaMap = {};
+    if (mediaUuids.length > 0) {
+        const mediaRecords = await db.Media.findAll({
+            where: { uuid: { [Op.in]: mediaUuids } }
+        });
+        mediaRecords.forEach((media) => {
+            mediaMap[media.uuid] = {
+                uuid: media.uuid,
+                name: media.name,
+                url: MediaService.getMediaUrl(media),
+                mime_type: media.mimeType
+            };
+        });
+    }
+
+    return rows.map((row) => {
+        let raw = row.media;
+        if (!raw) {
+            return [];
+        }
+        if (typeof raw === 'string') {
+            try {
+                raw = JSON.parse(raw);
+            } catch {
+                return [];
+            }
+        }
+        if (!Array.isArray(raw)) {
+            return [];
+        }
+        return raw
+            .map((item) => {
+                if (typeof item === 'string' && mediaMap[item]) {
+                    return mediaMap[item];
+                }
+                if (item && typeof item === 'object' && item.url) {
+                    return item;
+                }
+                return null;
+            })
+            .filter(Boolean);
+    });
+}
+
+/**
+ * List publish history for a post (API)
+ * @route GET /dashboard/api/posts/history/:postUuid
+ */
+PostsController.listHistory = async (req, res) => {
+    try {
+        const { postUuid } = req.params;
+        const { page = 1 } = req.query;
+        const limit = 20;
+        const offset = (page - 1) * limit;
+        const userUuid = req.user?.uuid;
+
+        const post = await db.Post.findOne({
+            where: { uuid: postUuid },
+            attributes: ['uuid', 'projectUuid']
+        });
+
+        if (!post) {
+            return res.status(404).json({ success: false, message: 'Post not found' });
+        }
+
+        const project = await db.Project.findOne({
+            where: { uuid: post.projectUuid, userUuid }
+        });
+
+        if (!project) {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+
+        const { count, rows } = await db.PostHistory.findAndCountAll({
+            where: { postUuid },
+            include: [
+                {
+                    model: db.Account,
+                    as: 'account',
+                    attributes: ['uuid', 'name', 'username', 'provider']
+                }
+            ],
+            order: [['publishedAt', 'DESC'], ['createdAt', 'DESC']],
+            limit,
+            offset
+        });
+
+        const resolvedMediaByRow = await resolveHistoryMediaForRows(rows);
+
+        const data = rows.map((row, index) => {
+            let contentExcerpt = '';
+            if (row.content) {
+                const plainText = row.content.replace(/<[^>]*>/g, '').trim();
+                contentExcerpt = plainText;
+            }
+            const media = resolvedMediaByRow[index] || [];
+            return {
+                uuid: row.uuid,
+                postUuid: row.postUuid,
+                accountUuid: row.accountUuid,
+                account: row.account
+                    ? {
+                        uuid: row.account.uuid,
+                        name: row.account.name,
+                        username: row.account.username,
+                        provider: row.account.provider
+                    }
+                    : null,
+                publishedAt: row.publishedAt,
+                status: row.status,
+                providerPostId: row.providerPostId,
+                recurringType: row.recurringType,
+                content: contentExcerpt,
+                media,
+                media_count: media.length,
+                data: row.data
+            };
+        });
+
+        return res.json({
+            success: true,
+            data,
+            meta: {
+                current_page: parseInt(page, 10),
+                last_page: Math.ceil(count / limit) || 1,
+                per_page: limit,
+                total: count
+            }
+        });
+    } catch (error) {
+        logger.error('PostsController.listHistory - Error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to load post history',
             error: error.message
         });
     }

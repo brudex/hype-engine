@@ -15,6 +15,7 @@ const ReportsController = require('../controllers/reports.controller');
 const ApiDocController = require('../controllers/apidoc.controller');
 const AccessTokenController = require('../controllers/access-token.controller');
 const IntegrationController = require('../controllers/integrations/integration.controller');
+const FlowPagesController = require('../controllers/flow/flow-pages.controller');
 
 // Middleware
 const authMiddleware = require('../middlewares/auth.middleware');
@@ -35,6 +36,14 @@ router.use(authMiddleware.requireLogin);
 // Dashboard Page Routes
 router.get('/', DashboardController.index);
 router.get('/error', DashboardController.errorPage);
+
+// Social Flow Builder (session-auth pages + dashboard JSON API)
+router.get('/flows', FlowPagesController.index);
+router.get('/flows/:flowUuid/design', FlowPagesController.design);
+router.get('/api/flows', FlowPagesController.apiList);
+router.post('/api/flows', FlowPagesController.apiCreate);
+router.put('/api/flows/:flowUuid', FlowPagesController.apiUpdate);
+router.delete('/api/flows/:flowUuid', FlowPagesController.apiDelete);
 
 // Dashboard API Routes
 router.get('/api/dashboard/global', DashboardController.getGlobalMetrics);
@@ -86,6 +95,7 @@ router.delete('/api/accounts/:uuid', AccountsController.delete);
 
 // Posts Page Routes
 router.get('/posts', PostsController.index);
+router.get('/posts/history/:postUuid', PostsController.history);
 router.get('/posts/:projectUuid', PostsController.index);
 router.get('/posts/create/:projectUuid/:schedule_at?', PostsController.create);
 router.get('/posts/edit/:uuid', PostsController.edit);
@@ -93,6 +103,7 @@ router.get('/posts/duplicate/:uuid', PostsController.duplicatePost);
 
 // Posts API Routes
 router.get('/api/posts/list/:projectUuid', PostsController.list);
+router.get('/api/posts/history/:postUuid', PostsController.listHistory);
 router.get('/api/posts/details/:uuid', PostsController.getPost);
 router.post('/api/posts/save', PostsController.save);
 router.post('/api/posts/update', PostsController.update);

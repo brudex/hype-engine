@@ -20,8 +20,8 @@
             </button>
 
             <!-- Schedule Time Display or Pick Time (next to Labels) -->
-            <div ng-if="vm.form.date && vm.form.time" class="action-schedule-display">
-                <i class="bi bi-calendar me-2"></i>
+            <div ng-if="vm.hasScheduleDisplay()" class="action-schedule-display">
+                <i class="bi me-2" ng-class="vm.form.scheduleMode === 'recurring' ? 'bi-arrow-repeat' : 'bi-calendar'"></i>
                 <span>{{ vm.formatScheduleTime() }}</span>
                 <button type="button" 
                         class="btn btn-link action-schedule-clear"
@@ -31,7 +31,7 @@
                 </button>
             </div>
             
-            <button ng-if="!vm.form.date || !vm.form.time"
+            <button ng-if="!vm.hasScheduleDisplay()"
                     type="button" 
                     class="btn action-btn action-btn-time"
                     ng-click="vm.openTimePicker()">

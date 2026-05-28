@@ -84,6 +84,34 @@
                 });
             },
 
+            // Social Flows (dashboard session API)
+            getFlows: getData('dashboard/api/flows'),
+            createFlow: function(payload, callback) {
+                $http.post(baseUrl + 'dashboard/api/flows', payload, {
+                    headers: { 'Content-Type': 'application/json' }
+                }).then(function(response) {
+                    callback(response.data);
+                }).catch(function(error) {
+                    callback(error.data || { success: false, message: 'Failed to create flow' });
+                });
+            },
+            updateFlow: function(uuid, payload, callback) {
+                $http.put(baseUrl + 'dashboard/api/flows/' + uuid, payload, {
+                    headers: { 'Content-Type': 'application/json' }
+                }).then(function(response) {
+                    callback(response.data);
+                }).catch(function(error) {
+                    callback(error.data || { success: false, message: 'Failed to update flow' });
+                });
+            },
+            deleteFlow: function(uuid, callback) {
+                $http.delete(baseUrl + 'dashboard/api/flows/' + uuid).then(function(response) {
+                    callback(response.data);
+                }).catch(function(error) {
+                    callback(error.data || { success: false, message: 'Failed to delete flow' });
+                });
+            },
+
             // Services Management
             getServices: getData('dashboard/api/services'),
             getService: getDataNoSpinner('dashboard/api/services'), //name will be passed to the returned method

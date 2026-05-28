@@ -66,6 +66,11 @@ module.exports = (sequelize, DataTypes) => {
             sourceKey: 'uuid',
             as: 'apiKeys'
         });
+        User.hasMany(models.FlowWorkflow, {
+            foreignKey: 'userUuid',
+            sourceKey: 'uuid',
+            as: 'flowWorkflows'
+        });
     };
  
    

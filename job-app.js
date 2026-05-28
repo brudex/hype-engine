@@ -3,11 +3,10 @@ const cors = require('cors');
 const morgan = require("morgan");
 const compression = require('compression');
 const logger = require('./utils/logger');
-
-// Reference cronserver to auto-start cron jobs
-require('./job-runner/cronserver');
+const jobRunner = require('./job-runner'); // registers all cron jobs (see job-runner/index.js)
 
 const app = express();
+app.locals.jobRunner = jobRunner;
 
 // Basic middleware
 app.use(morgan("dev"));
@@ -25,7 +24,11 @@ app.get('/health', (req, res) => {
 
 // Job status endpoint (can be extended for job management API)
 app.get('/jobs/status', (req, res) => {
-    res.json({ status: 'running', service: 'job-server' });
+    res.json({
+        status: 'running',
+        service: 'job-server',
+        crons: jobRunner.registeredCrons.map(({ name, schedule }) => ({ name, schedule }))
+    });
 });
 
 // Error handlers

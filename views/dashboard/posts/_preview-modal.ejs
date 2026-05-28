@@ -1,86 +1,72 @@
+<% var ctrl = typeof previewCtrl !== 'undefined' ? previewCtrl : 'postsCtrl'; %>
 <!-- Post Preview Modal -->
 <div class="modal fade" 
      id="postPreviewModal" 
      tabindex="-1" 
      aria-labelledby="postPreviewModalLabel" 
      aria-hidden="true"
-     ng-class="{'show': postsCtrl.showPreview, 'd-block': postsCtrl.showPreview}"
-     ng-style="{'display': postsCtrl.showPreview ? 'block' : 'none'}"
+     ng-class="{'show': <%= ctrl %>.showPreview, 'd-block': <%= ctrl %>.showPreview}"
+     ng-style="{'display': <%= ctrl %>.showPreview ? 'block' : 'none'}"
      style="background-color: rgba(0,0,0,0.5);">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="postPreviewModalLabel">
-                    <span class="badge" ng-class="postsCtrl.getStatusClass(postsCtrl.previewPost.status)" ng-if="postsCtrl.previewPost">
-                        {{ postsCtrl.getStatusText(postsCtrl.previewPost.status) }}
+                    <span class="badge" ng-class="<%= ctrl %>.getStatusClass(<%= ctrl %>.previewPost.status)" ng-if="<%= ctrl %>.previewPost">
+                        {{ <%= ctrl %>.getStatusText(<%= ctrl %>.previewPost.status) }}
                     </span>
                 </h5>
                 <button type="button" 
                         class="btn-close" 
-                        ng-click="postsCtrl.closePreview()"
+                        ng-click="<%= ctrl %>.closePreview()"
                         aria-label="Close"></button>
             </div>
-            <div class="modal-body" ng-if="postsCtrl.previewPost">
-                <!-- Post Preview Content - Using Platform-Specific Previews -->
-                <div ng-repeat="account in postsCtrl.previewPost.accounts" class="mb-4">
-                    <div ng-init="accountVersion = postsCtrl.getAccountVersion(postsCtrl.previewPost, account)">
-                        <!-- Platform-specific previews using ng-switch -->
+            <div class="modal-body" ng-if="<%= ctrl %>.previewPost">
+                <div ng-repeat="account in <%= ctrl %>.previewPost.accounts" class="mb-4">
+                    <div ng-init="accountVersion = <%= ctrl %>.getAccountVersion(<%= ctrl %>.previewPost, account)">
                         <div ng-switch="account.provider">
-                            <!-- Twitter Preview -->
                             <div ng-switch-when="twitter">
                                 <twitter-preview 
                                     account="account" 
                                     content="accountVersion"
-                                    get-plain-text="postsCtrl.getPlainText(html)">
+                                    get-plain-text="<%= ctrl %>.getPlainText(html)">
                                 </twitter-preview>
                             </div>
-                            
-                            <!-- Facebook Preview -->
                             <div ng-switch-when="facebook">
                                 <facebook-preview 
                                     account="account" 
                                     content="accountVersion"
-                                    get-plain-text="postsCtrl.getPlainText(html)">
+                                    get-plain-text="<%= ctrl %>.getPlainText(html)">
                                 </facebook-preview>
                             </div>
-                            
-                            <!-- Instagram Preview -->
                             <div ng-switch-when="instagram">
                                 <instagram-preview 
                                     account="account" 
                                     content="accountVersion"
-                                    get-plain-text="postsCtrl.getPlainText(html)">
+                                    get-plain-text="<%= ctrl %>.getPlainText(html)">
                                 </instagram-preview>
                             </div>
-                            
-                            <!-- LinkedIn Preview -->
                             <div ng-switch-when="linkedin">
                                 <linkedin-preview 
                                     account="account" 
                                     content="accountVersion"
-                                    get-plain-text="postsCtrl.getPlainText(html)">
+                                    get-plain-text="<%= ctrl %>.getPlainText(html)">
                                 </linkedin-preview>
                             </div>
-                            
-                            <!-- TikTok Preview -->
                             <div ng-switch-when="tiktok">
                                 <tiktok-preview 
                                     account="account" 
                                     content="accountVersion"
-                                    get-plain-text="postsCtrl.getPlainText(html)">
+                                    get-plain-text="<%= ctrl %>.getPlainText(html)">
                                 </tiktok-preview>
                             </div>
-                            
-                            <!-- Mastodon Preview -->
                             <div ng-switch-when="mastodon">
                                 <mastodon-preview 
                                     account="account" 
                                     content="accountVersion"
-                                    get-plain-text="postsCtrl.getPlainText(html)">
+                                    get-plain-text="<%= ctrl %>.getPlainText(html)">
                                 </mastodon-preview>
                             </div>
-                            
-                            <!-- Default Preview (fallback for unknown providers) -->
                             <div ng-switch-default>
                                 <div class="preview-post-card">
                                     <div class="preview-account-header">
@@ -102,7 +88,7 @@
                                     </div>
                                     <div ng-if="accountVersion" class="preview-post-body">
                                         <div class="preview-post-text" ng-if="accountVersion.body">
-                                            {{ postsCtrl.getPlainText(accountVersion.body) }}
+                                            {{ <%= ctrl %>.getPlainText(accountVersion.body) }}
                                         </div>
                                         <div ng-if="!accountVersion.body" class="preview-post-text-placeholder">
                                             Start typing your post...
@@ -124,17 +110,16 @@
             <div class="modal-footer">
                 <button type="button" 
                         class="btn btn-secondary" 
-                        ng-click="postsCtrl.closePreview()">
+                        ng-click="<%= ctrl %>.closePreview()">
                     Close
                 </button>
                 <button type="button" 
                         class="btn btn-primary" 
-                        ng-click="postsCtrl.editPost(postsCtrl.previewPost.uuid)"
-                        ng-if="postsCtrl.previewPost">
+                        ng-click="<%= ctrl %>.editPost(<%= ctrl %>.previewPost.uuid)"
+                        ng-if="<%= ctrl %>.previewPost">
                     <i class="bi bi-pencil"></i> Edit
                 </button>
             </div>
         </div>
     </div>
 </div>
-

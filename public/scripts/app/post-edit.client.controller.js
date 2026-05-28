@@ -34,8 +34,23 @@
             versions: [],
             tags: [],
             date: '',
-            time: ''
+            time: '',
+            scheduleMode: '',
+            recurringType: 'daily',
+            recurringDays: [],
+            recurringTime: '',
+            recurringEndDate: ''
         };
+
+        vm.recurringWeekDays = [
+            { code: 'MON', label: 'Mon' },
+            { code: 'TUE', label: 'Tue' },
+            { code: 'WED', label: 'Wed' },
+            { code: 'THU', label: 'Thu' },
+            { code: 'FRI', label: 'Fri' },
+            { code: 'SAT', label: 'Sat' },
+            { code: 'SUN', label: 'Sun' }
+        ];
         
         vm.selectedAccounts = [];
         vm.activeVersion = 0;
@@ -68,6 +83,10 @@
         vm.formatScheduleTime = formatScheduleTime;
         vm.closeTimePicker = closeTimePicker;
         vm.onDateTimeSelect = onDateTimeSelect;
+        vm.applySchedule = applySchedule;
+        vm.hasScheduleDisplay = hasScheduleDisplay;
+        vm.toggleRecurringDay = toggleRecurringDay;
+        vm.isRecurringDaySelected = isRecurringDaySelected;
         vm.openLabelsModal = openLabelsModal;
         vm.closeLabelsModal = closeLabelsModal;
         vm.toggleTag = toggleTag;
@@ -467,6 +486,10 @@
 
         /**
          * @param {string} mode - 'draft' (status 0, scheduleStatus 0) | 'publish' (1, 0) | 'reschedule' (1, 0)
+         *
+         * Immediate publish:
+         * - 'publish' with no date/time selected: send scheduledAt=null so the publisher job picks it up immediately.
+         * - 'reschedule' with date/time in the past (or missing): clear date/time and publish immediately.
          */
         function postNow(mode) {
             if (!vm.post) {
@@ -506,13 +529,23 @@
                 return;
             }
 
+            var publishImmediately = false;
+
             if (!vm.form.date || !vm.form.time) {
-                utils.alertInfo('Schedule', 'Please select a date and time.');
-                return;
-            }
-            if (!isScheduledTimeInFuture(vm.form.date, vm.form.time)) {
-                utils.alertError('Schedule', 'Scheduled time must be in the future.');
-                return;
+                // No date/time selected → publish immediately (scheduledAt will be null on the server)
+                publishImmediately = true;
+                vm.form.date = '';
+                vm.form.time = '';
+            } else if (!isScheduledTimeInFuture(vm.form.date, vm.form.time)) {
+                if (mode === 'reschedule') {
+                    // Past date on re-schedule → clear and publish immediately
+                    publishImmediately = true;
+                    vm.form.date = '';
+                    vm.form.time = '';
+                } else {
+                    utils.alertError('Schedule', 'Scheduled time must be in the future.');
+                    return;
+                }
             }
 
             vm.saving = true;
@@ -520,19 +553,26 @@
             var data = buildPostData(1, { scheduleStatus: 0 });
             services.updatePost(data, function(response) {
                 vm.saving = false;
-                if (response.success) {
-                    applyPostUpdateResponse(response);
-                    if (mode === 'reschedule') {
-                        utils.alertInfo('Success', 'Post scheduled successfully. Redirecting to posts list ...');
-                        $timeout(function() {
-                            window.location.href = postsListUrl();
-                        }, 4000);
-                    } else {
-                        utils.alertSuccess('Success', 'Post saved successfully');
-                    }
-                } else {
+                if (!response.success) {
                     vm.hasError = true;
                     utils.alertError('Error', response.message || 'Failed to save post');
+                    return;
+                }
+
+                applyPostUpdateResponse(response);
+
+                if (publishImmediately) {
+                    utils.alertInfo('Success', 'Post is being published. Redirecting to posts list ...');
+                    $timeout(function() {
+                        window.location.href = postsListUrl();
+                    }, 4000);
+                } else if (mode === 'reschedule') {
+                    utils.alertInfo('Success', 'Post scheduled successfully. Redirecting to posts list ...');
+                    $timeout(function() {
+                        window.location.href = postsListUrl();
+                    }, 4000);
+                } else {
+                    utils.alertSuccess('Success', 'Post saved successfully');
                 }
             });
         }
@@ -847,7 +887,32 @@
         // ============================================
         // SCHEDULE MANAGEMENT
         // ============================================
+        function ensureRecurringFormShape() {
+            if (!Array.isArray(vm.form.recurringDays)) {
+                vm.form.recurringDays = [];
+            }
+            if (!vm.form.recurringType) {
+                vm.form.recurringType = 'daily';
+            }
+        }
+
+        function toggleRecurringDay(dayCode) {
+            ensureRecurringFormShape();
+            var idx = vm.form.recurringDays.indexOf(dayCode);
+            if (idx === -1) {
+                vm.form.recurringDays.push(dayCode);
+            } else {
+                vm.form.recurringDays.splice(idx, 1);
+            }
+        }
+
+        function isRecurringDaySelected(dayCode) {
+            ensureRecurringFormShape();
+            return vm.form.recurringDays.indexOf(dayCode) !== -1;
+        }
+
         function openTimePicker() {
+            ensureRecurringFormShape();
             if (!vm.form.date) {
                 var now = new Date();
                 vm.form.date = now.getFullYear() + '-' + 
@@ -861,17 +926,138 @@
             hideModal('timePickerModal');
         }
 
+        function isRecurringScheduleTabActive() {
+            var pane = document.getElementById('schedule-recurring-pane');
+            return !!(pane && pane.classList.contains('active'));
+        }
+
+        function formatTime24To12(timeStr) {
+            if (!timeStr || typeof timeStr !== 'string') {
+                return '';
+            }
+            var timeParts = timeStr.split(':');
+            if (timeParts.length < 2) {
+                return timeStr;
+            }
+            var hour = parseInt(timeParts[0], 10);
+            var minute = parseInt(timeParts[1], 10);
+            if (isNaN(hour) || isNaN(minute)) {
+                return timeStr;
+            }
+            var hour12 = hour === 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+            var ampm = hour >= 12 ? 'pm' : 'am';
+            return hour12 + ':' + String(minute).padStart(2, '0') + ampm;
+        }
+
+        function formatRecurringEndDate(dateVal) {
+            if (!dateVal) {
+                return '';
+            }
+            var dateStr = dateVal;
+            if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
+                var y = dateVal.getFullYear();
+                var m = String(dateVal.getMonth() + 1).padStart(2, '0');
+                var d = String(dateVal.getDate()).padStart(2, '0');
+                dateStr = y + '-' + m + '-' + d;
+            }
+            var parts = String(dateStr).split('-');
+            if (parts.length !== 3) {
+                return String(dateStr);
+            }
+            var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            var monthIdx = parseInt(parts[1], 10) - 1;
+            return months[monthIdx] + ' ' + parseInt(parts[2], 10) + ', ' + parts[0];
+        }
+
+        function formatRecurringSchedule() {
+            ensureRecurringFormShape();
+            var summary = [];
+            if (vm.form.recurringType === 'daily') {
+                summary.push('Daily');
+            } else {
+                var dayLabels = (vm.form.recurringDays || []).map(function (code) {
+                    var match = vm.recurringWeekDays.find(function (d) {
+                        return d.code === code;
+                    });
+                    return match ? match.label : code;
+                });
+                summary.push('Weekly on ' + (dayLabels.length ? dayLabels.join(', ') : '—'));
+            }
+            var timeLabel = formatTime24To12(vm.form.recurringTime);
+            if (timeLabel) {
+                summary.push('at ' + timeLabel);
+            }
+            var endLabel = formatRecurringEndDate(vm.form.recurringEndDate);
+            if (endLabel) {
+                summary.push('until ' + endLabel);
+            }
+            return summary.join(' ');
+        }
+
+        function hasScheduleDisplay() {
+            ensureRecurringFormShape();
+            if (vm.form.scheduleMode === 'recurring') {
+                if (!vm.form.recurringTime) {
+                    return false;
+                }
+                if (vm.form.recurringType === 'weekly') {
+                    return vm.form.recurringDays.length > 0;
+                }
+                return true;
+            }
+            return !!(vm.form.date && vm.form.time);
+        }
+
+        function applySchedule() {
+            ensureRecurringFormShape();
+            if (isRecurringScheduleTabActive()) {
+                if (!vm.form.recurringTime) {
+                    utils.alertError('Error', 'Please select a time of day for the recurring schedule');
+                    return;
+                }
+                if (vm.form.recurringType === 'weekly' && vm.form.recurringDays.length === 0) {
+                    utils.alertError('Error', 'Please select at least one day of the week');
+                    return;
+                }
+                vm.form.scheduleMode = 'recurring';
+                vm.form.date = '';
+                vm.form.time = '';
+            } else {
+                if (!vm.form.date || !vm.form.time) {
+                    utils.alertError('Error', 'Please select a date and time');
+                    return;
+                }
+                vm.form.scheduleMode = 'once';
+                vm.form.recurringTime = '';
+                vm.form.recurringDays = [];
+                vm.form.recurringEndDate = '';
+                onDateTimeSelect(vm.form.date, vm.form.time);
+            }
+            hideModal('timePickerModal');
+        }
+
         function onDateTimeSelect(date, time) {
             if (date) vm.form.date = date;
             if (time) vm.form.time = time;
+            if (date && time) {
+                vm.form.scheduleMode = 'once';
+            }
         }
 
         function clearSchedule() {
+            vm.form.scheduleMode = '';
             vm.form.date = '';
             vm.form.time = '';
+            vm.form.recurringTime = '';
+            vm.form.recurringDays = [];
+            vm.form.recurringType = 'daily';
+            vm.form.recurringEndDate = '';
         }
 
         function formatScheduleTime() {
+            if (vm.form.scheduleMode === 'recurring') {
+                return formatRecurringSchedule();
+            }
             if (!vm.form.date || !vm.form.time) return '';
             
             try {

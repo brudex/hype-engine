@@ -1,4 +1,4 @@
-<!-- Pick Time Modal -->
+<!-- Pick Time / Schedule Modal -->
 <div class="modal fade" 
      id="timePickerModal" 
      tabindex="-1" 
@@ -9,19 +9,121 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title" id="timePickerModalLabel">Pick Time</h5>
+                <h5 class="modal-title" id="timePickerModalLabel">Schedule Post</h5>
                 <button type="button" 
                         class="btn-close btn-close-white" 
                         data-bs-dismiss="modal"
                         aria-label="Close"></button>
             </div>
+
             <div class="modal-body">
-                <date-time-picker 
-                    ng-model="vm.form.date"
-                    ng-time="vm.form.time"
-                    min-date="today">
-                </date-time-picker>
+                <!-- Tabs: One-time vs Recurring -->
+                <ul class="nav nav-tabs schedule-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active"
+                                id="schedule-once-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#schedule-once-pane"
+                                type="button"
+                                role="tab"
+                                aria-controls="schedule-once-pane"
+                                aria-selected="true">
+                            One-time
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link"
+                                id="schedule-recurring-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#schedule-recurring-pane"
+                                type="button"
+                                role="tab"
+                                aria-controls="schedule-recurring-pane"
+                                aria-selected="false">
+                            Recurring
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content pt-3">
+                    <!-- One-time scheduling (existing behaviour) -->
+                    <div class="tab-pane fade show active"
+                         id="schedule-once-pane"
+                         role="tabpanel"
+                         aria-labelledby="schedule-once-tab">
+                        <date-time-picker 
+                            ng-model="vm.form.date"
+                            ng-time="vm.form.time"
+                            min-date="today">
+                        </date-time-picker>
+                    </div>
+
+                    <!-- Recurring scheduling (UI only for now) -->
+                    <div class="tab-pane fade"
+                         id="schedule-recurring-pane"
+                         role="tabpanel"
+                         aria-labelledby="schedule-recurring-tab">
+                        <div class="mb-3">
+                            <label class="form-label text-theme-secondary small text-uppercase">Recurrence type</label>
+                            <div class="btn-group w-100 recurring-type-group" role="group" aria-label="Recurrence type">
+                                <input type="radio"
+                                       class="btn-check"
+                                       name="recurringType"
+                                       id="recurring-daily"
+                                       autocomplete="off"
+                                       ng-model="vm.form.recurringType"
+                                       ng-value="'daily'">
+                                <label class="btn btn-sm w-50 recurring-type-toggle" for="recurring-daily">
+                                    Daily
+                                </label>
+
+                                <input type="radio"
+                                       class="btn-check"
+                                       name="recurringType"
+                                       id="recurring-weekly"
+                                       autocomplete="off"
+                                       ng-model="vm.form.recurringType"
+                                       ng-value="'weekly'">
+                                <label class="btn btn-sm w-50 recurring-type-toggle" for="recurring-weekly">
+                                    Weekly
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Weekly day-of-week selection (multi-select) -->
+                        <div class="mb-3" ng-if="vm.form.recurringType === 'weekly'">
+                            <label class="form-label text-theme-secondary small text-uppercase">Days of week</label>
+                            <div class="d-flex flex-wrap gap-2 recurring-days-row" role="group" aria-label="Days of week">
+                                <button type="button"
+                                        class="recurring-day-toggle btn btn-sm"
+                                        ng-repeat="day in vm.recurringWeekDays track by day.code"
+                                        ng-class="{ 'recurring-day-toggle--selected': vm.isRecurringDaySelected(day.code) }"
+                                        ng-click="vm.toggleRecurringDay(day.code)">
+                                    {{ day.label }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Time of day (same control as one-time tab) -->
+                        <div class="mb-3">
+                            <label class="form-label text-theme-secondary small text-uppercase">Time of day</label>
+                            <time-picker ng-model="vm.form.recurringTime"></time-picker>
+                        </div>
+
+                        <!-- Optional end date -->
+                        <div class="mb-1">
+                            <label class="form-label text-theme-secondary small text-uppercase">End date (optional)</label>
+                            <input type="date"
+                                   class="form-control"
+                                   ng-model="vm.form.recurringEndDate">
+                        </div>
+                        <p class="text-theme-secondary small mb-0">
+                            Recurring settings are saved with the post and used by the scheduler job.
+                        </p>
+                    </div>
+                </div>
             </div>
+
             <div class="modal-footer border-0">
                 <button type="button" 
                         class="btn btn-secondary" 
@@ -30,9 +132,8 @@
                 </button>
                 <button type="button" 
                         class="btn btn-primary" 
-                        data-bs-dismiss="modal"
-                        ng-click="vm.onDateTimeSelect(vm.form.date, vm.form.time)">
-                    PICK TIME
+                        ng-click="vm.applySchedule()">
+                    APPLY
                 </button>
             </div>
         </div>

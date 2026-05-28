@@ -65,8 +65,16 @@ const validateApiV1Token = async (req, res, next) => {
         req.user = {
             uuid: apiKey.userUuid,
             email: apiKey.user?.email,
-            name: apiKey.user?.name
+            name: apiKey.user?.fullName || apiKey.user?.name
         };
+
+        if (!req.user.uuid) {
+            return res.status(401).json({
+                success: false,
+                error: 'Unauthorized',
+                message: 'API key has no associated user'
+            });
+        }
 
         next();
     } catch (error) {

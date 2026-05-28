@@ -35,8 +35,23 @@
             versions: [],
             tags: [],
             date: '',
-            time: ''
+            time: '',
+            scheduleMode: '',
+            recurringType: 'daily',
+            recurringDays: [],
+            recurringTime: '',
+            recurringEndDate: ''
         };
+
+        vm.recurringWeekDays = [
+            { code: 'MON', label: 'Mon' },
+            { code: 'TUE', label: 'Tue' },
+            { code: 'WED', label: 'Wed' },
+            { code: 'THU', label: 'Thu' },
+            { code: 'FRI', label: 'Fri' },
+            { code: 'SAT', label: 'Sat' },
+            { code: 'SUN', label: 'Sun' }
+        ];
         
         vm.selectedAccounts = [];
         vm.activeVersion = 0;
@@ -71,6 +86,10 @@
         vm.formatScheduleTime = formatScheduleTime;
         vm.closeTimePicker = closeTimePicker;
         vm.onDateTimeSelect = onDateTimeSelect;
+        vm.applySchedule = applySchedule;
+        vm.hasScheduleDisplay = hasScheduleDisplay;
+        vm.toggleRecurringDay = toggleRecurringDay;
+        vm.isRecurringDaySelected = isRecurringDaySelected;
         vm.openLabelsModal = openLabelsModal;
         vm.closeLabelsModal = closeLabelsModal;
         vm.toggleTag = toggleTag;
@@ -1041,7 +1060,32 @@
         // ============================================
         // CALENDAR / TIME PICKER
         // ============================================
+        function ensureRecurringFormShape() {
+            if (!Array.isArray(vm.form.recurringDays)) {
+                vm.form.recurringDays = [];
+            }
+            if (!vm.form.recurringType) {
+                vm.form.recurringType = 'daily';
+            }
+        }
+
+        function toggleRecurringDay(dayCode) {
+            ensureRecurringFormShape();
+            var idx = vm.form.recurringDays.indexOf(dayCode);
+            if (idx === -1) {
+                vm.form.recurringDays.push(dayCode);
+            } else {
+                vm.form.recurringDays.splice(idx, 1);
+            }
+        }
+
+        function isRecurringDaySelected(dayCode) {
+            ensureRecurringFormShape();
+            return vm.form.recurringDays.indexOf(dayCode) !== -1;
+        }
+
         function openTimePicker() {
+            ensureRecurringFormShape();
             // Initialize date if not set
             if (!vm.form.date) {
                 var now = new Date();
@@ -1061,8 +1105,118 @@
             hideModal('timePickerModal');
         }
 
+        function isRecurringScheduleTabActive() {
+            var pane = document.getElementById('schedule-recurring-pane');
+            return !!(pane && pane.classList.contains('active'));
+        }
+
+        function formatTime24To12(timeStr) {
+            if (!timeStr || typeof timeStr !== 'string') {
+                return '';
+            }
+            var timeParts = timeStr.split(':');
+            if (timeParts.length < 2) {
+                return timeStr;
+            }
+            var hour = parseInt(timeParts[0], 10);
+            var minute = parseInt(timeParts[1], 10);
+            if (isNaN(hour) || isNaN(minute)) {
+                return timeStr;
+            }
+            var hour12 = hour === 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+            var ampm = hour >= 12 ? 'pm' : 'am';
+            return hour12 + ':' + String(minute).padStart(2, '0') + ampm;
+        }
+
+        function formatRecurringEndDate(dateVal) {
+            if (!dateVal) {
+                return '';
+            }
+            var dateStr = dateVal;
+            if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
+                var y = dateVal.getFullYear();
+                var m = String(dateVal.getMonth() + 1).padStart(2, '0');
+                var d = String(dateVal.getDate()).padStart(2, '0');
+                dateStr = y + '-' + m + '-' + d;
+            }
+            var parts = String(dateStr).split('-');
+            if (parts.length !== 3) {
+                return String(dateStr);
+            }
+            var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            var monthIdx = parseInt(parts[1], 10) - 1;
+            return months[monthIdx] + ' ' + parseInt(parts[2], 10) + ', ' + parts[0];
+        }
+
+        function formatRecurringSchedule() {
+            ensureRecurringFormShape();
+            var summary = [];
+            if (vm.form.recurringType === 'daily') {
+                summary.push('Daily');
+            } else {
+                var dayLabels = (vm.form.recurringDays || []).map(function (code) {
+                    var match = vm.recurringWeekDays.find(function (d) {
+                        return d.code === code;
+                    });
+                    return match ? match.label : code;
+                });
+                summary.push('Weekly on ' + (dayLabels.length ? dayLabels.join(', ') : '—'));
+            }
+            var timeLabel = formatTime24To12(vm.form.recurringTime);
+            if (timeLabel) {
+                summary.push('at ' + timeLabel);
+            }
+            var endLabel = formatRecurringEndDate(vm.form.recurringEndDate);
+            if (endLabel) {
+                summary.push('until ' + endLabel);
+            }
+            return summary.join(' ');
+        }
+
+        function hasScheduleDisplay() {
+            ensureRecurringFormShape();
+            if (vm.form.scheduleMode === 'recurring') {
+                if (!vm.form.recurringTime) {
+                    return false;
+                }
+                if (vm.form.recurringType === 'weekly') {
+                    return vm.form.recurringDays.length > 0;
+                }
+                return true;
+            }
+            return !!(vm.form.date && vm.form.time);
+        }
+
+        function applySchedule() {
+            ensureRecurringFormShape();
+            if (isRecurringScheduleTabActive()) {
+                if (!vm.form.recurringTime) {
+                    utils.alertError('Error', 'Please select a time of day for the recurring schedule');
+                    return;
+                }
+                if (vm.form.recurringType === 'weekly' && vm.form.recurringDays.length === 0) {
+                    utils.alertError('Error', 'Please select at least one day of the week');
+                    return;
+                }
+                vm.form.scheduleMode = 'recurring';
+                vm.form.date = '';
+                vm.form.time = '';
+                vm.form.scheduleAt = '';
+            } else {
+                if (!vm.form.date || !vm.form.time) {
+                    utils.alertError('Error', 'Please select a date and time');
+                    return;
+                }
+                vm.form.scheduleMode = 'once';
+                vm.form.recurringTime = '';
+                vm.form.recurringDays = [];
+                vm.form.recurringEndDate = '';
+                onDateTimeSelect(vm.form.date, vm.form.time);
+            }
+            hideModal('timePickerModal');
+        }
+
         function onDateTimeSelect(date, time) {
-            // Only called when "PICK TIME" button is clicked
             // Use current form values if not provided (from directive)
             var selectedDate = date || vm.form.date;
             var selectedTime = time || vm.form.time;
@@ -1075,16 +1229,27 @@
             }
             if (selectedDate && selectedTime) {
                 vm.form.scheduleAt = selectedDate + ' ' + selectedTime;
+                if (!vm.form.scheduleMode || vm.form.scheduleMode === 'once') {
+                    vm.form.scheduleMode = 'once';
+                }
             }
         }
 
         function clearSchedule() {
+            vm.form.scheduleMode = '';
             vm.form.date = '';
             vm.form.time = '';
             vm.form.scheduleAt = '';
+            vm.form.recurringTime = '';
+            vm.form.recurringDays = [];
+            vm.form.recurringType = 'daily';
+            vm.form.recurringEndDate = '';
         }
 
         function formatScheduleTime() {
+            if (vm.form.scheduleMode === 'recurring') {
+                return formatRecurringSchedule();
+            }
             if (!vm.form.date || !vm.form.time) {
                 return '';
             }

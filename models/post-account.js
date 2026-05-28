@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
         }
     }, {
         tableName: "post_accounts",
-        timestamps: false
+        timestamps: true
     });
 
     PostAccount.associate = function(models) {
