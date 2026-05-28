@@ -85,6 +85,7 @@ router.get('/projects/:projectUuid/tags', TagsController.index);
 router.get('/api/accounts/project/:projectUuid', AccountsController.getAccounts);
 router.get('/api/accounts/single/:uuid', AccountsController.getAccount);
 router.post('/api/accounts/configure-apikey/:platformName', AccountsController.saveApiKeyConfiguration);
+router.put('/api/accounts/:uuid/account-tier', AccountsController.updateAccountTier);
 router.put('/api/accounts/:uuid', AccountsController.update);
 router.delete('/api/accounts/:uuid', AccountsController.delete);
 

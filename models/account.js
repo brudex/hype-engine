@@ -58,6 +58,12 @@ module.exports = (sequelize, DataTypes) => {
         active: {
             type: DataTypes.BOOLEAN,
             defaultValue: false
+        },
+        accountTier: {
+            type: DataTypes.STRING(32),
+            allowNull: false,
+            defaultValue: 'Basic',
+            comment: 'Platform API tier (X: Free, Basic, Premium, Premium Plus)'
         }
       
     }, {

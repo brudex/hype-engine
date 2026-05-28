@@ -4,8 +4,37 @@ const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
 const { encryptObject } = require('../utils/encryption');
 const socialaccountApiDefinitions = require('../services/socialaccount-api-definitions');
+const {
+    DEFAULT_ACCOUNT_TIER,
+    getTierOptionsForProvider,
+    isValidAccountTier
+} = require('../constants/account-tier');
 
 const AccountsController = {};
+
+function formatAccountForClient(account) {
+    return {
+        id: account.id,
+        uuid: account.uuid,
+        name: account.name,
+        username: account.username,
+        provider: account.provider,
+        providerId: account.providerId,
+        authorized: account.authorized,
+        active: account.active,
+        accountTier: account.accountTier || DEFAULT_ACCOUNT_TIER,
+        projectUuid: account.projectUuid,
+        project: account.project ? {
+            uuid: account.project.uuid,
+            name: account.project.name
+        } : null,
+        image: account.media
+            ? (typeof account.media === 'string' ? JSON.parse(account.media).url : account.media.url) || null
+            : null,
+        created_at: account.createdAt,
+        updated_at: account.updatedAt
+    };
+}
 
 /**
  * Clear dependent rows before account delete. Keeps post_histories (audit log).
@@ -77,24 +106,7 @@ AccountsController.index = async (req, res) => {
         });
 
         // Format accounts for frontend
-        const formattedAccounts = accounts.map(account => ({
-            id: account.id,
-            uuid: account.uuid,
-            name: account.name,
-            username: account.username,
-            provider: account.provider,
-            providerId: account.providerId,
-            authorized: account.authorized,
-            active: account.active,
-            projectUuid: account.projectUuid,
-            project: account.project ? {
-                uuid: account.project.uuid,
-                name: account.project.name
-            } : null,
-            image: account.media ? (typeof account.media === 'string' ? JSON.parse(account.media).url : account.media.url) || null : null,
-            created_at: account.createdAt,
-            updated_at: account.updatedAt
-        }));
+        const formattedAccounts = accounts.map((account) => formatAccountForClient(account));
 
         // Check service configuration status for this project (if projectUuid is provided)
         const serviceWhere = {};
@@ -203,6 +215,69 @@ AccountsController.update = async (req, res) => {
 };
 
 /**
+ * Update account API tier (e.g. X Free / Basic / Premium / Premium Plus)
+ * @route PUT /dashboard/api/accounts/:uuid/account-tier
+ * @body { string } accountTier
+ */
+AccountsController.updateAccountTier = async (req, res) => {
+    try {
+        const { uuid } = req.params;
+        const { accountTier } = req.body || {};
+
+        if (!accountTier || typeof accountTier !== 'string') {
+            return res.status(400).json({
+                success: false,
+                message: 'accountTier is required'
+            });
+        }
+
+        const account = await db.Account.findOne({ where: { uuid } });
+
+        if (!account) {
+            return res.status(404).json({
+                success: false,
+                message: 'Account not found'
+            });
+        }
+
+        if (!account.authorized) {
+            return res.status(400).json({
+                success: false,
+                message: 'Account must be authorized before setting API tier'
+            });
+        }
+
+        const tier = accountTier.trim();
+        if (!isValidAccountTier(account.provider, tier)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid accountTier for this provider',
+                allowed: getTierOptionsForProvider(account.provider)
+            });
+        }
+
+        account.accountTier = tier;
+        await account.save();
+
+        return res.json({
+            success: true,
+            message: 'Account tier updated',
+            data: {
+                uuid: account.uuid,
+                accountTier: account.accountTier
+            }
+        });
+    } catch (error) {
+        logger.error('Account tier update error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to update account tier',
+            error: error.message
+        });
+    }
+};
+
+/**
  * Get accounts list (API)
  * @route GET /api/accounts
  */
@@ -222,19 +297,12 @@ AccountsController.getAccounts = async (req, res) => {
         }); 
 
         // Format accounts for frontend
-        const formattedAccounts = accounts.map(account => ({
-            uuid: account.uuid,
-            name: account.name,
-            username: account.username,
-            provider: account.provider,
-            providerId: account.providerId,
-            authorized: account.authorized,
-            active: account.active,
-            projectUuid: account.projectUuid,
-            image: account.media ? (typeof account.media === 'string' ? JSON.parse(account.media).url : account.media.url) || null : null,
-            created_at: account.createdAt,
-            updated_at: account.updatedAt
-        }));
+        const formattedAccounts = accounts.map((account) => {
+            const row = formatAccountForClient(account);
+            delete row.id;
+            delete row.project;
+            return row;
+        });
 
         res.json({
             success: true,
@@ -268,18 +336,7 @@ AccountsController.getAccount = async (req, res) => {
 
         res.json({
             success: true,
-            data: {
-                id: account.id,
-                uuid: account.uuid,
-                name: account.name,
-                username: account.username,
-                provider: account.provider,
-                providerId: account.providerId,
-                authorized: account.authorized,
-                image: account.media ? (typeof account.media === 'string' ? JSON.parse(account.media).url : account.media.url) || null : null,
-                created_at: account.createdAt,
-                updated_at: account.updatedAt
-            }
+            data: formatAccountForClient(account)
         });
     } catch (error) {
         logger.error('Get account error:', error);

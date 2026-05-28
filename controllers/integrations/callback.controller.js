@@ -248,6 +248,7 @@ CallbackController.x = async (req, res) => {
                 apiKey: encryptedApiKey,
                 authorized: true,
                 active: true,
+                accountTier: 'Free',
                 data: { accessSecret },
                 media: null
             });

@@ -186,9 +186,18 @@
                                         <p class="text-theme-secondary">Connect your Twitter/X accounts to this project.</p>
                                         <div ng-if="accountsCtrl.getPlatformAccounts('twitter').length > 0">
                                             <div class="list-group mb-3">
-                                                <div class="list-group-item d-flex justify-content-between align-items-center" ng-repeat="account in accountsCtrl.getPlatformAccounts('twitter')">
+                                                <div class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2" ng-repeat="account in accountsCtrl.getPlatformAccounts('twitter')">
                                                     <div><h6 class="mb-0">{{ account.name }}</h6><small class="text-muted">{{ account.username || 'N/A' }}</small></div>
-                                                    <div class="d-flex align-items-center gap-2">
+                                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                        <div ng-if="account.authorized" class="d-flex align-items-center gap-1">
+                                                            <label class="small text-muted mb-0 text-nowrap">API tier</label>
+                                                            <select class="form-select form-select-sm"
+                                                                    style="min-width: 140px;"
+                                                                    ng-model="account.accountTier"
+                                                                    ng-options="opt for opt in accountsCtrl.getAccountTierOptions('twitter')"
+                                                                    ng-change="accountsCtrl.updateAccountTier(account)">
+                                                            </select>
+                                                        </div>
                                                         <span class="badge" ng-class="account.authorized ? 'bg-success' : 'bg-warning'">{{ account.authorized ? 'Authorized' : 'Unauthorized' }}</span><span class="badge bg-secondary ms-1" ng-if="!account.active">Deactivated</span>
                                                         <div class="dropdown">
                                                             <button class="btn btn-sm btn-link p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>

@@ -35,10 +35,17 @@
         vm.hasAuthorizedAccount = hasAuthorizedAccount;
         vm.getFormFields = getFormFields;
         vm.saveApiKeyConfig = saveApiKeyConfig;
+        vm.getAccountTierOptions = getAccountTierOptions;
+        vm.updateAccountTier = updateAccountTier;
 
         // Initialize
         function init(accounts, isConfiguredService, isServiceActive, projectUuid) {
-            vm.accounts = accounts || [];
+            vm.accounts = (accounts || []).map(function (account) {
+                if (!account.accountTier) {
+                    account.accountTier = 'Basic';
+                }
+                return account;
+            });
             vm.isConfiguredService = isConfiguredService || {};
             vm.isServiceActive = isServiceActive || {};
             vm.selectedProjectUuid = projectUuid || null;
@@ -94,7 +101,12 @@
             $http.get(url).then(function(response) {
                 vm.loading = false;
                 if (response.data.success) {
-                    vm.accounts = response.data.data || [];
+                    vm.accounts = (response.data.data || []).map(function (account) {
+                        if (!account.accountTier) {
+                            account.accountTier = 'Basic';
+                        }
+                        return account;
+                    });
                 } else {
                     utils.alertError('Error', response.data.message || 'Failed to load accounts');
                 }
@@ -263,6 +275,36 @@
         function getFormFields(platform) {
             var def = vm.serviceDefinitions[platform];
             return (def && def.formFields && Array.isArray(def.formFields)) ? def.formFields : [];
+        }
+
+        var twitterTierOptions = ['Free', 'Basic', 'Premium', 'Premium Plus'];
+
+        function getAccountTierOptions(platform) {
+            if ((platform || '').toLowerCase() === 'twitter') {
+                return twitterTierOptions;
+            }
+            return [];
+        }
+
+        function updateAccountTier(account) {
+            if (!account || !account.uuid) {
+                return;
+            }
+            $http.put('/dashboard/api/accounts/' + account.uuid + '/account-tier', {
+                accountTier: account.accountTier
+            }).then(function (response) {
+                if (response.data && response.data.success) {
+                    utils.alertSuccess('Saved', 'API tier updated');
+                } else {
+                    utils.alertError('Error', (response.data && response.data.message) || 'Failed to update tier');
+                    var pu = (vm.selectedProject && vm.selectedProject.uuid) || vm.selectedProjectUuid;
+                    if (pu) loadAccounts(pu);
+                }
+            }).catch(function (error) {
+                utils.alertError('Error', (error.data && error.data.message) || 'Failed to update tier');
+                var pu = (vm.selectedProject && vm.selectedProject.uuid) || vm.selectedProjectUuid;
+                if (pu) loadAccounts(pu);
+            });
         }
 
         // Build configuration object from form elements named configuration[fieldName]

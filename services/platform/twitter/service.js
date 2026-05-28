@@ -4,7 +4,34 @@ const fs = require('fs').promises;
 const logger = require('../../../utils/logger');
 const { createUserClient } = require('./oauth');
 const { serializeTwitterApiError, safeSerialize, logX } = require('./x-api-logger');
+const { DEFAULT_ACCOUNT_TIER } = require('../../../constants/account-tier');
 const db = require('../../../models');
+
+/** X tweet length limits by connected account tier */
+const X_TIER_MAX_LENGTH = {
+    free: 270,
+    basic: 25000,
+    premium: 25000,
+    'premium plus': 25000,
+    'premium+': 25000
+};
+
+/**
+ * @param {string} text
+ * @param {string} [accountTier]
+ * @returns {string}
+ */
+function truncateTextForAccountTier(text, accountTier) {
+    if (!text) {
+        return text;
+    }
+    const tierKey = String(accountTier || DEFAULT_ACCOUNT_TIER).trim().toLowerCase();
+    const maxLength = X_TIER_MAX_LENGTH[tierKey] ?? 25000;
+    if (text.length <= maxLength) {
+        return text;
+    }
+    return text.substring(0, maxLength);
+}
 
 /** Max images per tweet (X limit is 4) */
 const MAX_MEDIA_PER_TWEET = 4;
@@ -204,7 +231,8 @@ async function publishPost(post, postVersion, tags, account) {
         const rawContent = postVersion.content || '';
         const content = stripHtml(rawContent).trim();
         const hashtagsSuffix = buildHashtagsSuffix(tags || []);
-        const text = content + hashtagsSuffix;
+        let text = content + hashtagsSuffix;
+        text = truncateTextForAccountTier(text, account.accountTier);
         const mediaUuids = Array.isArray(postVersion.media) ? postVersion.media : [];
         if (!text.trim() && mediaUuids.length === 0) {
             return {
@@ -258,6 +286,7 @@ async function publishPost(post, postVersion, tags, account) {
 
         logX('info', 'X: creating tweet', {
             ...logContext,
+            accountTier: account.accountTier || DEFAULT_ACCOUNT_TIER,
             endpoint: 'POST https://api.twitter.com/2/tweets',
             requestPayload: safeSerialize(tweetBody)
         });
