@@ -3,27 +3,10 @@ const db = require('../models');
 const { Op } = require('sequelize');
 const logger = require('../utils/logger');
 const { publishPostToAccounts } = require('./lib/publish-post-accounts');
+const { getPostPublishIncludes } = require('./lib/post-publish-includes');
 const { RECURRING_ONE_TIME } = require('./lib/recurring-schedule');
 
 const schedule = '* * * * *'; // every minute
-
-const postIncludes = [
-    {
-        model: db.Account,
-        as: 'accounts',
-        through: { attributes: [] },
-        required: true
-    },
-    {
-        model: db.PostVersion,
-        as: 'versions'
-    },
-    {
-        model: db.Tag,
-        as: 'tags',
-        through: { attributes: [] }
-    }
-];
 
 /**
  * After publish: one-time post is complete.
@@ -77,7 +60,7 @@ async function publishScheduledPosts() {
                             { scheduledAt: { [Op.lte]: now } }
                         ]
                     },
-                    include: postIncludes
+                    include: getPostPublishIncludes()
                 })
                     .then((posts) => {
                         logger.info(`Found ${posts.length} scheduled posts to process`);

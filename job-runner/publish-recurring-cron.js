@@ -3,6 +3,7 @@ const db = require('../models');
 const { Op } = require('sequelize');
 const logger = require('../utils/logger');
 const { publishPostToAccounts } = require('./lib/publish-post-accounts');
+const { getPostPublishIncludes } = require('./lib/post-publish-includes');
 const {
     RECURRING_DAILY,
     RECURRING_WEEKLY,
@@ -10,24 +11,6 @@ const {
 } = require('./lib/recurring-schedule');
 
 const schedule = '* * * * *'; // every minute (matches recurringTime to the minute, UTC)
-
-const postIncludes = [
-    {
-        model: db.Account,
-        as: 'accounts',
-        through: { attributes: [] },
-        required: true
-    },
-    {
-        model: db.PostVersion,
-        as: 'versions'
-    },
-    {
-        model: db.Tag,
-        as: 'tags',
-        through: { attributes: [] }
-    }
-];
 
 /**
  * After publish: keep series active for the next occurrence.
@@ -79,7 +62,7 @@ async function publishRecurringPosts() {
                             { recurringEndAt: { [Op.gte]: now } }
                         ]
                     },
-                    include: postIncludes
+                    include: getPostPublishIncludes()
                 })
                     .then((posts) => {
                         const due = posts.filter((post) => isRecurringDueNow(post, now));

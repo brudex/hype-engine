@@ -75,7 +75,7 @@ function startCronServer() {
 }
 
 // Delay start until DB/models are ready (same as legacy cronserver)
-const START_DELAY_MS = 10000;
+const START_DELAY_MS = 20000;
 setTimeout(startCronServer, START_DELAY_MS);
 
 module.exports = {

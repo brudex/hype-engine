@@ -27,7 +27,7 @@ async function syncDatabase(){
     process.exit(1);
   }
 }
-setTimeout(syncDatabase, 2000);
+setTimeout(syncDatabase, 10000);
 function normalizePort(val) {
   const port = parseInt(val, 10);
   if (isNaN(port)) return val;
