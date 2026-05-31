@@ -105,10 +105,33 @@ async function getManagedPages(userAccessToken, apiVersion = 'v24.0') {
     });
     const data = res.data || {};
     if (res.status !== 200) {
+        logger.error('Facebook me/accounts request failed', {
+            status: res.status,
+            apiVersion: v,
+            graphResponse: data
+        });
         const msg = data.error?.message || data.error || `me/accounts failed (${res.status})`;
         throw new Error(msg);
     }
-    return Array.isArray(data.data) ? data.data : [];
+
+    const pages = Array.isArray(data.data) ? data.data : [];
+    const pageSummary = pages.map((p) => ({
+        id: p.id,
+        name: p.name,
+        hasPageAccessToken: !!p.access_token,
+        tasks: p.tasks
+    }));
+
+    logger.info('Facebook me/accounts response', {
+        status: res.status,
+        apiVersion: v,
+        pageCount: pages.length,
+        paging: data.paging || null,
+        pages: pageSummary,
+        ...(pages.length === 0 && { graphResponse: data })
+    });
+
+    return pages;
 }
 
 /**

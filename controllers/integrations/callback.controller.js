@@ -465,17 +465,36 @@ CallbackController.facebook = async (req, res) => {
         });
 
         const shortLived = await facebookPlatform.exchangeCodeForToken(code, redirectUri, appId, appSecret, apiVersion);
+        logger.info('Facebook OAuth callback: short-lived token received', {
+            expiresIn: shortLived.expires_in ?? null
+        });
+
         const longLived = await facebookPlatform.exchangeToLongLivedUserToken(
             shortLived.access_token,
             appId,
             appSecret,
             apiVersion
         );
+        logger.info('Facebook OAuth callback: long-lived token ready', {
+            expiresIn: longLived.expires_in ?? null,
+            usedShortLivedFallback: longLived.expires_in == null
+        });
+
         const pages = await facebookPlatform.getManagedPages(longLived.access_token, apiVersion);
         if (!pages.length) {
+            logger.warn('Facebook OAuth callback: no pages — connect-status will show placeholder', {
+                placeholderUuid: placeholderAccount.uuid,
+                placeholderName: 'Facebook (pending)',
+                projectUuid
+            });
             req.flash('error', 'No Facebook Pages found for this account.');
             return res.redirect(302, '/dashboard/accounts/connect-status/' + placeholderAccount.uuid);
         }
+
+        logger.info('Facebook OAuth callback: saving connected accounts', {
+            pageCount: pages.length,
+            pageNames: pages.map((p) => p.name || p.id)
+        });
 
         const userExpiresAt =
             longLived.expires_in != null ? new Date(Date.now() + longLived.expires_in * 1000).toISOString() : null;
