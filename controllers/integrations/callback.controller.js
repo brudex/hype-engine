@@ -468,6 +468,7 @@ CallbackController.facebook = async (req, res) => {
         logger.info('Facebook OAuth callback: short-lived token received', {
             expiresIn: shortLived.expires_in ?? null
         });
+        await facebookPlatform.logTokenDiagnostics(shortLived.access_token, appId, appSecret, apiVersion);
 
         const longLived = await facebookPlatform.exchangeToLongLivedUserToken(
             shortLived.access_token,
@@ -479,6 +480,9 @@ CallbackController.facebook = async (req, res) => {
             expiresIn: longLived.expires_in ?? null,
             usedShortLivedFallback: longLived.expires_in == null
         });
+        if (longLived.access_token !== shortLived.access_token) {
+            await facebookPlatform.logTokenDiagnostics(longLived.access_token, appId, appSecret, apiVersion);
+        }
 
         const permissions = await facebookPlatform.getGrantedPermissions(longLived.access_token, apiVersion);
 

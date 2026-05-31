@@ -11,7 +11,7 @@ const DEFAULT_SCOPES = [
     'pages_manage_metadata',
     'instagram_basic',
     'instagram_content_publish',
-    'pages_messaging'
+    'business_management'
 ].join(',');
 
 /**
@@ -89,6 +89,38 @@ async function exchangeToLongLivedUserToken(shortToken, appId, appSecret, apiVer
         return { access_token: shortToken, expires_in: null };
     }
     return { access_token: data.access_token, expires_in: data.expires_in };
+}
+
+/**
+ * Troubleshooting: log Graph /me and debug_token for a user access token.
+ */
+async function logTokenDiagnostics(accessToken, appId, appSecret, apiVersion = 'v24.0') {
+    const v = apiVersion.replace(/^\//, '');
+    try {
+        const me = await axios.get(`https://graph.facebook.com/${v}/me`, {
+            params: {
+                fields: 'id,name',
+                access_token: accessToken
+            },
+            validateStatus: () => true
+        });
+        logger.info('FACEBOOK USER', me.data);
+    } catch (err) {
+        logger.error('FACEBOOK USER request failed', { message: err.message });
+    }
+
+    try {
+        const debug = await axios.get('https://graph.facebook.com/debug_token', {
+            params: {
+                input_token: accessToken,
+                access_token: `${appId}|${appSecret}`
+            },
+            validateStatus: () => true
+        });
+        logger.info('TOKEN DEBUG', debug.data);
+    } catch (err) {
+        logger.error('TOKEN DEBUG request failed', { message: err.message });
+    }
 }
 
 /** Permissions required for /me/accounts and Page posting. */
@@ -193,6 +225,7 @@ module.exports = {
     generateAuthLink,
     exchangeCodeForToken,
     exchangeToLongLivedUserToken,
+    logTokenDiagnostics,
     getGrantedPermissions,
     getManagedPages,
     getInstagramBusinessAccount,
