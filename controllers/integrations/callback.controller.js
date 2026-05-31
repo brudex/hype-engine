@@ -480,14 +480,26 @@ CallbackController.facebook = async (req, res) => {
             usedShortLivedFallback: longLived.expires_in == null
         });
 
+        const permissions = await facebookPlatform.getGrantedPermissions(longLived.access_token, apiVersion);
+
         const pages = await facebookPlatform.getManagedPages(longLived.access_token, apiVersion);
         if (!pages.length) {
             logger.warn('Facebook OAuth callback: no pages — connect-status will show placeholder', {
                 placeholderUuid: placeholderAccount.uuid,
                 placeholderName: 'Facebook (pending)',
-                projectUuid
+                projectUuid,
+                grantedPermissions: permissions.granted,
+                missingRequiredPermissions: permissions.missingRequired
             });
-            req.flash('error', 'No Facebook Pages found for this account.');
+            let flashMsg =
+                'No Facebook Pages found for this account. On the Facebook permission screen, select the Page(s) you manage (e.g. HypeEngine) and allow all requested permissions.';
+            if (permissions.missingRequired.length) {
+                flashMsg +=
+                    ' Missing permissions: ' +
+                    permissions.missingRequired.join(', ') +
+                    '. Disconnect and connect again — we re-request permissions each time.';
+            }
+            req.flash('error', flashMsg);
             return res.redirect(302, '/dashboard/accounts/connect-status/' + placeholderAccount.uuid);
         }
 

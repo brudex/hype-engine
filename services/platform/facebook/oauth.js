@@ -27,10 +27,10 @@ function generateAuthLink({ appId, redirectUri, apiVersion = 'v24.0' }) {
         redirect_uri: redirectUri,
         state,
         response_type: 'code',
-        scope: DEFAULT_SCOPES
+        scope: DEFAULT_SCOPES,
+        auth_type: 'rerequest'
     };
     logger.info('Facebook auth link payload', { payload });
-    console.log('Facebook auth link payload', payload);
     const params = new URLSearchParams(payload);
     const url = `https://www.facebook.com/${v}/dialog/oauth?${params.toString()}`;
     logger.info('Facebook auth link', { state: state.slice(0, 8) + '...' });
@@ -89,6 +89,41 @@ async function exchangeToLongLivedUserToken(shortToken, appId, appSecret, apiVer
         return { access_token: shortToken, expires_in: null };
     }
     return { access_token: data.access_token, expires_in: data.expires_in };
+}
+
+/** Permissions required for /me/accounts and Page posting. */
+const REQUIRED_PAGE_PERMISSIONS = [
+    'pages_show_list',
+    'pages_read_engagement',
+    'pages_manage_posts',
+    'pages_manage_metadata'
+];
+
+/**
+ * Inspect granted/declined permissions on the user access token.
+ */
+async function getGrantedPermissions(userAccessToken, apiVersion = 'v24.0') {
+    const v = apiVersion.replace(/^\//, '');
+    const res = await axios.get(`https://graph.facebook.com/${v}/me/permissions`, {
+        params: { access_token: userAccessToken },
+        validateStatus: () => true
+    });
+    const data = res.data || {};
+    const entries = Array.isArray(data.data) ? data.data : [];
+    const granted = entries.filter((p) => p.status === 'granted').map((p) => p.permission);
+    const declined = entries.filter((p) => p.status === 'declined').map((p) => p.permission);
+    const missingRequired = REQUIRED_PAGE_PERMISSIONS.filter((name) => !granted.includes(name));
+
+    logger.info('Facebook me/permissions response', {
+        status: res.status,
+        apiVersion: v,
+        granted,
+        declined,
+        missingRequired,
+        ...(res.status !== 200 && { graphResponse: data })
+    });
+
+    return { granted, declined, missingRequired, entries };
 }
 
 /**
@@ -158,7 +193,9 @@ module.exports = {
     generateAuthLink,
     exchangeCodeForToken,
     exchangeToLongLivedUserToken,
+    getGrantedPermissions,
     getManagedPages,
     getInstagramBusinessAccount,
-    DEFAULT_SCOPES
+    DEFAULT_SCOPES,
+    REQUIRED_PAGE_PERMISSIONS
 };

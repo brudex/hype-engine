@@ -31,6 +31,8 @@
         vm.deleteAccount = deleteAccount;
         vm.setActiveAccount = setActiveAccount;
         vm.connectAccount = connectAccount;
+        vm.connectFacebookForInstagram = connectFacebookForInstagram;
+        vm.showInstagramConnectInfo = showInstagramConnectInfo;
         vm.getPlatformAccounts = getPlatformAccounts;
         vm.hasAuthorizedAccount = hasAuthorizedAccount;
         vm.getFormFields = getFormFields;
@@ -254,7 +256,44 @@
                 return;
             }
             var platform = (provider || '').toLowerCase();
-            window.open('/dashboard/integrations/' + platform + '/connect/' + projectUuid, '_blank', 'noopener,noreferrer');
+            if (platform === 'instagram') {
+                showInstagramConnectInfo();
+                return;
+            }
+            openIntegrationConnect(platform, projectUuid);
+        }
+
+        function showInstagramConnectInfo() {
+            var el = document.getElementById('instagramConnectInfoModal');
+            if (el && window.bootstrap && bootstrap.Modal) {
+                bootstrap.Modal.getOrCreateInstance(el).show();
+            }
+        }
+
+        function connectFacebookForInstagram() {
+            var modalEl = document.getElementById('instagramConnectInfoModal');
+            if (modalEl && window.bootstrap && bootstrap.Modal) {
+                var instance = bootstrap.Modal.getInstance(modalEl);
+                if (instance) instance.hide();
+            }
+            var facebookTab = document.getElementById('tab-acc-facebook');
+            if (facebookTab && window.bootstrap && bootstrap.Tab) {
+                bootstrap.Tab.getOrCreateInstance(facebookTab).show();
+            }
+            var projectUuid = (vm.selectedProject && vm.selectedProject.uuid) || vm.selectedProjectUuid;
+            if (!projectUuid) {
+                utils.alertError('Error', 'Please select a project first');
+                return;
+            }
+            openIntegrationConnect('facebook', projectUuid);
+        }
+
+        function openIntegrationConnect(platform, projectUuid) {
+            window.open(
+                '/dashboard/integrations/' + platform + '/connect/' + projectUuid,
+                '_blank',
+                'noopener,noreferrer'
+            );
         }
 
         // Get accounts for a specific platform (for selected project)
