@@ -399,10 +399,20 @@ CallbackController.linkedIn = async (req, res) => {
  * @route GET /integrations/facebook/callback
  */
 CallbackController.facebook = async (req, res) => {
-    const redirectUri = siteUrl + '/integrations/facebook/callback';
-
     try {
-        const { code, state, error: oauthError, error_description, error_reason } = req.query;
+        const rawCode = req.query.code;
+        const rawState = req.query.state;
+        const code = Array.isArray(rawCode) ? rawCode[0] : rawCode;
+        const state = Array.isArray(rawState) ? rawState[0] : rawState;
+        const { error: oauthError, error_description, error_reason } = req.query;
+
+        logger.info('Facebook OAuth callback received', {
+            queryKeys: Object.keys(req.query || {}),
+            hasCode: !!code,
+            codeLength: code ? String(code).length : 0,
+            hasState: !!state,
+            stateLength: state ? String(state).length : 0
+        });
 
         if (oauthError || error_reason) {
             logger.warn('Facebook OAuth callback: denied or error', { oauthError, error_reason, error_description });
@@ -420,6 +430,10 @@ CallbackController.facebook = async (req, res) => {
             attributes: ['uuid', 'projectUuid']
         });
         if (!placeholderAccount) {
+            logger.warn('Facebook OAuth callback: placeholder not found', {
+                statePrefix: String(state).slice(0, 8),
+                providerId: 'pending-' + state
+            });
             req.flash('error', 'Invalid or expired state. Please try connecting again.');
             return res.redirect(302, '/dashboard/error');
         }
@@ -427,6 +441,7 @@ CallbackController.facebook = async (req, res) => {
         const projectUuid = placeholderAccount.projectUuid;
         const oauthService = await db.OauthService.findOne({ where: { name: 'facebook' } });
         if (!oauthService || !oauthService.configuration) {
+            logger.warn('Facebook OAuth callback: oauth service not configured');
             req.flash('error', 'Facebook OAuth is not configured.');
             return res.redirect(302, '/dashboard/accounts/connect-status/' + placeholderAccount.uuid);
         }
@@ -435,10 +450,19 @@ CallbackController.facebook = async (req, res) => {
         const appId = String(config.app_id || config.client_id || '').trim();
         const appSecret = String(config.app_secret || config.client_secret || '').trim();
         const apiVersion = String(config.api_version || 'v19.0').trim();
+        const redirectUri =
+            String(config.redirect_uri || '').trim() || siteUrl + '/integrations/facebook/callback';
         if (!appId || !appSecret) {
+            logger.warn('Facebook OAuth callback: missing app credentials');
             req.flash('error', 'Facebook App ID or App Secret missing.');
             return res.redirect(302, '/dashboard/accounts/connect-status/' + placeholderAccount.uuid);
         }
+
+        logger.info('Facebook OAuth callback: exchanging code', {
+            redirectUri,
+            statePrefix: String(state).slice(0, 8),
+            placeholderUuid: placeholderAccount.uuid
+        });
 
         const shortLived = await facebookPlatform.exchangeCodeForToken(code, redirectUri, appId, appSecret, apiVersion);
         const longLived = await facebookPlatform.exchangeToLongLivedUserToken(
@@ -572,6 +596,10 @@ CallbackController.facebook = async (req, res) => {
 
         const firstAccountUuid = connectedAccounts[0].uuid;
         req.flash('success', `Connected ${connectedAccounts.length} account(s): ${connectedAccounts.map((a) => a.provider).join(', ')}.`);
+        logger.info('Facebook OAuth callback: success', {
+            connectedCount: connectedAccounts.length,
+            redirectTo: '/dashboard/accounts/connect-status/' + firstAccountUuid
+        });
         return res.redirect(302, '/dashboard/accounts/connect-status/' + firstAccountUuid);
     } catch (err) {
         logger.error('Facebook OAuth callback error', {
@@ -588,6 +616,7 @@ CallbackController.facebook = async (req, res) => {
             });
             if (pending && pending.uuid) redirectUrl = '/dashboard/accounts/connect-status/' + pending.uuid;
         }
+        logger.info('Facebook OAuth callback: error redirect', { redirectUrl, statePrefix: state ? String(state).slice(0, 8) : null });
         return res.redirect(302, redirectUrl);
     }
 };

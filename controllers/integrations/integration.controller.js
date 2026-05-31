@@ -118,7 +118,8 @@ async function handleFacebookLinkGeneration(projectUuid) {
     if (!appId || !appSecret) {
         throw new Error('Facebook credentials incomplete. Enter App ID and App Secret in OAuth Connect.');
     }
-    const callbackUrl = config.redirect_uri;
+    const callbackUrl =
+        String(config.redirect_uri || '').trim() || siteUrl + '/integrations/facebook/callback';
     const { url, state } = facebookPlatform.generateAuthLink({
         appId,
         redirectUri: callbackUrl,
