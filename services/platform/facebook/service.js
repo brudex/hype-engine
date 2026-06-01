@@ -1,10 +1,13 @@
 const axios = require('axios');
 const logger = require('../../../utils/logger');
+const { resolveMetaCredentials } = require('./lib/credentials');
+const { buildCaption } = require('./lib/content');
+const { loadMediaByUuids, getPublicMediaUrl, isImageMedia } = require('./lib/media');
+const { publishToFacebookPage } = require('./publish/facebook-page');
+const { publishToInstagram } = require('./publish/instagram');
 
 /**
- * Test Facebook API credentials
- * @param {object} configuration - Service configuration
- * @returns {Promise<object>} - Test result
+ * Test Facebook API credentials (app id + secret).
  */
 async function testCredentials(configuration) {
     try {
@@ -31,16 +34,6 @@ async function testCredentials(configuration) {
         );
 
         if (response.data && response.data.access_token) {
-            const verifyResponse = await axios.get(
-                `https://graph.facebook.com/${api_version}/me`,
-                {
-                    params: {
-                        access_token: response.data.access_token
-                    },
-                    timeout: 10000
-                }
-            );
-
             return {
                 success: true,
                 message: 'Facebook API credentials are valid',
@@ -87,73 +80,66 @@ async function testCredentials(configuration) {
 }
 
 /**
- * Publish a post to Facebook
+ * Resolve first suitable public image URL from post media UUIDs.
  */
-function resolvePageTokenAndId(account) {
-    const pageId = account.providerId;
-    let raw = account.accessToken;
-    if (raw == null) return { pageId, token: null };
-    if (typeof raw === 'string') {
-        const trimmed = raw.trim();
-        if (trimmed.startsWith('{')) {
-            try {
-                const parsed = JSON.parse(trimmed);
-                return {
-                    pageId: parsed.page_id || pageId,
-                    token: parsed.access_token || null
-                };
-            } catch (_) {
-                return { pageId, token: raw };
-            }
-        }
-        return { pageId, token: raw };
+async function resolvePublicImageUrl(mediaUuids) {
+    const records = await loadMediaByUuids(mediaUuids);
+    for (const media of records) {
+        if (!isImageMedia(media)) continue;
+        const url = getPublicMediaUrl(media);
+        if (url) return url;
     }
-    if (typeof raw === 'object' && raw.access_token) {
-        return { pageId: raw.page_id || pageId, token: raw.access_token };
-    }
-    return { pageId, token: null };
+    return null;
 }
 
+/**
+ * Dispatch publish to Facebook Page or Instagram Business publisher.
+ */
 async function publishPost(post, postVersion, tags, account) {
+    const credentials = resolveMetaCredentials(account);
+    const caption = buildCaption(postVersion, tags);
+    const publicImageUrl = await resolvePublicImageUrl(
+        Array.isArray(postVersion.media) ? postVersion.media : []
+    );
+
+    logger.info('Meta publish dispatch', {
+        postUuid: post?.uuid,
+        accountUuid: credentials.accountUuid,
+        provider: credentials.provider,
+        apiVersion: credentials.apiVersion,
+        hasCaption: !!caption,
+        hasPublicImage: !!publicImageUrl
+    });
+
     try {
-        const text = postVersion.content || '';
-        const mediaUuids = postVersion.media || [];
-        const { pageId, token: accessToken } = resolvePageTokenAndId(account);
-
-        if (!accessToken) {
-            return {
-                success: false,
-                error: 'Missing access token for account'
-            };
+        if (credentials.provider === 'instagram') {
+            return await publishToInstagram({ credentials, caption, publicImageUrl });
         }
-
-        if (!pageId) {
-            return {
-                success: false,
-                error: 'Missing page ID for account'
-            };
+        if (credentials.provider === 'facebook') {
+            return await publishToFacebookPage({ credentials, caption, publicImageUrl });
         }
-
-        logger.info(`Publishing to Facebook for account ${account.uuid}`);
-
-        return {
-            success: true,
-            providerPostId: `facebook_${Date.now()}`,
-            data: {
-                platform: 'facebook',
-                publishedAt: new Date()
-            }
-        };
-    } catch (error) {
-        logger.error('Facebook publish error:', error);
         return {
             success: false,
-            error: error.message || 'Failed to publish to Facebook'
+            error: `Unsupported Meta provider for publish: ${credentials.provider}`
+        };
+    } catch (error) {
+        const logKey = credentials.provider === 'instagram' ? 'Meta IG publish' : 'Meta FB publish';
+        logger.error(`${logKey} unexpected error`, {
+            accountUuid: credentials.accountUuid,
+            message: error?.message,
+            ...(error?.response && { httpStatus: error.response.status, responseData: error.response.data })
+        });
+        return {
+            success: false,
+            error: error.message || `Failed to publish to ${credentials.provider}`
         };
     }
 }
 
 module.exports = {
     testCredentials,
-    publishPost
+    publishPost,
+    resolveMetaCredentials,
+    publishToFacebookPage,
+    publishToInstagram
 };
