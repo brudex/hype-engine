@@ -592,16 +592,17 @@
                 return;
             }
 
-            var confirmMessage = 'This post will be immediately published.';
-            if (vm.form.date && vm.form.time) {
+            var confirmMessage = 'This post will be immediately published. Are you sure?';
+            if (vm.form.scheduleMode === 'recurring') {
+                var recurringLabel = vm.formatScheduleTime();
+                confirmMessage = recurringLabel
+                    ? 'This post will publish on a recurring schedule (' + recurringLabel + '). Are you sure?'
+                    : 'This post will publish on a recurring schedule. Are you sure?';
+            } else if (vm.form.date && vm.form.time) {
                 var scheduledTime = vm.formatScheduleTime();
                 if (scheduledTime) {
                     confirmMessage = 'This post will be published at ' + scheduledTime + '. Are you sure?';
-                } else {
-                    confirmMessage = 'This post will be immediately published. Are you sure?';
                 }
-            } else {
-                confirmMessage = 'This post will be immediately published. Are you sure?';
             }
  
             utils.alertConfirm('Confirm', confirmMessage, function(result) {
@@ -620,9 +621,7 @@
             vm.saving = true;
             vm.hasError = false;
             
-            var scheduledAt = vm.form.date + ' ' + vm.form.time + ':00';
             var data = buildPostData(1);
-            data.scheduled_at = scheduledAt;
             
             console.log('Creating and scheduling post with payload:', JSON.stringify(data, null, 2));
             
@@ -649,17 +648,17 @@
             vm.saving = true;
             vm.hasError = false;
             
-            var now = new Date();
-            var scheduledAt = now.toISOString();
             var data = buildPostData(1);
-            data.scheduled_at = scheduledAt;
             
             console.log('Creating and publishing post with payload:', JSON.stringify(data, null, 2));
             
             services.createPost(data, function(response) {
                 vm.saving = false;
                 if (response.success) {
-                    utils.alertSuccess('Success', 'Post published successfully');
+                    var successMsg = vm.form.scheduleMode === 'recurring'
+                        ? 'Recurring post scheduled successfully'
+                        : 'Post published successfully';
+                    utils.alertSuccess('Success', successMsg);
                     // Redirect to posts list with projectUuid
                     if (vm.currentProject && vm.currentProject.uuid) {
                         $timeout(function() {
@@ -673,6 +672,26 @@
                     utils.alertError('Error', response.message || 'Failed to publish post');
                 }
             });
+        }
+
+        function appendScheduleFieldsToPayload(payload) {
+            ensureRecurringFormShape();
+            if (vm.form.scheduleMode === 'recurring') {
+                payload.recurringType = vm.form.recurringType === 'weekly' ? 2 : 1;
+                payload.recurringDays = vm.form.recurringType === 'weekly'
+                    ? (vm.form.recurringDays || []).join(',') || null
+                    : null;
+                payload.recurringTime = vm.form.recurringTime || null;
+                payload.recurringEndAt = vm.form.recurringEndDate || null;
+                payload.date = null;
+                payload.time = null;
+            } else {
+                payload.recurringType = 0;
+                payload.recurringDays = null;
+                payload.recurringTime = null;
+                payload.recurringEndAt = null;
+            }
+            return payload;
         }
 
         /**
@@ -730,6 +749,8 @@
             if (status === 0 || status === 1) {
                 payload.status = status;
             }
+
+            appendScheduleFieldsToPayload(payload);
             
             // Verify media is included in payload
             var hasMedia = false;

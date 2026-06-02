@@ -172,19 +172,27 @@
                                     </td>
                                     <td ng-click="$event.stopPropagation()" class="posts-table-cell">
                                         <div>
-                                            <span class="badge posts-status-badge" 
-                                                  ng-style="postsCtrl.getStatusBadgeStyle(post.status)">
-                                                {{ postsCtrl.getStatusText(post.status) }}
-                                            </span>
-                                            <div ng-if="post.status === 1" class="small mt-1 posts-status-date">
-                                                <span ng-if="post.recurringType === 1 || post.recurringType === 2">
-                                                    {{ postsCtrl.getRecurringScheduleLabel(post) }}
+                                            <div class="d-flex align-items-center flex-wrap gap-1">
+                                                <span class="badge posts-status-badge" 
+                                                      ng-style="postsCtrl.getStatusBadgeStyle(post.status)">
+                                                    {{ postsCtrl.getStatusText(post.status) }}
                                                 </span>
-                                                <span ng-if="(!post.recurringType || post.recurringType === 0) && post.scheduledAt">
-                                                    {{ postsCtrl.formatDate(post.scheduledAt) }}
+                                                <span ng-if="postsCtrl.isRecurringPost(post)"
+                                                      class="badge posts-recurring-badge"
+                                                      title="Recurring schedule">
+                                                    <i class="bi bi-arrow-repeat"></i> Recurring
                                                 </span>
                                             </div>
-                                            <div ng-if="post.status === 2 && post.publishedAt" class="small mt-1 posts-status-date">
+                                            <div ng-if="postsCtrl.isRecurringPost(post)"
+                                                 class="small mt-1 posts-status-date posts-recurring-summary">
+                                                <i class="bi bi-clock me-1"></i>{{ postsCtrl.getRecurringScheduleLabel(post) }}
+                                            </div>
+                                            <div ng-if="!postsCtrl.isRecurringPost(post) && post.status === 1 && post.scheduledAt"
+                                                 class="small mt-1 posts-status-date">
+                                                <i class="bi bi-calendar me-1"></i>{{ postsCtrl.formatDate(post.scheduledAt) }}
+                                            </div>
+                                            <div ng-if="post.status === 2 && post.publishedAt"
+                                                 class="small mt-1 posts-status-date">
                                                 {{ postsCtrl.formatDate(post.publishedAt) }}
                                             </div>
                                         </div>

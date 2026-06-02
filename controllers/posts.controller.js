@@ -752,6 +752,104 @@ PostsController.create = async (req, res) => {
     }
 };
 
+const RECURRING_ONE_TIME = 0;
+const RECURRING_DAILY = 1;
+const RECURRING_WEEKLY = 2;
+const VALID_RECURRING_DAY_CODES = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
+function normalizeRecurringDays(recurringDays) {
+    if (recurringDays == null || recurringDays === '') {
+        return null;
+    }
+    if (Array.isArray(recurringDays)) {
+        const joined = recurringDays
+            .map((d) => String(d).trim().toUpperCase())
+            .filter((d) => VALID_RECURRING_DAY_CODES.includes(d))
+            .join(',');
+        return joined || null;
+    }
+    const joined = String(recurringDays)
+        .split(',')
+        .map((d) => d.trim().toUpperCase())
+        .filter((d) => VALID_RECURRING_DAY_CODES.includes(d))
+        .join(',');
+    return joined || null;
+}
+
+function normalizeRecurringTime(recurringTime) {
+    if (!recurringTime) {
+        return null;
+    }
+    const str = String(recurringTime).trim();
+    const match = str.match(/^(\d{1,2}):(\d{2})/);
+    if (!match) {
+        return null;
+    }
+    const hour = parseInt(match[1], 10);
+    const minute = parseInt(match[2], 10);
+    if (Number.isNaN(hour) || Number.isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+        return null;
+    }
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+}
+
+function normalizeRecurringEndAt(recurringEndAt) {
+    if (!recurringEndAt) {
+        return null;
+    }
+    const parsed = new Date(recurringEndAt);
+    if (Number.isNaN(parsed.getTime())) {
+        return null;
+    }
+    return parsed;
+}
+
+/**
+ * Map one-time date/time or recurring fields to DB columns.
+ * @returns {{ scheduledAt, recurringType, recurringDays, recurringTime, recurringEndAt, error? }}
+ */
+function resolveScheduleFields({ date, time, recurringType, recurringDays, recurringTime, recurringEndAt }) {
+    const type = recurringType !== undefined && recurringType !== null ? Number(recurringType) : RECURRING_ONE_TIME;
+
+    if (type === RECURRING_DAILY || type === RECURRING_WEEKLY) {
+        const timeNorm = normalizeRecurringTime(recurringTime);
+        if (!timeNorm) {
+            return { error: 'Recurring time is required for daily or weekly posts' };
+        }
+        const daysNorm = normalizeRecurringDays(recurringDays);
+        if (type === RECURRING_WEEKLY && !daysNorm) {
+            return { error: 'At least one day of the week is required for weekly recurrence' };
+        }
+        return {
+            scheduledAt: null,
+            recurringType: type,
+            recurringDays: type === RECURRING_WEEKLY ? daysNorm : null,
+            recurringTime: timeNorm,
+            recurringEndAt: normalizeRecurringEndAt(recurringEndAt)
+        };
+    }
+
+    let scheduledAt = null;
+    if (date && time) {
+        try {
+            scheduledAt = new Date(`${date} ${time}:00`);
+            if (Number.isNaN(scheduledAt.getTime())) {
+                scheduledAt = null;
+            }
+        } catch (err) {
+            scheduledAt = null;
+        }
+    }
+
+    return {
+        scheduledAt,
+        recurringType: RECURRING_ONE_TIME,
+        recurringDays: null,
+        recurringTime: null,
+        recurringEndAt: null
+    };
+}
+
 // Joi validation schema for post save
 const postSaveSchema = Joi.object({
     projectUuid: Joi.string().uuid().required().messages({
@@ -800,7 +898,19 @@ const postSaveSchema = Joi.object({
     scheduleStatus: Joi.number().integer().valid(0, 1, 2).optional().messages({
         'number.base': 'scheduleStatus must be a number',
         'any.only': 'scheduleStatus must be 0 (PENDING), 1 (PROCESSING), or 2 (PROCESSED)'
-    })
+    }),
+    recurringType: Joi.number().integer().valid(0, 1, 2).optional().default(0).messages({
+        'any.only': 'recurringType must be 0 (one-time), 1 (daily), or 2 (weekly)'
+    }),
+    recurringDays: Joi.alternatives().try(
+        Joi.string().allow(null, '').max(32),
+        Joi.array().items(Joi.string().valid(...VALID_RECURRING_DAY_CODES))
+    ).optional().default(null),
+    recurringTime: Joi.string().allow(null, '').optional().default(null),
+    recurringEndAt: Joi.alternatives().try(
+        Joi.date(),
+        Joi.string().allow(null, '')
+    ).optional().default(null)
 });
 
 /**
@@ -853,20 +963,37 @@ PostsController.save = async (req, res) => {
             });
         }
         // Use validated and sanitized values
-        const { projectUuid, versions, tags, accountUuids, date, time, status: statusFromBody } = value;
-        // Build scheduledAt from date and time
-        let scheduledAt = null;
-        if (date && time) {
-            try {
-                scheduledAt = new Date(`${date} ${time}:00`);
-                if (isNaN(scheduledAt.getTime())) {
-                    scheduledAt = null;
-                }
-            } catch (error) {
-                logger.warn('PostsController.save - Invalid date/time format:', { date, time, error: error.message });
-                scheduledAt = null;
-            }
+        const {
+            projectUuid,
+            versions,
+            tags,
+            accountUuids,
+            date,
+            time,
+            status: statusFromBody,
+            recurringType,
+            recurringDays,
+            recurringTime,
+            recurringEndAt
+        } = value;
+
+        const scheduleFields = resolveScheduleFields({
+            date,
+            time,
+            recurringType,
+            recurringDays,
+            recurringTime,
+            recurringEndAt
+        });
+
+        if (scheduleFields.error) {
+            return res.status(400).json({
+                success: false,
+                message: scheduleFields.error
+            });
         }
+
+        const { scheduledAt, recurringType: resolvedRecurringType, recurringDays: resolvedRecurringDays, recurringTime: resolvedRecurringTime, recurringEndAt: resolvedRecurringEndAt } = scheduleFields;
 
         logger.info('PostsController.save - Validated data:', {
             userUuid: userUuid,
@@ -876,7 +1003,8 @@ PostsController.save = async (req, res) => {
             accountUuidsCount: accountUuids?.length || 0,
             date: date || 'not provided',
             time: time || 'not provided',
-            scheduledAt: scheduledAt || 'not scheduled'
+            scheduledAt: scheduledAt || 'not scheduled',
+            recurringType: resolvedRecurringType
         });
 
         // Verify project belongs to user
@@ -912,6 +1040,10 @@ PostsController.save = async (req, res) => {
             status: initialStatus,
             scheduleStatus: 0, // PENDING
             scheduledAt: scheduledAt,
+            recurringType: resolvedRecurringType,
+            recurringDays: resolvedRecurringDays,
+            recurringTime: resolvedRecurringTime,
+            recurringEndAt: resolvedRecurringEndAt,
             userUuid: userUuid,
             projectUuid: projectUuid
         });
@@ -1359,6 +1491,10 @@ PostsController.getPost = async (req, res) => {
                 scheduleStatus: post.scheduleStatus,
                 scheduledAt: post.scheduledAt,
                 publishedAt: post.publishedAt,
+                recurringType: post.recurringType ?? 0,
+                recurringDays: post.recurringDays,
+                recurringTime: post.recurringTime,
+                recurringEndAt: post.recurringEndAt,
                 accounts: formattedAccounts,
                 tags: formattedTags,
                 versions: formattedVersions,
@@ -1453,7 +1589,37 @@ PostsController.update = async (req, res) => {
         }
 
         // Use validated and sanitized values
-        const { versions, tags, accountUuids, date, time, status: statusFromBody, scheduleStatus: scheduleStatusFromBody } = value;
+        const {
+            versions,
+            tags,
+            accountUuids,
+            date,
+            time,
+            status: statusFromBody,
+            scheduleStatus: scheduleStatusFromBody,
+            recurringType,
+            recurringDays,
+            recurringTime,
+            recurringEndAt
+        } = value;
+
+        const scheduleFields = resolveScheduleFields({
+            date,
+            time,
+            recurringType,
+            recurringDays,
+            recurringTime,
+            recurringEndAt
+        });
+
+        if (scheduleFields.error) {
+            return res.status(400).json({
+                success: false,
+                message: scheduleFields.error
+            });
+        }
+
+        const { scheduledAt, recurringType: resolvedRecurringType, recurringDays: resolvedRecurringDays, recurringTime: resolvedRecurringTime, recurringEndAt: resolvedRecurringEndAt } = scheduleFields;
         
         logger.info('PostsController.update - Validated payload:', {
             postUuid: uuid,
@@ -1464,6 +1630,7 @@ PostsController.update = async (req, res) => {
             tagsCount: tags ? tags.length : 0,
             date: date || null,
             time: time || null,
+            recurringType: resolvedRecurringType,
             versions: versions ? versions.map(v => ({
                 accountUuid: v.accountUuid,
                 original: v.original,
@@ -1487,21 +1654,7 @@ PostsController.update = async (req, res) => {
             });
         }
 
-        // Build scheduledAt from date and time
-        let scheduledAt = null;
-        if (date && time) {
-            try {
-                scheduledAt = new Date(`${date} ${time}:00`);
-                if (isNaN(scheduledAt.getTime())) {
-                    scheduledAt = null;
-                }
-            } catch (error) {
-                logger.warn('PostsController.update - Invalid date/time format:', { date, time, error: error.message });
-                scheduledAt = null;
-            }
-        }
-
-        if (statusFromBody === 1 && scheduledAt && scheduledAt.getTime() <= Date.now()) {
+        if (statusFromBody === 1 && resolvedRecurringType === RECURRING_ONE_TIME && scheduledAt && scheduledAt.getTime() <= Date.now()) {
             return res.status(400).json({
                 success: false,
                 message: 'Scheduled time must be in the future'
@@ -1510,6 +1663,10 @@ PostsController.update = async (req, res) => {
 
         // Update post fields
         post.scheduledAt = scheduledAt;
+        post.recurringType = resolvedRecurringType;
+        post.recurringDays = resolvedRecurringDays;
+        post.recurringTime = resolvedRecurringTime;
+        post.recurringEndAt = resolvedRecurringEndAt;
         if (statusFromBody !== undefined && statusFromBody !== null) {
             post.status = statusFromBody;
         }
@@ -1520,7 +1677,8 @@ PostsController.update = async (req, res) => {
 
         logger.info('PostsController.update - Post updated:', {
             postUuid: post.uuid,
-            scheduledAt: scheduledAt || null
+            scheduledAt: scheduledAt || null,
+            recurringType: resolvedRecurringType
         });
 
         // Update versions

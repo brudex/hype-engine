@@ -31,7 +31,7 @@
         vm.formatDate = formatDate;
         vm.getPostContent = getPostContent;
         vm.getHistoryStatusText = getHistoryStatusText;
-        vm.getHistoryStatusBadgeStyle = getHistoryStatusBadgeStyle;
+        vm.getHistoryStatusClass = getHistoryStatusClass;
         vm.getAccountProviderIcon = getAccountProviderIcon;
         vm.getAccountProviderColor = getAccountProviderColor;
         vm.openPreview = openPreview;
@@ -132,7 +132,11 @@
         }
 
         function getHistoryStatusText(status) {
-            return status === 0 ? 'Success' : 'Failed';
+            return Number(status) === 0 ? 'Success' : 'Failed';
+        }
+
+        function getHistoryStatusClass(status) {
+            return Number(status) === 0 ? 'badge-success' : 'badge-danger';
         }
 
         function normalizeProvider(provider) {
@@ -185,13 +189,6 @@
                 mastodon: '#6364FF'
             };
             return colors[key] || '#B0B0B0';
-        }
-
-        function getHistoryStatusBadgeStyle(status) {
-            if (status === 0) {
-                return 'background: linear-gradient(135deg, rgba(198, 255, 0, 0.25) 0%, rgba(198, 255, 0, 0.15) 100%); color: #C6FF00; border: 1px solid rgba(198, 255, 0, 0.45);';
-            }
-            return 'background: linear-gradient(135deg, rgba(255, 80, 80, 0.25) 0%, rgba(255, 0, 0, 0.15) 100%); color: #FF6B6B; border: 1px solid rgba(255, 80, 80, 0.45);';
         }
 
         function openPreview(post) {

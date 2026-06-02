@@ -185,7 +185,18 @@
             updateSelectedAccounts();
             vm.form.tags = post.tags || [];
             
-            if (post.scheduledAt) {
+            if (post.recurringType === 1 || post.recurringType === 2) {
+                vm.form.scheduleMode = 'recurring';
+                vm.form.recurringType = post.recurringType === 2 ? 'weekly' : 'daily';
+                vm.form.recurringDays = post.recurringDays
+                    ? String(post.recurringDays).split(',').map(function (d) { return d.trim().toUpperCase(); }).filter(Boolean)
+                    : [];
+                vm.form.recurringTime = parseRecurringTimeFromApi(post.recurringTime);
+                vm.form.recurringEndDate = parseRecurringEndDateFromApi(post.recurringEndAt);
+                vm.form.date = '';
+                vm.form.time = '';
+            } else if (post.scheduledAt) {
+                vm.form.scheduleMode = 'once';
                 var scheduledDate = new Date(post.scheduledAt);
                 vm.form.date = scheduledDate.toISOString().split('T')[0];
                 vm.form.time = scheduledDate.toTimeString().split(' ')[0].substring(0, 5);
@@ -193,6 +204,31 @@
             
             vm.activeVersion = 0;
             updateCurrentContent();
+        }
+
+        function parseRecurringTimeFromApi(timeVal) {
+            if (!timeVal) {
+                return '';
+            }
+            var str = String(timeVal);
+            var parts = str.split(':');
+            if (parts.length >= 2) {
+                return String(parseInt(parts[0], 10)).padStart(2, '0') + ':' + String(parseInt(parts[1], 10)).padStart(2, '0');
+            }
+            return str;
+        }
+
+        function parseRecurringEndDateFromApi(endAt) {
+            if (!endAt) {
+                return '';
+            }
+            var d = new Date(endAt);
+            if (isNaN(d.getTime())) {
+                return '';
+            }
+            return d.getFullYear() + '-' +
+                String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                String(d.getDate()).padStart(2, '0');
         }
 
         function normalizeContent(content) {
@@ -530,8 +566,18 @@
             }
 
             var publishImmediately = false;
+            var isRecurringSchedule = vm.form.scheduleMode === 'recurring';
 
-            if (!vm.form.date || !vm.form.time) {
+            if (isRecurringSchedule) {
+                if (!vm.form.recurringTime) {
+                    utils.alertError('Schedule', 'Please set a recurring schedule before posting.');
+                    return;
+                }
+                if (vm.form.recurringType === 'weekly' && (!vm.form.recurringDays || vm.form.recurringDays.length === 0)) {
+                    utils.alertError('Schedule', 'Please select at least one day for the weekly schedule.');
+                    return;
+                }
+            } else if (!vm.form.date || !vm.form.time) {
                 // No date/time selected → publish immediately (scheduledAt will be null on the server)
                 publishImmediately = true;
                 vm.form.date = '';
@@ -566,6 +612,11 @@
                     $timeout(function() {
                         window.location.href = postsListUrl();
                     }, 4000);
+                } else if (isRecurringSchedule) {
+                    utils.alertInfo('Success', 'Recurring schedule saved. Redirecting to posts list ...');
+                    $timeout(function() {
+                        window.location.href = postsListUrl();
+                    }, 4000);
                 } else if (mode === 'reschedule') {
                     utils.alertInfo('Success', 'Post scheduled successfully. Redirecting to posts list ...');
                     $timeout(function() {
@@ -594,6 +645,26 @@
         }
 
        
+
+        function appendScheduleFieldsToPayload(payload) {
+            ensureRecurringFormShape();
+            if (vm.form.scheduleMode === 'recurring') {
+                payload.recurringType = vm.form.recurringType === 'weekly' ? 2 : 1;
+                payload.recurringDays = vm.form.recurringType === 'weekly'
+                    ? (vm.form.recurringDays || []).join(',') || null
+                    : null;
+                payload.recurringTime = vm.form.recurringTime || null;
+                payload.recurringEndAt = vm.form.recurringEndDate || null;
+                payload.date = null;
+                payload.time = null;
+            } else {
+                payload.recurringType = 0;
+                payload.recurringDays = null;
+                payload.recurringTime = null;
+                payload.recurringEndAt = null;
+            }
+            return payload;
+        }
 
         /**
          * @param {number} [status] - 0 draft, 1 scheduled
@@ -656,6 +727,8 @@
             if (options.scheduleStatus !== undefined && options.scheduleStatus !== null) {
                 payload.scheduleStatus = options.scheduleStatus;
             }
+
+            appendScheduleFieldsToPayload(payload);
             
             return payload;
         }

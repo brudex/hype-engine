@@ -1817,6 +1817,19 @@
     border-radius: 4px;
 }
 
+.posts-recurring-badge {
+    font-size: 11px;
+    padding: 3px 7px;
+    font-weight: 500;
+    background-color: rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.35);
+}
+
+.posts-recurring-summary {
+    color: #c4b5fd;
+}
+
 .posts-status-date {
     font-size: 12px;
     color: #B0B0B0;
@@ -1831,23 +1844,52 @@
     line-height: 1.5;
 }
 
-/* Media Thumbnail */
+/* Post history status badges — override Bootstrap .badge white text + table cell inherit */
 .posts-history-status-badge {
     font-size: 12px;
     font-weight: 600;
     padding: 4px 10px;
     border-radius: 4px;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.posts-table .posts-history-status-badge.badge-success,
+.posts-history-data-modal .posts-history-status-badge.badge-success {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.3) 0%, rgba(40, 167, 69, 0.15) 100%) !important;
+    color: #28a745 !important;
+    border: 1px solid rgba(40, 167, 69, 0.45) !important;
+    --bs-badge-color: #28a745;
+}
+
+.posts-table .posts-history-status-badge.badge-danger,
+.posts-history-data-modal .posts-history-status-badge.badge-danger {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.3) 0%, rgba(220, 53, 69, 0.15) 100%) !important;
+    color: #dc3545 !important;
+    border: 1px solid rgba(220, 53, 69, 0.45) !important;
+    --bs-badge-color: #dc3545;
 }
 
 .posts-history-status-btn {
     border: none;
     cursor: pointer;
     transition: opacity 0.2s ease, transform 0.15s ease;
+    background-color: transparent;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 .posts-history-status-btn:hover {
     opacity: 0.9;
     transform: scale(1.03);
+}
+
+.posts-table.table-hover > tbody > tr:hover .posts-history-status-badge.badge-success {
+    color: #28a745 !important;
+}
+
+.posts-table.table-hover > tbody > tr:hover .posts-history-status-badge.badge-danger {
+    color: #dc3545 !important;
 }
 
 .posts-history-data-modal .modal-content {

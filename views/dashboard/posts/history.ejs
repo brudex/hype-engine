@@ -52,8 +52,8 @@
                                 <td class="posts-table-cell">{{ historyCtrl.formatDate(item.publishedAt) }}</td>
                                 <td class="posts-table-cell">
                                     <button type="button"
-                                            class="badge posts-status-badge posts-history-status-badge posts-history-status-btn"
-                                            ng-style="historyCtrl.getHistoryStatusBadgeStyle(item.status)"
+                                            class="badge posts-history-status-badge posts-history-status-btn"
+                                            ng-class="historyCtrl.getHistoryStatusClass(item.status)"
                                             title="View response data"
                                             ng-click="historyCtrl.openStatusDataModal(item, $event)">
                                         {{ historyCtrl.getHistoryStatusText(item.status) }}
@@ -141,7 +141,7 @@
                         Publish details
                         <span ng-if="historyCtrl.statusDataItem"
                               class="badge ms-2 posts-history-status-badge"
-                              ng-style="historyCtrl.getHistoryStatusBadgeStyle(historyCtrl.statusDataItem.status)">
+                              ng-class="historyCtrl.getHistoryStatusClass(historyCtrl.statusDataItem.status)">
                             {{ historyCtrl.getHistoryStatusText(historyCtrl.statusDataItem.status) }}
                         </span>
                     </h5>

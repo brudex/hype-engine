@@ -57,6 +57,7 @@
         vm.getAccountVersion = getAccountVersion;
         vm.getPlainText = getPlainText;
         vm.truncateContent = truncateContent;
+        vm.isRecurringPost = isRecurringPost;
         vm.getRecurringScheduleLabel = getRecurringScheduleLabel;
         vm.openPreviewFromMenu = openPreviewFromMenu;
 
@@ -288,6 +289,14 @@
             return plain.substring(0, maxLength) + '...';
         }
 
+        function isRecurringPost(post) {
+            if (!post) {
+                return false;
+            }
+            var type = Number(post.recurringType);
+            return type === 1 || type === 2;
+        }
+
         function formatRecurringTime(timeVal) {
             if (!timeVal) {
                 return '';
@@ -304,15 +313,29 @@
             return hour12 + ':' + String(minute).padStart(2, '0') + ampm;
         }
 
-        function getRecurringScheduleLabel(post) {
-            if (!post || !post.recurringType) {
+        function formatRecurringEndDate(endAt) {
+            if (!endAt) {
                 return '';
             }
-            var timeLabel = formatRecurringTime(post.recurringTime);
-            if (post.recurringType === 1) {
-                return timeLabel ? 'Daily ' + timeLabel : 'Daily';
+            var d = new Date(endAt);
+            if (isNaN(d.getTime())) {
+                return '';
             }
-            if (post.recurringType === 2) {
+            var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return 'until ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+        }
+
+        function getRecurringScheduleLabel(post) {
+            if (!isRecurringPost(post)) {
+                return '';
+            }
+            var type = Number(post.recurringType);
+            var timeLabel = formatRecurringTime(post.recurringTime);
+            var label = '';
+
+            if (type === 1) {
+                label = timeLabel ? 'Daily at ' + timeLabel : 'Daily';
+            } else if (type === 2) {
                 var dayMap = { MON: 'Mon', TUE: 'Tue', WED: 'Wed', THU: 'Thu', FRI: 'Fri', SAT: 'Sat', SUN: 'Sun' };
                 var days = '';
                 if (post.recurringDays) {
@@ -321,16 +344,21 @@
                         .filter(Boolean)
                         .join(', ');
                 }
-                var label = 'Weekly';
+                label = 'Weekly';
                 if (days) {
-                    label += ' ' + days;
+                    label += ' on ' + days;
                 }
                 if (timeLabel) {
-                    label += ' ' + timeLabel;
+                    label += ' at ' + timeLabel;
                 }
-                return label;
             }
-            return '';
+
+            var endLabel = formatRecurringEndDate(post.recurringEndAt);
+            if (endLabel) {
+                label = label ? label + ', ' + endLabel : endLabel;
+            }
+
+            return label;
         }
 
         function openPreviewFromMenu(post, $event) {
