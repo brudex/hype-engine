@@ -10,6 +10,11 @@ without giving up a practical web interface or background-job automation.
 
 Try Hype Engine at [hypeengine.cachetechs.com](https://hypeengine.cachetechs.com).
 
+![Hype Engine dashboard](docs/marketing/screenshots/dashboard.png)
+
+[Watch the product tour](docs/marketing/video/hype-engine-product-tour.webm)
+or browse the [marketing media gallery](docs/marketing/README.md).
+
 ## What it includes
 
 - Multi-project social account management
