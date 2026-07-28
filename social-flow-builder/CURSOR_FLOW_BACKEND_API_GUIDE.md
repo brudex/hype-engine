@@ -3,7 +3,7 @@
 Target project:
 
 ```txt
-/Users/brudex/developer/QuizeFactor/VibeSocial/mixpost/mixpost-node-better
+/path/to/hype-engine
 ```
 
 This document describes the backend API and persistence layer Cursor should build into that existing Express/Sequelize project.
@@ -17,7 +17,7 @@ The target project is an Express app with:
 - Existing API v1 auth middleware in `middlewares/api-v1.auth.middleware.js`
 - New Social Flow routes should live in `routes/flow.routes.js` and be mounted at `/api/flow`
 - Existing project-scoped routes shaped like `/:projectUuid/posts`, but Social Flow workflows must be user-owned and project-agnostic.
-- Existing social publishing services under `services/mixpost/*`
+- Existing social publishing services under `services/*`
 
 Follow the existing CommonJS style.
 
@@ -592,7 +592,7 @@ Set `selectedOutput` to the matching condition id.
 
 ### publish
 
-Delegate to existing Mixpost social services. Do not store OAuth credentials in flow tables.
+Delegate to existing HypeEngine social services. Do not store OAuth credentials in flow tables.
 
 Output:
 
@@ -637,6 +637,6 @@ Validate workflow definitions before save:
 6. Implement variable resolver.
 7. Implement DAG executor service at `services/flow/flow-executor.service.js`.
 8. Implement node runners under `services/flow/nodes/*.js`.
-9. Connect `publish` runner to existing Mixpost publishing services.
+9. Connect `publish` runner to existing HypeEngine publishing services.
 10. Add the flow management pages and design page.
 11. Add tests or Postman examples for create, update, run, and get run.

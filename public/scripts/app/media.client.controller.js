@@ -2,11 +2,11 @@
     'use strict';
     angular
         .module('app')
-        .controller('MixpostMediaController', MixpostMediaController);
+        .controller('HypeEngineMediaController', HypeEngineMediaController);
 
-    MixpostMediaController.$inject = ['$scope', 'brudexservices', 'brudexutils', 'uploadservice', '$http', '$timeout'];
+    HypeEngineMediaController.$inject = ['$scope', 'brudexservices', 'brudexutils', 'uploadservice', '$http', '$timeout'];
 
-    function MixpostMediaController($scope, services, utils, uploadservice, $http, $timeout) {
+    function HypeEngineMediaController($scope, services, utils, uploadservice, $http, $timeout) {
         var vm = this;
 
         // Properties
@@ -330,4 +330,3 @@
         }
     }
 })();
-

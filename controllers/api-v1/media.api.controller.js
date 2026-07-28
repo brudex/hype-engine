@@ -1,14 +1,13 @@
 const db = require('../../models');
 const { Op } = require('sequelize');
 const logger = require('../../utils/logger');
-const MediaService = require('../../services/mixpost/media.service');
+const MediaService = require('../../services/media.service');
 
 const MediaApiController = {};
 
 /**
  * List media files
  * GET /api/v1/media
- * Based on: https://docs.mixpost.app/api/media/list/
  */
 MediaApiController.list = async (req, res) => {
     try {
@@ -61,7 +60,6 @@ MediaApiController.list = async (req, res) => {
 /**
  * Get a media file
  * GET /api/v1/media/{mediaUuid}
- * Based on: https://docs.mixpost.app/api/media/get/
  */
 MediaApiController.get = async (req, res) => {
     try {
@@ -110,7 +108,6 @@ MediaApiController.get = async (req, res) => {
 /**
  * Upload a media file
  * POST /api/v1/media
- * Based on: https://docs.mixpost.app/api/media/upload/
  */
 MediaApiController.upload = async (req, res) => {
     try {
@@ -139,11 +136,19 @@ MediaApiController.upload = async (req, res) => {
         }
 
         const userUuid = req.user.uuid;
+        const customName = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+        if (customName.length > 255) {
+            return res.status(400).json({
+                success: false,
+                error: 'Bad Request',
+                message: 'Media name cannot exceed 255 characters'
+            });
+        }
         const uploadedMedia = [];
 
         for (const file of files) {
             try {
-                const media = await MediaService.uploadFile(file, userUuid);
+                const media = await MediaService.uploadFile(file, userUuid, 'public', customName || null);
                 uploadedMedia.push({
                     uuid: media.uuid,
                     name: media.name,
@@ -184,7 +189,6 @@ MediaApiController.upload = async (req, res) => {
 /**
  * Update a media file
  * PUT /api/v1/media/{mediaUuid}
- * Based on: https://docs.mixpost.app/api/media/update/
  */
 MediaApiController.update = async (req, res) => {
     try {
@@ -239,7 +243,6 @@ MediaApiController.update = async (req, res) => {
 /**
  * Delete a media file
  * DELETE /api/v1/media/{mediaUuid}
- * Based on: https://docs.mixpost.app/api/media/delete/
  */
 MediaApiController.delete = async (req, res) => {
     try {
@@ -278,4 +281,3 @@ MediaApiController.delete = async (req, res) => {
 };
 
 module.exports = MediaApiController;
-

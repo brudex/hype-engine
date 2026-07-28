@@ -1,7 +1,7 @@
-# Mixpost Models Summary
+# HypeEngine Models Summary
 
 ## Overview
-All Mixpost models have been created following the Sequelize ORM pattern used in the mixpost-node-better project. The models follow the existing coding standards and are automatically loaded by `models/index.js`.
+All HypeEngine models follow the repository's Sequelize ORM pattern and are automatically loaded by `models/index.js`.
 
 ## Created Models
 
@@ -116,9 +116,9 @@ All Mixpost models have been created following the Sequelize ORM pattern used in
 
 1. **Database Migration**: Create Sequelize migrations or SQL scripts to create the tables
 2. **Controllers**: Create controllers for each model following the existing pattern
-3. **Routes**: Set up routes for Mixpost features
+3. **Routes**: Set up routes for HypeEngine features
 4. **Services**: Implement business logic for social media integrations
-5. **Frontend**: Create EJS views with AngularJS for the Mixpost interface
+5. **Frontend**: Create EJS views with AngularJS for the HypeEngine interface
 
 ## Notes
 
@@ -126,4 +126,3 @@ All Mixpost models have been created following the Sequelize ORM pattern used in
 - All models follow the existing coding pattern in the project
 - Relationships are properly configured and will be established when models are loaded
 - The models are ready to use once the database tables are created
-

@@ -2,14 +2,13 @@ const db = require('../../models');
 const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../utils/logger');
-const PostSchedulingService = require('../../services/mixpost/post-scheduling.service');
+const PostSchedulingService = require('../../services/post-scheduling.service');
 
 const PostsApiController = {};
 
 /**
  * List posts
  * GET /api/v1/{projectUuid}/posts
- * Based on: https://docs.mixpost.app/api/posts/list/
  */
 PostsApiController.list = async (req, res) => {
     try {
@@ -76,8 +75,13 @@ PostsApiController.list = async (req, res) => {
             return {
                 uuid: post.uuid,
                 status: post.status,
+                schedule_status: post.scheduleStatus,
                 scheduled_at: post.scheduledAt,
                 published_at: post.publishedAt,
+                recurring_type: post.recurringType,
+                recurring_days: post.recurringDays ? post.recurringDays.split(',') : [],
+                recurring_time: post.recurringTime,
+                recurring_end_at: post.recurringEndAt,
                 accounts: (post.accounts || []).map(acc => ({
                     uuid: acc.uuid,
                     name: acc.name,
@@ -131,7 +135,6 @@ PostsApiController.list = async (req, res) => {
 /**
  * Get a post
  * GET /api/v1/{projectUuid}/posts/{postUuid}
- * Based on: https://docs.mixpost.app/api/posts/get/
  */
 PostsApiController.get = async (req, res) => {
     try {
@@ -192,8 +195,13 @@ PostsApiController.get = async (req, res) => {
         const formattedPost = {
             uuid: post.uuid,
             status: post.status,
+            schedule_status: post.scheduleStatus,
             scheduled_at: post.scheduledAt,
             published_at: post.publishedAt,
+            recurring_type: post.recurringType,
+            recurring_days: post.recurringDays ? post.recurringDays.split(',') : [],
+            recurring_time: post.recurringTime,
+            recurring_end_at: post.recurringEndAt,
             accounts: (post.accounts || []).map(acc => ({
                 uuid: acc.uuid,
                 name: acc.name,
@@ -240,7 +248,6 @@ PostsApiController.get = async (req, res) => {
 /**
  * Create a post
  * POST /api/v1/{projectUuid}/posts
- * Based on: https://docs.mixpost.app/api/posts/create/
  * Payload structure matches PostsController.save:
  * - versions: Array of version objects with accountUuid, original, content
  * - accountUuids: Array of account UUIDs for PostAccount records
@@ -485,7 +492,6 @@ PostsApiController.create = async (req, res) => {
 /**
  * Update a post
  * PUT /api/v1/{projectUuid}/posts/{postUuid}
- * Based on: https://docs.mixpost.app/api/posts/update/
  * Payload structure matches PostsController.update:
  * - versions: Array of version objects with accountUuid, original, content
  * - accountUuids: Array of account UUIDs for PostAccount records
@@ -754,7 +760,6 @@ PostsApiController.update = async (req, res) => {
 /**
  * Delete a post
  * DELETE /api/v1/{projectUuid}/posts/{postUuid}
- * Based on: https://docs.mixpost.app/api/posts/delete/
  */
 PostsApiController.delete = async (req, res) => {
     try {
@@ -815,7 +820,6 @@ PostsApiController.delete = async (req, res) => {
 /**
  * Delete multiple posts
  * DELETE /api/v1/{projectUuid}/posts
- * Based on: https://docs.mixpost.app/api/posts/delete-multiple/
  */
 PostsApiController.deleteMultiple = async (req, res) => {
     try {
@@ -889,7 +893,6 @@ PostsApiController.deleteMultiple = async (req, res) => {
 /**
  * Schedule a post
  * POST /api/v1/{projectUuid}/posts/{postUuid}/schedule
- * Based on: https://docs.mixpost.app/api/posts/schedule/
  */
 PostsApiController.schedule = async (req, res) => {
     try {
@@ -962,4 +965,3 @@ PostsApiController.schedule = async (req, res) => {
 };
 
 module.exports = PostsApiController;
-

@@ -1,6 +1,6 @@
-# Mixpost API Endpoints Documentation
+# HypeEngine API Endpoints Documentation
 
-All Mixpost API endpoints are prefixed with `/api/`
+All HypeEngine API endpoints are prefixed with `/api/`
 
 ## Accounts API
 
@@ -228,7 +228,7 @@ Currently, API endpoints do not require authentication. To add authentication:
 1. Use the existing `auth.middleware.js`
 2. Add middleware to routes:
 ```javascript
-router.get('/posts', auth.requireAuth, MixpostApiController.getPosts);
+router.get('/posts', auth.requireAuth, HypeEngineApiController.getPosts);
 ```
 
 ## Notes
@@ -238,4 +238,3 @@ router.get('/posts', auth.requireAuth, MixpostApiController.getPosts);
 - JSON fields (content, data, conversions) are automatically parsed
 - Pagination uses 1-based page numbers
 - File uploads use `multipart/form-data`
-

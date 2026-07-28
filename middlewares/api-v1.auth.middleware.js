@@ -4,7 +4,7 @@ const logger = require('../utils/logger');
 /**
  * API v1 Authentication Middleware
  * Validates Bearer token (API key) from Authorization header
- * Based on Mixpost API documentation: https://docs.mixpost.app/api/
+ * HypeEngine API key authentication.
  */
 const validateApiV1Token = async (req, res, next) => {
     try {

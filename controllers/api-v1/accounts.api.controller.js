@@ -7,7 +7,6 @@ const AccountsApiController = {};
 /**
  * List accounts
  * GET /api/v1/{projectUuid}/accounts
- * Based on: https://docs.mixpost.app/api/accounts/list/
  */
 AccountsApiController.list = async (req, res) => {
     try {
@@ -60,7 +59,6 @@ AccountsApiController.list = async (req, res) => {
 /**
  * Get an account
  * GET /api/v1/{projectUuid}/accounts/{accountUuid}
- * Based on: https://docs.mixpost.app/api/accounts/get/
  */
 AccountsApiController.get = async (req, res) => {
     try {
@@ -129,4 +127,3 @@ AccountsApiController.get = async (req, res) => {
 };
 
 module.exports = AccountsApiController;
-

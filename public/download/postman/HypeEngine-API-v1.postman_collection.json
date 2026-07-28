@@ -2,8 +2,18 @@
 	"info": {
 		"_postman_id": "3cc4c513-4d06-41f0-844a-82081f63ae2b",
 		"name": "HypeEngine API v1",
-		"description": "Complete API collection for HypeEngine API v1 endpoints. All endpoints require Bearer token authentication.\n\n## Authentication\n\nAll requests require an `Authorization` header with a Bearer token:\n```\nAuthorization: Bearer <your-access-token>\n```\n\n## Base URL\n\nSet the `base_url` variable to your Mixpost instance URL (e.g., `http://localhost:3000` or `https://your-domain.com`).\n\n## Variables\n\n- `base_url`: Your Mixpost instance base URL\n- `project_uuid`: Project UUID for testing\n- `access_token`: Your API access token (Bearer token)",
+		"description": "Complete API collection for the currently implemented HypeEngine API v1 endpoints. All endpoints require Bearer API-key authentication.\n\n## Authentication\n\nSet `access_token` to a HypeEngine API key. The collection sends it as:\n```\nAuthorization: Bearer <your-api-key>\n```\n\n## Base URL\n\nSet `base_url` to your HypeEngine instance URL (for example, `http://localhost:3000` or `https://your-domain.com`).\n\n## Variables\n\n- `base_url`: Your HypeEngine instance base URL\n- `project_uuid`: Project UUID for testing project-scoped routes\n- `access_token`: HypeEngine API key used as the Bearer token\n- `scheduled_at`: ISO 8601 timestamp used by the Schedule Post request",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
 	},
 	"item": [
 		{
@@ -193,7 +203,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "hypengn-bb9ac737e0f9267c61494dcc932360f8627dc238c35e739d58bbae0a57ca6420",
+									"value": "{{access_token}}",
 									"type": "string"
 								}
 							]
@@ -504,11 +514,11 @@
 									"host": [
 										"{{base_url}}"
 									],
-							"path": [
-								"api",
-								"v1",
-								"media"
-							],
+									"path": [
+										"api",
+										"v1",
+										"media"
+									],
 									"query": [
 										{
 											"key": "page",
@@ -710,6 +720,12 @@
 								"key": "Authorization",
 								"value": "Bearer {{access_token}}",
 								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{idempotency_key}}",
+								"type": "text",
+								"description": "Optional; use a new stable value for each logical upload"
 							}
 						],
 						"body": {
@@ -719,12 +735,12 @@
 									"key": "file",
 									"description": "Media file to upload (image or video)",
 									"type": "file",
-									"src": "/Users/nana/Desktop/Screenshot 2026-01-05 at 5.00.11 PM.png"
+									"src": ""
 								},
 								{
 									"key": "name",
 									"value": "",
-									"description": "Optional: Custom name for the media file",
+									"description": "Optional custom media-library name (maximum 255 characters)",
 									"type": "text"
 								}
 							]
@@ -737,11 +753,10 @@
 							"path": [
 								"api",
 								"v1",
-								"{{project_uuid}}",
 								"media"
 							]
 						},
-						"description": "Upload a media file (image or video) to the media library. Supported formats: JPEG, PNG, GIF, MP4, MOV. Maximum file size: 50MB."
+						"description": "Upload one media file to the authenticated user's media library using multipart field `file`. Optional field `name` overrides the media-library display name. The server upload limit is 200 MB. The API records the uploaded MIME type but does not enforce a media-format allow-list. Supply `Idempotency-Key` to make retries safe."
 					},
 					"response": [
 						{
@@ -762,12 +777,12 @@
 											"key": "file",
 											"description": "Media file to upload (image or video)",
 											"type": "file",
-											"src": "/Users/nana/Desktop/Screenshot 2026-01-05 at 5.00.11 PM.png"
+											"src": ""
 										},
 										{
 											"key": "name",
 											"value": "",
-											"description": "Optional: Custom name for the media file",
+											"description": "Optional custom media-library name (maximum 255 characters)",
 											"type": "text"
 										}
 									]
@@ -780,7 +795,6 @@
 									"path": [
 										"api",
 										"v1",
-										"{{project_uuid}}",
 										"media"
 									]
 								}
@@ -2037,6 +2051,57 @@
 					]
 				},
 				{
+					"name": "List Post History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/{{project_uuid}}/posts/:post_uuid/history?page=1&limit=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"{{project_uuid}}",
+								"posts",
+								":post_uuid",
+								"history"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							],
+							"variable": [
+								{
+									"key": "post_uuid",
+									"value": "",
+									"description": "Post UUID"
+								}
+							]
+						},
+						"description": "List per-account publish attempts for a post. Results include provider identifiers, recurring occurrence metadata, and sanitized provider response/error data."
+					},
+					"response": []
+				},
+				{
 					"name": "Create Post",
 					"request": {
 						"method": "POST",
@@ -2050,11 +2115,17 @@
 								"key": "Content-Type",
 								"value": "application/json",
 								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{idempotency_key}}",
+								"type": "text",
+								"description": "Optional; use a new stable value for each logical post"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"versions\": [\n    {\n      \"accountUuid\": \"\",\n      \"original\": true,\n      \"content\": [\n        {\n          \"body\": \"Base content for all accounts\",\n          \"media\": [\n            \"550e8400-e29b-41d4-a716-446655440000\"\n          ]\n        }\n      ]\n    },\n    {\n      \"accountUuid\": \"123e4567-e89b-12d3-a456-426614174000\",\n      \"original\": false,\n      \"content\": [\n        {\n          \"body\": \"Custom content for Twitter account\",\n          \"media\": [\n            \"550e8400-e29b-41d4-a716-446655440000\",\n            \"660e8400-e29b-41d4-a716-446655440001\"\n          ]\n        }\n      ]\n    },\n    {\n      \"accountUuid\": \"bf0d77d0-71bf-4ced-9472-87ac4acb3f7e\",\n      \"original\": false,\n      \"content\": [\n        {\n          \"body\": \"Custom content for Facebook account\",\n          \"media\": []\n        }\n      ]\n    }\n  ],\n  \"accountUuids\": [\n    \"7be42d53-a784-43be-81d2-87daef160b93\",\n    \"bf0d77d0-71bf-4ced-9472-87ac4acb3f7e\"\n    ],\n  \"tags\": [\n    \"1820b656-f378-4d3b-a9fe-85c534928720\"\n  ],\n  \"date\": \"2024-12-25\",\n  \"time\": \"14:30\"\n}",
+							"raw": "{\n  \"versions\": [\n    {\n      \"accountUuid\": \"\",\n      \"original\": true,\n      \"content\": [\n        {\n          \"body\": \"Base content for all accounts\",\n          \"media\": [\n            \"550e8400-e29b-41d4-a716-446655440000\"\n          ]\n        }\n      ]\n    },\n    {\n      \"accountUuid\": \"123e4567-e89b-12d3-a456-426614174000\",\n      \"original\": false,\n      \"content\": [\n        {\n          \"body\": \"Custom content for Twitter account\",\n          \"media\": [\n            \"550e8400-e29b-41d4-a716-446655440000\",\n            \"660e8400-e29b-41d4-a716-446655440001\"\n          ]\n        }\n      ]\n    },\n    {\n      \"accountUuid\": \"bf0d77d0-71bf-4ced-9472-87ac4acb3f7e\",\n      \"original\": false,\n      \"content\": [\n        {\n          \"body\": \"Custom content for Facebook account\",\n          \"media\": []\n        }\n      ]\n    }\n  ],\n  \"accountUuids\": [\n    \"7be42d53-a784-43be-81d2-87daef160b93\",\n    \"bf0d77d0-71bf-4ced-9472-87ac4acb3f7e\"\n    ],\n  \"tags\": [\n    \"1820b656-f378-4d3b-a9fe-85c534928720\"\n  ],\n  \"date\": null,\n  \"time\": null,\n  \"recurringType\": 0,\n  \"recurringDays\": null,\n  \"recurringTime\": null,\n  \"recurringEndAt\": null,\n  \"recurringType\": 0,\n  \"recurringDays\": null,\n  \"recurringTime\": null,\n  \"recurringEndAt\": null\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -2073,7 +2144,7 @@
 								"posts"
 							]
 						},
-						"description": "Create a new post. If `scheduled_at` is provided, the post will be scheduled; otherwise, it will be created as a draft.\n\n**Required fields:**\n- `accounts`: Array of account UUIDs (at least one required)\n- `content.body`: Post content in HTML format\n\n**Optional fields:**\n- `content.media`: Array of media UUIDs\n- `content.tags`: Array of tag UUIDs\n- `scheduled_at`: ISO 8601 date string for scheduling"
+						"description": "Create a post for a project. Requests are strictly validated and created transactionally.\n\n**Required fields:**\n- `versions`: Non-empty array with exactly one original version. Each version contains `original`, optional `accountUuid`, and a one-item `content` array supplying `body` and optional media UUIDs.\n\n**Optional fields:**\n- `accountUuids`: Active, authorized account UUIDs from this project\n- `tags`: Tag UUIDs from this project\n- `date` and `time`: Supply both for a future one-time schedule; omit or set both to null for a draft\n- `recurringType`: `0` one-time, `1` daily, or `2` weekly\n- `recurringTime`: Required UTC time for daily/weekly recurrence (`HH:mm`)\n- `recurringDays`: Required for weekly recurrence (`MON` through `SUN`)\n- `recurringEndAt`: Optional future ISO 8601 end timestamp\n\nScheduled and recurring posts require at least one `accountUuid`. Media must belong to the authenticated user. Supply `Idempotency-Key` to make retries safe."
 					},
 					"response": [
 						{
@@ -2094,7 +2165,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"versions\": [\n    {\n      \"accountUuid\": \"\",\n      \"original\": true,\n      \"content\": [\n        {\n          \"body\": \"Base content for all accounts\",\n          \"media\": [\n            \"550e8400-e29b-41d4-a716-446655440000\"\n          ]\n        }\n      ]\n    },\n    {\n      \"accountUuid\": \"123e4567-e89b-12d3-a456-426614174000\",\n      \"original\": false,\n      \"content\": [\n        {\n          \"body\": \"Custom content for Twitter account\",\n          \"media\": [\n            \"550e8400-e29b-41d4-a716-446655440000\",\n            \"660e8400-e29b-41d4-a716-446655440001\"\n          ]\n        }\n      ]\n    },\n    {\n      \"accountUuid\": \"bf0d77d0-71bf-4ced-9472-87ac4acb3f7e\",\n      \"original\": false,\n      \"content\": [\n        {\n          \"body\": \"Custom content for Facebook account\",\n          \"media\": []\n        }\n      ]\n    }\n  ],\n  \"accountUuids\": [\n    \"7be42d53-a784-43be-81d2-87daef160b93\",\n    \"bf0d77d0-71bf-4ced-9472-87ac4acb3f7e\"\n    ],\n  \"tags\": [\n    \"1820b656-f378-4d3b-a9fe-85c534928720\"\n  ],\n  \"date\": \"2024-12-25\",\n  \"time\": \"14:30\"\n}",
+									"raw": "{\n  \"versions\": [\n    {\n      \"accountUuid\": \"\",\n      \"original\": true,\n      \"content\": [\n        {\n          \"body\": \"Base content for all accounts\",\n          \"media\": [\n            \"550e8400-e29b-41d4-a716-446655440000\"\n          ]\n        }\n      ]\n    },\n    {\n      \"accountUuid\": \"123e4567-e89b-12d3-a456-426614174000\",\n      \"original\": false,\n      \"content\": [\n        {\n          \"body\": \"Custom content for Twitter account\",\n          \"media\": [\n            \"550e8400-e29b-41d4-a716-446655440000\",\n            \"660e8400-e29b-41d4-a716-446655440001\"\n          ]\n        }\n      ]\n    },\n    {\n      \"accountUuid\": \"bf0d77d0-71bf-4ced-9472-87ac4acb3f7e\",\n      \"original\": false,\n      \"content\": [\n        {\n          \"body\": \"Custom content for Facebook account\",\n          \"media\": []\n        }\n      ]\n    }\n  ],\n  \"accountUuids\": [\n    \"7be42d53-a784-43be-81d2-87daef160b93\",\n    \"bf0d77d0-71bf-4ced-9472-87ac4acb3f7e\"\n    ],\n  \"tags\": [\n    \"1820b656-f378-4d3b-a9fe-85c534928720\"\n  ],\n  \"date\": null,\n  \"time\": null\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2160,7 +2231,7 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"uuid\": \"214f1f35-d4d0-4e1e-8054-1ec1aba4dde9\",\n        \"status\": 1,\n        \"scheduled_at\": \"2024-12-25T14:30:00.000Z\",\n        \"published_at\": null,\n        \"accounts\": [\n            {\n                \"uuid\": \"7be42d53-a784-43be-81d2-87daef160b93\",\n                \"name\": \"Twitter Account 1\",\n                \"username\": \"twitter_user_1\",\n                \"provider\": \"twitter\"\n            },\n            {\n                \"uuid\": \"bf0d77d0-71bf-4ced-9472-87ac4acb3f7e\",\n                \"name\": \"Twitter Account 2\",\n                \"username\": \"twitter_user_2\",\n                \"provider\": \"twitter\"\n            }\n        ],\n        \"tags\": [\n            {\n                \"uuid\": \"1820b656-f378-4d3b-a9fe-85c534928720\",\n                \"name\": \"cr\",\n                \"hex_color\": \"fb923c\"\n            }\n        ],\n        \"versions\": [\n            {\n                \"account\": null,\n                \"content\": {\n                    \"body\": \"Base content for all accounts\",\n                    \"media\": [\n                        \"550e8400-e29b-41d4-a716-446655440000\"\n                    ]\n                },\n                \"is_original\": true\n            },\n            {\n                \"account\": {\n                    \"uuid\": \"bf0d77d0-71bf-4ced-9472-87ac4acb3f7e\",\n                    \"name\": \"Twitter Account 2\",\n                    \"username\": \"twitter_user_2\",\n                    \"provider\": \"twitter\"\n                },\n                \"content\": {\n                    \"body\": \"Custom content for Facebook account\",\n                    \"media\": []\n                },\n                \"is_original\": false\n            }\n        ],\n        \"created_at\": \"2026-01-12T13:16:25.926Z\",\n        \"updated_at\": \"2026-01-12T13:16:25.926Z\"\n    }\n}"
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"uuid\": \"214f1f35-d4d0-4e1e-8054-1ec1aba4dde9\",\n        \"status\": 0,\n        \"scheduled_at\": null,\n        \"published_at\": null,\n        \"accounts\": [\n            {\n                \"uuid\": \"7be42d53-a784-43be-81d2-87daef160b93\",\n                \"name\": \"Twitter Account 1\",\n                \"username\": \"twitter_user_1\",\n                \"provider\": \"twitter\"\n            },\n            {\n                \"uuid\": \"bf0d77d0-71bf-4ced-9472-87ac4acb3f7e\",\n                \"name\": \"Twitter Account 2\",\n                \"username\": \"twitter_user_2\",\n                \"provider\": \"twitter\"\n            }\n        ],\n        \"tags\": [\n            {\n                \"uuid\": \"1820b656-f378-4d3b-a9fe-85c534928720\",\n                \"name\": \"cr\",\n                \"hex_color\": \"fb923c\"\n            }\n        ],\n        \"versions\": [\n            {\n                \"account\": null,\n                \"content\": {\n                    \"body\": \"Base content for all accounts\",\n                    \"media\": [\n                        \"550e8400-e29b-41d4-a716-446655440000\"\n                    ]\n                },\n                \"is_original\": true\n            },\n            {\n                \"account\": {\n                    \"uuid\": \"bf0d77d0-71bf-4ced-9472-87ac4acb3f7e\",\n                    \"name\": \"Twitter Account 2\",\n                    \"username\": \"twitter_user_2\",\n                    \"provider\": \"twitter\"\n                },\n                \"content\": {\n                    \"body\": \"Custom content for Facebook account\",\n                    \"media\": []\n                },\n                \"is_original\": false\n            }\n        ],\n        \"created_at\": \"2026-01-12T13:16:25.926Z\",\n        \"updated_at\": \"2026-01-12T13:16:25.926Z\"\n    }\n}"
 						}
 					]
 				},
@@ -2580,11 +2651,17 @@
 								"key": "Content-Type",
 								"value": "application/json",
 								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{idempotency_key}}",
+								"type": "text",
+								"description": "Optional; reuse the same value only when retrying this schedule request"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"scheduled_at\": \"2026-01-13T14:30:00Z\"\n}",
+							"raw": "{\n  \"scheduled_at\": \"{{scheduled_at}}\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -2612,7 +2689,7 @@
 								}
 							]
 						},
-						"description": "Schedule a post to be published at a specific date and time. The scheduled time must be in the future and in ISO 8601 format."
+						"description": "Schedule a post using `scheduled_at`. Set the collection variable to a valid future ISO 8601 timestamp before sending. The post must already have at least one active, authorized account. Supply `Idempotency-Key` to make retries safe."
 					},
 					"response": [
 						{
@@ -2633,7 +2710,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"scheduled_at\": \"2026-01-13T14:30:00Z\"\n}",
+									"raw": "{\n  \"scheduled_at\": \"{{scheduled_at}}\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2728,7 +2805,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"scheduled_at\": \"2026-01-13T14:30:00Z\"\n}",
+									"raw": "{\n  \"scheduled_at\": \"{{scheduled_at}}\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2803,7 +2880,7 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"success\": true,\n    \"message\": \"Post scheduled successfully\",\n    \"data\": {\n        \"uuid\": \"214f1f35-d4d0-4e1e-8054-1ec1aba4dde9\",\n        \"status\": 1,\n        \"scheduled_at\": \"2026-01-13T14:30:00.000Z\"\n    }\n}"
+							"body": "{\n    \"success\": true,\n    \"message\": \"Post scheduled successfully\",\n    \"data\": {\n        \"uuid\": \"214f1f35-d4d0-4e1e-8054-1ec1aba4dde9\",\n        \"status\": 1,\n        \"scheduled_at\": \"2030-01-13T14:30:00.000Z\"\n    }\n}"
 						}
 					]
 				}
@@ -2847,6 +2924,16 @@
 		{
 			"key": "access_token",
 			"value": ""
+		},
+		{
+			"key": "scheduled_at",
+			"value": "",
+			"description": "ISO 8601 timestamp for the Schedule Post request, for example 2030-01-13T14:30:00Z"
+		},
+		{
+			"key": "idempotency_key",
+			"value": "",
+			"description": "Optional unique retry key for media upload, post creation, and scheduling"
 		}
 	]
 }

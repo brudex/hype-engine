@@ -10003,7 +10003,7 @@ var A_ = /* @__PURE__ */ q("div", { class: "vue-flow__edge-labels" }, null, -1),
 	post: {
 		label: "Publish",
 		icon: "POST",
-		description: "Dry-run or publish through Mixpost services.",
+		description: "Dry-run or publish through HypeEngine services.",
 		workflowType: "publish",
 		outputs: {
 			success: {},

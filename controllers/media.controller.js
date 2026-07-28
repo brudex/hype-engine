@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs').promises;
 const logger = require('../utils/logger');
-const MediaService = require('../services/mixpost/media.service');
+const MediaService = require('../services/media.service');
 
 const MediaController = {};
 
@@ -341,4 +341,3 @@ MediaController.downloadExternal = async (req, res) => {
 };
 
 module.exports = MediaController;
-

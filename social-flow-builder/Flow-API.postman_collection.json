@@ -1,7 +1,7 @@
 {
   "info": {
-    "_postman_id": "a7f3c2e1-8b9d-4f6e-flow-api-mixpost",
-    "name": "Mixpost Flow API",
+    "_postman_id": "a7f3c2e1-8b9d-4f6e-flow-api-hype-engine",
+    "name": "HypeEngine Flow API",
     "description": "REST routes mounted at `/api/flow` from `hype-engine/routes/flow.routes.js`.\n\n**Auth**\n- All routes except **Webhook** require `Authorization: Bearer <API_KEY>` (same tokens as `/api/v1`), **or** a logged-in dashboard session cookie when calling from the browser.\n\n**Paths**\n- Authenticated CRUD and runs use **`/flows/...`** under `baseUrl`. Saving a graph is **`POST /api/flow/flows/save/:flowUuid`** only (create empty flows via dashboard `POST /dashboard/api/flows` first). Webhooks: **`/webhooks/:workflowUuid/...`** (no Bearer).\n\n**Variables**\n- `baseUrl` — e.g. `http://localhost:3010/api/flow`\n- `flowUuid`, `runUuid`, `workflowUuid` — use an existing flow id for save/run\n- `apiToken` — active API key",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },

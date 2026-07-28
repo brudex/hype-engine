@@ -3,7 +3,7 @@
  * design page can load /modules/flow-builder/flow-builder.css and flow-builder.umd.cjs.
  *
  * Run after: npm run build:lib
- * Or use:    npm run build:mixpost
+ * Or use:    npm run build:hype-engine
  */
 import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'fs';
 import { join, dirname } from 'path';

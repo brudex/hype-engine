@@ -8,7 +8,6 @@ const TagsApiController = {};
 /**
  * List tags
  * GET /api/v1/{projectUuid}/tags
- * Based on: https://docs.mixpost.app/api/tags/list/
  */
 TagsApiController.list = async (req, res) => {
     try {
@@ -62,7 +61,6 @@ TagsApiController.list = async (req, res) => {
 /**
  * Get a tag
  * GET /api/v1/{projectUuid}/tags/{tagUuid}
- * Based on: https://docs.mixpost.app/api/tags/get/
  */
 TagsApiController.get = async (req, res) => {
     try {
@@ -124,7 +122,6 @@ TagsApiController.get = async (req, res) => {
 /**
  * Create a tag
  * POST /api/v1/{projectUuid}/tags
- * Based on: https://docs.mixpost.app/api/tags/create/
  */
 TagsApiController.create = async (req, res) => {
     try {
@@ -203,7 +200,6 @@ TagsApiController.create = async (req, res) => {
 /**
  * Update a tag
  * PUT /api/v1/{projectUuid}/tags/{tagUuid}
- * Based on: https://docs.mixpost.app/api/tags/update/
  */
 TagsApiController.update = async (req, res) => {
     try {
@@ -291,7 +287,6 @@ TagsApiController.update = async (req, res) => {
 /**
  * Delete a tag
  * DELETE /api/v1/{projectUuid}/tags/{tagUuid}
- * Based on: https://docs.mixpost.app/api/tags/delete/
  */
 TagsApiController.delete = async (req, res) => {
     try {
@@ -346,4 +341,3 @@ TagsApiController.delete = async (req, res) => {
 };
 
 module.exports = TagsApiController;
-

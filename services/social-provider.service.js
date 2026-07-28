@@ -1,5 +1,5 @@
-const db = require('../../models');
-const logger = require('../../utils/logger');
+const db = require('../models');
+const logger = require('../utils/logger');
 
 /**
  * Social Provider Service
@@ -71,4 +71,3 @@ class SocialProviderService {
 }
 
 module.exports = SocialProviderService;
-

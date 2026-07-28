@@ -7,7 +7,7 @@ const SAMPLE_CONTENT = [
     'QuizFactorA+ — Daily certification practice questions.',
     'New AWS Solutions Architect quiz pack is live. Try it today!',
     'CISA study tip: review domain 4 before your exam.',
-    'LinkedIn post: we just shipped recurring schedules in Mixpost.'
+    'LinkedIn post: we just shipped recurring schedules in HypeEngine.'
 ];
 
 /**

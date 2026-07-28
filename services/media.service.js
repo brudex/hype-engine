@@ -1,8 +1,8 @@
-const db = require('../../models');
+const db = require('../models');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs').promises;
-const logger = require('../../utils/logger');
+const logger = require('../utils/logger');
 
 /**
  * Media Service
@@ -15,7 +15,7 @@ class MediaService {
      * @param {String} userUuid - The UUID of the user uploading the file
      * @param {String} disk - The disk name (default: 'public')
      */
-    static async uploadFile(file, userUuid, disk = 'public') {
+    static async uploadFile(file, userUuid, disk = 'public', customName = null) {
         try {
             if (!file) {
                 throw new Error('No file provided');
@@ -30,7 +30,7 @@ class MediaService {
             const filename = `${uuidv4()}${ext}`;
             
             // Use user-specific directory: public/uploads/{userUuid}/
-            const userUploadDir = path.join(__dirname, '../../public/uploads', userUuid);
+            const userUploadDir = path.join(__dirname, '../public/uploads', userUuid);
             const uploadPath = path.join(userUploadDir, filename);
 
             // Ensure directory exists
@@ -46,7 +46,7 @@ class MediaService {
             // Create media record with user-specific path and userUuid
             const media = await db.Media.create({
                 uuid: uuidv4(),
-                name: file.name,
+                name: customName || file.name,
                 mimeType: mimeType,
                 disk: disk,
                 path: `uploads/${userUuid}/${filename}`,
@@ -75,7 +75,7 @@ class MediaService {
             }
 
             // Delete file from disk
-            const filePath = path.join(__dirname, '../../public', media.path);
+            const filePath = path.join(__dirname, '../public', media.path);
             try {
                 await fs.unlink(filePath);
             } catch (error) {
@@ -87,7 +87,7 @@ class MediaService {
                 const conversions = JSON.parse(media.conversions);
                 for (const conversion of conversions) {
                     try {
-                        const convPath = path.join(__dirname, '../../public', conversion.path);
+                        const convPath = path.join(__dirname, '../public', conversion.path);
                         await fs.unlink(convPath);
                     } catch (error) {
                         logger.warn(`Failed to delete conversion file:`, error);
@@ -153,4 +153,3 @@ class MediaService {
 }
 
 module.exports = MediaService;
-

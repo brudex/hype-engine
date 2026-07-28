@@ -1,5 +1,6 @@
 const db = require('../../models');
 const logger = require('../../utils/logger');
+const { projectScopeWhere } = require('../../middlewares/api-v1.project-scope.middleware');
 
 const ProjectsApiController = {};
 
@@ -13,7 +14,8 @@ ProjectsApiController.list = async (req, res) => {
 
         const projects = await db.Project.findAll({
             where: {
-                userUuid: userUuid
+                userUuid: userUuid,
+                ...projectScopeWhere(req)
             },
             include: [
                 {
@@ -123,4 +125,3 @@ ProjectsApiController.get = async (req, res) => {
 };
 
 module.exports = ProjectsApiController;
-

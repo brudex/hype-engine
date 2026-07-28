@@ -48,7 +48,7 @@ app.use(cookieParser(config.jwtSecret));
 app.use(fileUpload({
     createParentPath: true,
     limits: {
-        fileSize: 100 * 1024 * 1024 // 100MB max file size
+        fileSize: 200 * 1024 * 1024 // 200MB max file size
     },
     abortOnLimit: true
 }));
@@ -90,7 +90,7 @@ app.use(passport.session());
 //                 // Try to find or create a dummy test user
 //                 let dummyUser = await db.User.findOne({
 //                     where: {
-//                         email: 'test@mixpost.dev'
+//                         email: 'test@hype-engine.dev'
 //                     }
 //                 });
 //
@@ -99,7 +99,7 @@ app.use(passport.session());
 //                     dummyUser = await db.User.create({
 //                         uuid: uuidv4(),
 //                         fullName: 'Test User',
-//                         email: 'test@mixpost.dev',
+//                         email: 'test@hype-engine.dev',
 //                         role: 'admin',
 //                         isActive: true,
 //                         provider: 'local'

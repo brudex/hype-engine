@@ -1,7 +1,7 @@
-# Mixpost Implementation Summary
+# HypeEngine Implementation Summary
 
 ## Overview
-This document summarizes the implementation of Mixpost features in the mixpost-node-better project. All features from mixpost-2.4.0 (Laravel) have been ported to Node.js with EJS views and AngularJS frontend.
+This document summarizes the HypeEngine implementation. Features originally informed by the upstream Laravel project have been ported to Node.js with EJS views and an AngularJS frontend.
 
 ## Completed Components
 
@@ -18,7 +18,7 @@ All models include:
 - Indexes and constraints
 
 ### 2. Controllers (9 controllers created)
-Located in `controllers/mixpost/`:
+Located in `controllers/`:
 - `accounts.controller.js` - Account management
 - `dashboard.controller.js` - Dashboard view
 - `posts.controller.js` - Post CRUD operations
@@ -30,17 +30,17 @@ Located in `controllers/mixpost/`:
 - `reports.controller.js` - Analytics and reports
 
 ### 3. Services (3 services created)
-Located in `services/mixpost/`:
+Located in `services/`:
 - `social-provider.service.js` - OAuth and social provider management
 - `post-scheduling.service.js` - Post scheduling and publishing
 - `media.service.js` - File upload and media management
 
 ### 4. Routes
-- `routes/mixpost.routes.js` - All Mixpost routes
+- `routes/dashboard.routes.js` - All HypeEngine dashboard routes
 - Integrated into `routes/index.js`
 
 ### 5. Frontend Views
-Located in `views/mixpost/`:
+Located in `views/dashboard/`:
 - `dashboard.ejs` - Main dashboard
 - `accounts/index.ejs` - Account management
 - `posts/index.ejs` - Posts listing
@@ -48,30 +48,30 @@ Located in `views/mixpost/`:
 
 ## Routes Structure
 
-All routes are prefixed with `/mixpost`:
+All dashboard routes are prefixed with `/dashboard`:
 
 ```
-GET  /mixpost                    - Dashboard
-GET  /mixpost/reports            - Reports
-GET  /mixpost/accounts           - List accounts
-PUT  /mixpost/accounts/:uuid     - Update account
-DELETE /mixpost/accounts/:uuid   - Delete account
-GET  /mixpost/posts              - List posts
-GET  /mixpost/posts/create       - Create post form
-POST /mixpost/posts/store        - Store new post
-GET  /mixpost/posts/:uuid        - Edit post
-PUT  /mixpost/posts/:uuid        - Update post
-DELETE /mixpost/posts/:uuid      - Delete post
-GET  /mixpost/calendar/:date?/:type? - Calendar view
-GET  /mixpost/media              - Media library
-DELETE /mixpost/media            - Delete media
-POST /mixpost/tags               - Create tag
-PUT  /mixpost/tags/:uuid         - Update tag
-DELETE /mixpost/tags/:uuid       - Delete tag
-GET  /mixpost/settings           - Settings page
-PUT  /mixpost/settings           - Update settings
-GET  /mixpost/services           - Services page
-PUT  /mixpost/services/:name     - Update service
+GET  /dashboard                    - Dashboard
+GET  /dashboard/reports            - Reports
+GET  /dashboard/accounts           - List accounts
+PUT  /dashboard/accounts/:uuid     - Update account
+DELETE /dashboard/accounts/:uuid   - Delete account
+GET  /dashboard/posts              - List posts
+GET  /dashboard/posts/create       - Create post form
+POST /dashboard/posts/store        - Store new post
+GET  /dashboard/posts/:uuid        - Edit post
+PUT  /dashboard/posts/:uuid        - Update post
+DELETE /dashboard/posts/:uuid      - Delete post
+GET  /dashboard/calendar/:date?/:type? - Calendar view
+GET  /dashboard/media              - Media library
+DELETE /dashboard/media            - Delete media
+POST /dashboard/tags               - Create tag
+PUT  /dashboard/tags/:uuid         - Update tag
+DELETE /dashboard/tags/:uuid       - Delete tag
+GET  /dashboard/settings           - Settings page
+PUT  /dashboard/settings           - Update settings
+GET  /dashboard/services           - Services page
+PUT  /dashboard/services/:name     - Update service
 ```
 
 ## Frontend Technology Stack
@@ -177,9 +177,9 @@ PUT  /mixpost/services/:name     - Update service
 ## File Structure
 
 ```
-mixpost-node-better/
+hype-engine/
 ├── controllers/
-│   └── mixpost/
+│   └── dashboard/
 │       ├── accounts.controller.js
 │       ├── dashboard.controller.js
 │       ├── posts.controller.js
@@ -190,7 +190,7 @@ mixpost-node-better/
 │       ├── calendar.controller.js
 │       └── reports.controller.js
 ├── services/
-│   └── mixpost/
+│   └── dashboard/
 │       ├── social-provider.service.js
 │       ├── post-scheduling.service.js
 │       └── media.service.js
@@ -209,10 +209,10 @@ mixpost-node-better/
 │   ├── facebook-insight.js
 │   └── imported-post.js
 ├── routes/
-│   ├── mixpost.routes.js
+│   ├── dashboard.routes.js
 │   └── index.js (updated)
 └── views/
-    └── mixpost/
+    └── dashboard/
         ├── dashboard.ejs
         ├── accounts/
         │   └── index.ejs
@@ -235,7 +235,7 @@ mixpost-node-better/
 To test the implementation:
 
 1. Start the application: `npm start` or `npm run dev`
-2. Navigate to `/mixpost` for dashboard
+2. Navigate to `/dashboard` for the dashboard
 3. Test each route and functionality
 4. Verify database tables are created automatically
 5. Test CRUD operations for each resource
@@ -250,4 +250,3 @@ All required dependencies are already in `package.json`:
 - And others...
 
 No additional packages needed for basic functionality.
-

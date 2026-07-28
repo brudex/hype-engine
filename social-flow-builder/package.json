@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "build:lib": "vite build --mode lib",
-    "build:mixpost": "vite build --mode lib && node scripts/copy-to-mixpost.js",
+    "build:hype-engine": "vite build --mode lib && node scripts/copy-to-hype-engine.js",
     "preview": "vite preview",
     "test": "vitest run tests/unit",
     "test:e2e": "playwright test"

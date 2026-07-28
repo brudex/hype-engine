@@ -2,17 +2,17 @@ const db = require('../models');
 const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
-const MediaService = require('../services/mixpost/media.service');
-const PostSchedulingService = require('../services/mixpost/post-scheduling.service');
+const MediaService = require('../services/media.service');
+const PostSchedulingService = require('../services/post-scheduling.service');
 const axios = require('axios');
 
-const MixpostApiController = {};
+const HypeEngineApiController = {};
 
 /**
  * Fetch uploaded media
  * GET /api/media/uploaded
  */
-MixpostApiController.fetchUploads = async (req, res) => {
+HypeEngineApiController.fetchUploads = async (req, res) => {
     try {
         const { page = 1, limit = 30 } = req.query;
         const offset = (page - 1) * limit;
@@ -61,7 +61,7 @@ MixpostApiController.fetchUploads = async (req, res) => {
  * Fetch stock images (Unsplash)
  * GET /api/media/stock
  */
-MixpostApiController.fetchStock = async (req, res) => {
+HypeEngineApiController.fetchStock = async (req, res) => {
     try {
         const { keyword = '', page = 1 } = req.query;
 
@@ -90,7 +90,7 @@ MixpostApiController.fetchStock = async (req, res) => {
  * Fetch GIFs (Tenor)
  * GET /api/media/gifs
  */
-MixpostApiController.fetchGifs = async (req, res) => {
+HypeEngineApiController.fetchGifs = async (req, res) => {
     try {
         const { keyword = '', page = 1 } = req.query;
 
@@ -118,7 +118,7 @@ MixpostApiController.fetchGifs = async (req, res) => {
  * Upload media file
  * POST /api/media/upload
  */
-MixpostApiController.uploadMedia = async (req, res) => {
+HypeEngineApiController.uploadMedia = async (req, res) => {
     try {
         if (!req.files) {
             return res.status(400).json({
@@ -189,7 +189,7 @@ MixpostApiController.uploadMedia = async (req, res) => {
  * Download external media
  * POST /api/media/download
  */
-MixpostApiController.downloadExternal = async (req, res) => {
+HypeEngineApiController.downloadExternal = async (req, res) => {
     try {
         const { url, name } = req.body;
 
@@ -221,7 +221,7 @@ MixpostApiController.downloadExternal = async (req, res) => {
  * Schedule a post
  * POST /api/posts/:uuid/schedule
  */
-MixpostApiController.schedulePost = async (req, res) => {
+HypeEngineApiController.schedulePost = async (req, res) => {
     try {
         const { uuid } = req.params;
         const { scheduled_at } = req.body;
@@ -267,7 +267,7 @@ MixpostApiController.schedulePost = async (req, res) => {
  * Duplicate a post
  * POST /api/posts/:uuid/duplicate
  */
-MixpostApiController.duplicatePost = async (req, res) => {
+HypeEngineApiController.duplicatePost = async (req, res) => {
     try {
         const { uuid } = req.params;
 
@@ -362,7 +362,7 @@ MixpostApiController.duplicatePost = async (req, res) => {
  * Delete multiple posts
  * DELETE /api/posts
  */
-MixpostApiController.deleteMultiple = async (req, res) => {
+HypeEngineApiController.deleteMultiple = async (req, res) => {
     try {
         const { posts } = req.body;
 
@@ -400,7 +400,7 @@ MixpostApiController.deleteMultiple = async (req, res) => {
  * Get accounts list (API)
  * GET /api/accounts
  */
-MixpostApiController.getAccounts = async (req, res) => {
+HypeEngineApiController.getAccounts = async (req, res) => {
     try {
         const { projectUuid } = req.query;
         const userUuid = req.user?.uuid;
@@ -456,7 +456,7 @@ MixpostApiController.getAccounts = async (req, res) => {
     }
 };
 
-MixpostApiController.getAccountsOld = async (req, res) => {
+HypeEngineApiController.getAccountsOld = async (req, res) => {
     try {
         const accounts = await db.Account.findAll({
             order: [['createdAt', 'ASC']]
@@ -492,7 +492,7 @@ MixpostApiController.getAccountsOld = async (req, res) => {
  * Get single account (API)
  * GET /api/accounts/:uuid
  */
-MixpostApiController.getAccount = async (req, res) => {
+HypeEngineApiController.getAccount = async (req, res) => {
     try {
         const { uuid } = req.params;
         const account = await db.Account.findOne({ where: { uuid } });
@@ -533,7 +533,7 @@ MixpostApiController.getAccount = async (req, res) => {
  * Get posts list (API)
  * GET /api/posts
  */
-MixpostApiController.getPosts = async (req, res) => {
+HypeEngineApiController.getPosts = async (req, res) => {
     try {
         const { keyword, status, tags, accounts, projectUuid, page = 1, limit = 20 } = req.query;
         const offset = (page - 1) * limit;
@@ -642,7 +642,7 @@ MixpostApiController.getPosts = async (req, res) => {
  * Get single post (API)
  * GET /api/posts/:uuid
  */
-MixpostApiController.getPost = async (req, res) => {
+HypeEngineApiController.getPost = async (req, res) => {
     try {
         const { uuid } = req.params;
         const post = await db.Post.findOne({
@@ -706,7 +706,7 @@ MixpostApiController.getPost = async (req, res) => {
  * Get tags list (API)
  * GET /api/tags
  */
-MixpostApiController.getTags = async (req, res) => {
+HypeEngineApiController.getTags = async (req, res) => {
     try {
         const tags = await db.Tag.findAll({
             order: [['createdAt', 'DESC']]
@@ -734,5 +734,4 @@ MixpostApiController.getTags = async (req, res) => {
     }
 };
 
-module.exports = MixpostApiController;
-
+module.exports = HypeEngineApiController;

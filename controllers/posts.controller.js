@@ -3,7 +3,7 @@ const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
 const Joi = require('joi');
-const MediaService = require('../services/mixpost/media.service');
+const MediaService = require('../services/media.service');
 
 const PostsController = {};
 
@@ -2283,4 +2283,3 @@ PostsController.deleteMultiple = async (req, res) => {
 };
 
 module.exports = PostsController;
-

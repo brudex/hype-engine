@@ -141,7 +141,7 @@ export const NODE_TYPES = {
   post: {
     label: 'Publish',
     icon: 'POST',
-    description: 'Dry-run or publish through Mixpost services.',
+    description: 'Dry-run or publish through HypeEngine services.',
     workflowType: 'publish',
     outputs: {
       success: {},

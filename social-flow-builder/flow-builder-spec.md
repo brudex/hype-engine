@@ -1,5 +1,5 @@
 # Social Flow Builder — Product Specification
-**Vue 3 Module · JavaScript · Mixpost Platform · v1.0 Draft · May 2026**
+**Vue 3 Module · JavaScript · HypeEngine Platform · v1.0 Draft · May 2026**
 
 ---
 
@@ -280,13 +280,13 @@ Only `connections.<name>.main[selectedOutput]` is traversed; every other branch 
 
 ### ↑ Publish Node — `Publish` (`type: "publish"`)
 
-Publishes content to social media accounts already connected in the **host Mixpost application**. No OAuth or API keys are managed by this module — publishing is delegated to the host app's social service layer (`PlatformServiceFactory`).
+Publishes content to social media accounts already connected in the **host HypeEngine application**. No OAuth or API keys are managed by this module — publishing is delegated to the host app's social service layer (`PlatformServiceFactory`).
 
 **Config Fields** (`parameters`)
 
 | Field | Type | Description |
 |---|---|---|
-| `projectUuid` | string | Target Mixpost project |
+| `projectUuid` | string | Target HypeEngine project |
 | `accountUuids[]` | array | Connected account UUIDs to publish to. Populated from the host app's connected accounts (passed in embed config) |
 | `content` | textarea | Post body. Supports `{{ }}` tokens, e.g. `{{ "Format Output".output.caption }}` |
 | `media[]` | array | Image/video references from an upstream node or Media Library |
@@ -605,7 +605,7 @@ dist/
     // Required: where the module sends execution requests
     apiBaseUrl: '/api/flow-builder',
 
-    // Required: connected social accounts from the host Mixpost app.
+    // Required: connected social accounts from the host HypeEngine app.
     // The Post node populates its account picker from this list.
     // No OAuth happens in the module — accounts are managed by the host.
     accounts: <%- JSON.stringify(connectedAccounts) %>,
@@ -641,7 +641,7 @@ The module communicates with the host application via a small REST API that the 
 | POST | `/nodes/http-request` | Proxy external HTTP request (host enforces allowlist) |
 | POST | `/nodes/ai-prompt` | Proxy prompt to AI model (host holds API keys) |
 | POST | `/nodes/javascript` | Execute sandboxed JS in host isolate |
-| POST | `/nodes/publish` | Publish via host app's existing Mixpost social service |
+| POST | `/nodes/publish` | Publish via host app's existing HypeEngine social service |
 | GET | `/accounts` | List connected social accounts (alternative to config inject) |
 
 ### `embed.js` — Mount Entry Point
@@ -932,4 +932,4 @@ flow-builder/                        ← drop into host project as a module fold
 
 ---
 
-*Social Flow Builder · Vue 3 Module · JavaScript · Mixpost Platform · v1.0 Draft · May 2026*
+*Social Flow Builder · Vue 3 Module · JavaScript · HypeEngine Platform · v1.0 Draft · May 2026*
