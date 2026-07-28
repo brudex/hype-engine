@@ -6,6 +6,10 @@ scheduling, analytics, recurring content, and visual automation workflows.
 It is built for teams that want control of their social publishing stack
 without giving up a practical web interface or background-job automation.
 
+## Live demo
+
+Try Hype Engine at [hypeengine.cachetechs.com](https://hypeengine.cachetechs.com).
+
 ## What it includes
 
 - Multi-project social account management
