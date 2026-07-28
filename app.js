@@ -67,7 +67,7 @@ app.use(session({
 	}),
     // Cookie security
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        secure: new URL(config.siteurl).protocol === 'https:',
         httpOnly: true, // Prevent XSS
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
         sameSite: 'lax', // Lax so session is sent when OAuth provider redirects back (strict would drop cookie on that redirect)
@@ -142,6 +142,12 @@ app.use((req, res, next) => {
     next();
 });
 
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        service: 'web'
+    });
+});
 
 // Routes
 const indexRouter = require("./routes/index");

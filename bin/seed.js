@@ -4,14 +4,14 @@ require('dotenv').config();
 const db = require("../models");
 const seeder = require("../seeder/index");
 const logger = require("../utils/logger");
+const { migrate } = require("../services/database/migrator");
 
 async function runSeeder() {
     try {
         console.log('Starting database seeding...');
         logger.info('Starting database seeding...');
-        // Sync database first
-        await db.sequelize.sync();
-        logger.info('Database synced successfully');
+        await migrate();
+        logger.info('Database migrations completed successfully');
         // Run seeder (it will close the connection itself)
         await seeder.seed();
         console.log('Database seeding completed successfully!');
@@ -26,5 +26,4 @@ async function runSeeder() {
 }
 
 
-setTimeout(runSeeder, 2000);
-
+runSeeder();

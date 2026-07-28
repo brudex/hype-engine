@@ -1,13 +1,26 @@
 const axios = require('axios');
 const { resolveDeep, resolveString } = require('../flow-variable-resolver');
 
+function extractModel(params) {
+    const m = params.model;
+    if (m == null) return 'gpt-4o-mini';
+    if (typeof m === 'string') return m;
+    if (typeof m === 'object' && m.value) return String(m.value);
+    return 'gpt-4o-mini';
+}
+
 async function runAiPrompt(nodeDef, context, dryRun) {
-    const config = resolveDeep(nodeDef.config || {}, context);
-    const model = config.model || 'gpt-4o-mini';
-    const systemPrompt = resolveString(config.systemPrompt || '', context);
-    const userPrompt = resolveString(config.userPrompt || '', context);
-    const temperature = config.temperature != null ? Number(config.temperature) : 0.7;
-    const maxTokens = config.maxTokens != null ? parseInt(config.maxTokens, 10) : 300;
+    const resolveOpts = nodeDef._resolveOptions || {};
+    const params = resolveDeep(nodeDef.config || {}, context, resolveOpts);
+    const model = extractModel(params);
+    const systemPrompt = resolveString(
+        params.options?.systemMessage || params.systemPrompt || '',
+        context,
+        resolveOpts
+    );
+    const userPrompt = resolveString(params.userPrompt || params.prompt || '', context, resolveOpts);
+    const temperature = params.temperature != null ? Number(params.temperature) : 0.7;
+    const maxTokens = params.maxTokens != null ? parseInt(params.maxTokens, 10) : 300;
 
     if (dryRun) {
         return {
@@ -35,7 +48,7 @@ async function runAiPrompt(nodeDef, context, dryRun) {
             max_tokens: maxTokens,
             messages: [
                 ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
-                { role: 'user', content: userPrompt || ' ' }
+                { role: 'user', content: userPrompt || systemPrompt || ' ' }
             ]
         },
         {

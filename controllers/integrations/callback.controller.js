@@ -2,13 +2,14 @@ const crypto = require('crypto');
 const db = require('../../models');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../utils/logger');
+const appConfig = require('../../config/config');
 const { encryptObject } = require('../../utils/encryption');
 const twitterPlatform = require('../../services/platform/twitter');
 const linkedinPlatform = require('../../services/platform/linkedin');
 const facebookPlatform = require('../../services/platform/facebook');
 
 /** Must match `integration.controller.js` — same string used in authorize `redirect_uri` and token exchange. */
-const siteUrl = (process.env.SITEURL || 'https://hypeengine.cachetechs.com').replace(/\/+$/, '');
+const siteUrl = appConfig.siteurl;
 
 /**
  * Social platform OAuth/integration callbacks.
@@ -183,30 +184,16 @@ CallbackController.x = async (req, res) => {
             });
         }
 
-        console.log('Calling exchangeRequestToken with: oauth_token', oauth_token);
-        console.log('Calling exchangeRequestToken with: oauth_token_secret', oauth_token_secret);
-        console.log('Calling exchangeRequestToken with: oauth_verifier', oauth_verifier);
-        console.log('Calling exchangeRequestToken with: appKey' + appKey);
-        console.log('Calling exchangeRequestToken with: appSecret' + appSecret);
-        logger.info('Calling exchangeRequestToken with: oauth_token' + oauth_token);
-        logger.info('Calling exchangeRequestToken with: oauth_token_secret' + oauth_token_secret);
-        logger.info('Calling exchangeRequestToken with: oauth_verifier' + oauth_verifier);
-        logger.info('Calling exchangeRequestToken with: appKey' + appKey);
-        logger.info('Calling exchangeRequestToken with: appSecret' + appSecret);
         const { accessToken, accessSecret, userId, screenName } = await twitterPlatform.exchangeRequestToken(
             oauth_token,
             oauth_token_secret,
             oauth_verifier,
             { appKey, appSecret }
         );
-        logger.info('exchangeRequestToken result: accessToken', accessToken);
-        logger.info('exchangeRequestToken result: accessSecret', accessSecret);
-        logger.info('exchangeRequestToken result: userId', userId);
-        logger.info('exchangeRequestToken result: screenName', screenName);
-        console.log('exchangeRequestToken result: accessToken', accessToken);
-        console.log('exchangeRequestToken result: accessSecret', accessSecret);
-        console.log('exchangeRequestToken result: userId', userId);
-        console.log('exchangeRequestToken result: screenName', screenName);
+        logger.info('X OAuth request token exchanged successfully', {
+            userId,
+            screenName
+        });
 
         const providerId = String(userId);
         const name = screenName ? `@${screenName}` : `X ${providerId}`;
@@ -256,7 +243,7 @@ CallbackController.x = async (req, res) => {
         }
 
         logger.info('X account connected', { accountUuid: account.uuid, screenName, userId, projectUuid });
-        console.log('X account connected', { accountUuid: account.uuid, screenName, userId, projectUuid });
+        logger.info('X account connected', { accountUuid: account.uuid, screenName, userId, projectUuid });
         req.flash('success', name + ' has been successfully connected to X (Twitter) for this project. You can now use this account to post.');
         return res.redirect(302, '/dashboard/accounts/connect-status/' + account.uuid);
     } catch (err) {
@@ -299,7 +286,7 @@ CallbackController.linkedIn = async (req, res) => {
         }
 
         if (!code || !state) {
-            logger.warn('LinkedIn OAuth callback: missing code or state', req.query);
+            logger.warn('LinkedIn OAuth callback: missing code or state');
             req.flash('error', 'Missing authorization code or state. Please try connecting again.');
             return res.redirect(302, '/dashboard/accounts');
         }
@@ -420,7 +407,7 @@ CallbackController.facebook = async (req, res) => {
             return res.redirect(302, '/dashboard/accounts');
         }
         if (!code || !state) {
-            logger.warn('Facebook OAuth callback: missing code or state', req.query);
+            logger.warn('Facebook OAuth callback: missing code or state');
             req.flash('error', 'Missing authorization code or state. Please try connecting again.');
             return res.redirect(302, '/dashboard/accounts');
         }

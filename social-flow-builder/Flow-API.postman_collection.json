@@ -1,0 +1,285 @@
+{
+  "info": {
+    "_postman_id": "a7f3c2e1-8b9d-4f6e-flow-api-mixpost",
+    "name": "Mixpost Flow API",
+    "description": "REST routes mounted at `/api/flow` from `hype-engine/routes/flow.routes.js`.\n\n**Auth**\n- All routes except **Webhook** require `Authorization: Bearer <API_KEY>` (same tokens as `/api/v1`), **or** a logged-in dashboard session cookie when calling from the browser.\n\n**Paths**\n- Authenticated CRUD and runs use **`/flows/...`** under `baseUrl`. Saving a graph is **`POST /api/flow/flows/save/:flowUuid`** only (create empty flows via dashboard `POST /dashboard/api/flows` first). Webhooks: **`/webhooks/:workflowUuid/...`** (no Bearer).\n\n**Variables**\n- `baseUrl` — e.g. `http://localhost:3010/api/flow`\n- `flowUuid`, `runUuid`, `workflowUuid` — use an existing flow id for save/run\n- `apiToken` — active API key",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{apiToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3010/api/flow"
+    },
+    {
+      "key": "apiToken",
+      "value": ""
+    },
+    {
+      "key": "flowUuid",
+      "value": "8a3d0bec-321c-4671-8a17-33ce9cfcbf40"
+    },
+    {
+      "key": "runUuid",
+      "value": "00000000-0000-4000-8000-000000000002"
+    },
+    {
+      "key": "workflowUuid",
+      "value": "8a3d0bec-321c-4671-8a17-33ce9cfcbf40"
+    },
+    {
+      "key": "webhookSecret",
+      "value": "your-webhook-secret"
+    },
+    {
+      "key": "userId",
+      "value": "8eae48e2-ef3a-4857-96c1-c931bdfaaf1c"
+    }
+  ],
+  "item": [
+    {
+      "name": "Webhook (no Bearer)",
+      "item": [
+        {
+          "name": "Trigger workflow via webhook",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{userId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"sku-42\",\n  \"event\": \"order.completed\"\n}"
+            },
+            "url": "{{baseUrl}}/webhooks/{{workflowUuid}}/{{webhookSecret}}",
+            "description": "`secretPath` is optional unless `triggerConfig.webhookSecret` is set on the workflow — then it must match.\n\nRuns the workflow with trigger payload in context."
+          },
+          "response": [
+            {
+              "name": "200 OK — run finished",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": "{{baseUrl}}/webhooks/{{workflowUuid}}/{{webhookSecret}}"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"eventId\": \"evt-uuid-string\",\n    \"runId\": \"run-uuid-string\",\n    \"status\": \"success\",\n    \"context\": {\n      \"trigger_1\": {\n        \"status\": \"success\",\n        \"output\": { \"body\": { \"productId\": \"sku-42\" } },\n        \"meta\": {},\n        \"error\": null\n      }\n    }\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden — bad secret",
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"message\": \"Forbidden\"\n}"
+            },
+            {
+              "name": "404 — workflow not found",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"message\": \"Workflow not found\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Flows",
+      "item": [
+        {
+          "name": "Get workflow",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{userId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/flows/{{flowUuid}}"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"uuid\": \"{{flowUuid}}\",\n    \"name\": \"Daily Social Pulse\",\n    \"description\": \"\",\n    \"version\": \"1.0.0\",\n    \"triggerType\": \"manual\",\n    \"triggerConfig\": {},\n    \"status\": 1,\n    \"definition\": {\n      \"id\": \"draft-flow\",\n      \"name\": \"Daily Social Pulse\",\n      \"version\": \"1.0.0\",\n      \"trigger\": { \"id\": \"trigger_1\", \"type\": \"manual\", \"name\": \"Manual Trigger\", \"config\": {}, \"outputSchema\": { \"body\": \"object\" } },\n      \"nodes\": [],\n      \"edges\": []\n    },\n    \"updatedAt\": \"2026-05-06T12:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "404 Not found",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"message\": \"Not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Save workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{userId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated summary\",\n  \"id\": \"draft-flow\",\n  \"name\": \"Daily Social Pulse\",\n  \"version\": \"1.0.1\",\n  \"trigger\": {\n    \"id\": \"trigger_1\",\n    \"type\": \"manual\",\n    \"name\": \"Manual Trigger\",\n    \"config\": {},\n    \"outputSchema\": { \"body\": \"object\" }\n  },\n  \"nodes\": [\n    {\n      \"id\": \"fetch_trends\",\n      \"type\": \"rest\",\n      \"name\": \"REST\",\n      \"position\": { \"x\": 80, \"y\": 90 },\n      \"disabled\": false,\n      \"config\": { \"method\": \"GET\", \"url\": \"https://api.example.com\" },\n      \"outputs\": { \"success\": {}, \"error\": {} }\n    }\n  ],\n  \"edges\": []\n}"
+            },
+            "url": "{{baseUrl}}/flows/save/{{flowUuid}}",
+            "description": "Requires **`:flowUuid`** in the path (owned row). Body = full canonical definition; optional top-level `description`. Top-level `workflowUuid` / `uuid` are stripped and not stored in `definition`. Returns **200** with `data.uuid` and `data.definition`."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"uuid\": \"{{flowUuid}}\",\n    \"definition\": {\n      \"id\": \"draft-flow\",\n      \"name\": \"Daily Social Pulse\",\n      \"version\": \"1.0.1\",\n      \"trigger\": {\n        \"id\": \"trigger_1\",\n        \"type\": \"manual\",\n        \"name\": \"Manual Trigger\",\n        \"config\": {},\n        \"outputSchema\": { \"body\": \"object\" }\n      },\n      \"nodes\": [],\n      \"edges\": []\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete workflow",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{userId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/flows/{{flowUuid}}"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"deleted\": true,\n    \"uuid\": \"{{flowUuid}}\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Runs",
+      "item": [
+        {
+          "name": "Run workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{userId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trigger\": \"manual\",\n  \"dryRun\": true,\n  \"context\": {\n    \"trigger\": {\n      \"status\": \"success\",\n      \"output\": {\n        \"body\": { \"productId\": \"demo-1\" }\n      },\n      \"meta\": {},\n      \"error\": null\n    }\n  }\n}"
+            },
+            "url": "{{baseUrl}}/flows/{{flowUuid}}/run",
+            "description": "`context` is merged into executor state; trigger node id from definition wraps into wrapped outputs per node."
+          },
+          "response": [
+            {
+              "name": "200 OK — dry run",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"runId\": \"run-uuid\",\n    \"status\": \"success\",\n    \"context\": {\n      \"trigger_1\": {\n        \"status\": \"success\",\n        \"output\": { \"body\": { \"productId\": \"demo-1\" } },\n        \"meta\": {},\n        \"error\": null\n      },\n      \"fetch_trends\": {\n        \"status\": \"success\",\n        \"output\": {},\n        \"meta\": {\n          \"startedAt\": \"2026-05-06T12:00:00.000Z\",\n          \"finishedAt\": \"2026-05-06T12:00:01.000Z\",\n          \"durationMs\": 12\n        },\n        \"error\": null\n      }\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List runs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{userId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/flows/{{flowUuid}}/runs",
+            "description": "Last 100 runs for this workflow."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": [\n    {\n      \"uuid\": \"run-uuid\",\n      \"status\": \"success\",\n      \"triggerType\": \"manual\",\n      \"startedAt\": \"2026-05-06T12:00:00.000Z\",\n      \"finishedAt\": \"2026-05-06T12:00:05.000Z\",\n      \"createdAt\": \"2026-05-06T12:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get run (with runNodes)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "{{userId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/flows/{{flowUuid}}/runs/{{runUuid}}"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"data\": {\n    \"uuid\": \"{{runUuid}}\",\n    \"workflowUuid\": \"{{flowUuid}}\",\n    \"userUuid\": \"user-uuid\",\n    \"triggerType\": \"manual\",\n    \"status\": \"success\",\n    \"startedAt\": \"2026-05-06T12:00:00.000Z\",\n    \"finishedAt\": \"2026-05-06T12:00:05.000Z\",\n    \"initialContext\": {},\n    \"contextSnapshot\": {},\n    \"error\": null,\n    \"createdAt\": \"2026-05-06T12:00:00.000Z\",\n    \"updatedAt\": \"2026-05-06T12:00:05.000Z\",\n    \"runNodes\": [\n      {\n        \"uuid\": \"run-node-uuid\",\n        \"runUuid\": \"{{runUuid}}\",\n        \"workflowUuid\": \"{{flowUuid}}\",\n        \"nodeId\": \"fetch_trends\",\n        \"status\": \"success\",\n        \"selectedOutput\": null,\n        \"inputContext\": {},\n        \"output\": {},\n        \"meta\": { \"durationMs\": 10 },\n        \"error\": null,\n        \"startedAt\": \"2026-05-06T12:00:01.000Z\",\n        \"finishedAt\": \"2026-05-06T12:00:01.010Z\",\n        \"durationMs\": 10\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "404 Run not found",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"message\": \"Run not found\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

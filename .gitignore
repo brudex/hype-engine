@@ -105,4 +105,12 @@ dist
 .tern-port
 .cursor
 .cursorrules
+.agents/
 public/uploads/
+run.sh
+skills-lock.json
+AGENTS.md
+CLAUDE.md
+notes.md
+social-flow-builder/dist-app/
+social-flow-builder/test-results/

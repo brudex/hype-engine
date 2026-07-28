@@ -2,21 +2,12 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../../models');
 const { getRunner } = require('./nodes');
 const logger = require('../../utils/logger');
-
-function wrapSuccess(nodeId, output, meta, startedAt) {
-    const finishedAt = new Date().toISOString();
-    const durationMs = startedAt ? Date.now() - startedAt : 0;
-    return {
-        status: 'success',
-        output: output != null ? output : {},
-        meta: {
-            startedAt: new Date(startedAt || Date.now()).toISOString(),
-            finishedAt,
-            durationMs
-        },
-        error: null
-    };
-}
+const {
+    buildExecutionPlan,
+    seedEntryContext,
+    getUpstreamNodeId,
+    getNodeParameters
+} = require('./flow-definition.service');
 
 function wrapError(nodeId, err, startedAt) {
     const finishedAt = new Date().toISOString();
@@ -29,7 +20,8 @@ function wrapError(nodeId, err, startedAt) {
             finishedAt,
             durationMs
         },
-        error: { message: err.message || String(err), stack: err.stack }
+        error: { message: err.message || String(err), stack: err.stack },
+        selectedOutput: null
     };
 }
 
@@ -38,45 +30,22 @@ function wrapSkipped() {
         status: 'skipped',
         output: null,
         meta: {},
-        error: null
+        error: null,
+        selectedOutput: null
     };
 }
 
-function canTraverseEdge(edge, fromCtx, fromNodeDef, triggerId) {
+function canTraverseEdge(edge, fromCtx, fromNodeDef) {
     if (!fromCtx) return false;
-    if (fromCtx.status === 'skipped') return false;
-    const fromOut = edge.fromOutput != null ? String(edge.fromOutput) : 'success';
-    if (edge.from === triggerId) {
+    if (fromCtx.status === 'skipped' || fromCtx.status === 'error') return false;
+    if (fromNodeDef && fromNodeDef.type === 'logic') {
         if (fromCtx.status !== 'success') return false;
-        return fromOut === 'success';
+        const selected = fromCtx.selectedOutput;
+        if (selected == null) return false;
+        return edge.outputIndex === selected;
     }
-    if (!fromNodeDef) return false;
-    if (fromNodeDef.type === 'logic') {
-        if (fromCtx.status !== 'success') return false;
-        if (!fromCtx.output || !fromCtx.output.matched) return false;
-        return fromOut === fromCtx.output.conditionId;
-    }
-    if (fromCtx.status === 'success') return fromOut === 'success';
-    if (fromCtx.status === 'error') return fromOut === 'error';
+    if (fromCtx.status === 'success') return edge.outputIndex === 0;
     return false;
-}
-
-function buildExecutorContext(initialContext, triggerId) {
-    const raw = initialContext && typeof initialContext === 'object' ? { ...initialContext } : {};
-    const ctx = { ...raw };
-    if (!ctx[triggerId]) {
-        const body =
-            raw.trigger?.output?.body != null
-                ? raw.trigger.output.body
-                : {};
-        ctx[triggerId] = {
-            status: 'success',
-            output: { body },
-            meta: raw.trigger?.meta || {},
-            error: raw.trigger?.error != null ? raw.trigger.error : null
-        };
-    }
-    return ctx;
 }
 
 function aggregateRunStatus(statuses) {
@@ -87,42 +56,38 @@ function aggregateRunStatus(statuses) {
     return 'success';
 }
 
-async function persistRunNode(runUuid, workflowUuid, nodeId, record) {
-    await db.FlowRunNode.create({
-        uuid: uuidv4(),
-        runUuid,
-        workflowUuid,
-        nodeId,
-        status: record.status,
-        selectedOutput: record.selectedOutput != null ? record.selectedOutput : null,
-        inputContext: record.inputContext || {},
-        output: record.output != null ? record.output : {},
-        meta: record.meta || {},
-        error: record.error != null ? record.error : null,
-        startedAt: record.startedAt,
-        finishedAt: record.finishedAt || null,
-        durationMs: record.durationMs != null ? record.durationMs : 0
-    });
+function toNodeSnapshot(wrapped, startedAtDate, finishedAtDate) {
+    const meta = wrapped.meta || {};
+    const startedAt = meta.startedAt || startedAtDate.toISOString();
+    const finishedAt = meta.finishedAt || (finishedAtDate || new Date()).toISOString();
+    return {
+        status: wrapped.status,
+        output: wrapped.output,
+        error: wrapped.error != null ? wrapped.error : null,
+        startedAt,
+        finishedAt,
+        durationMs: meta.durationMs != null ? meta.durationMs : 0
+    };
 }
 
-/**
- * @param {object} workflowRow - FlowWorkflow instance
- * @param {object} options
- * @param {string} options.userUuid
- * @param {object} options.initialContext - request context (may include trigger)
- * @param {boolean} options.dryRun
- * @param {string} options.triggerType
- */
+function recordNodeResult(context, snapshot, nodeId, wrapped, startedAtDate, finishedAtDate) {
+    context[nodeId] = wrapped;
+    snapshot[nodeId] = toNodeSnapshot(wrapped, startedAtDate, finishedAtDate);
+}
+
 async function runWorkflow(workflowRow, options) {
     const userUuid = options.userUuid;
     const dryRun = !!options.dryRun;
     const triggerType = options.triggerType || workflowRow.triggerType || 'manual';
-    const def = workflowRow.definition;
-    const triggerId = def.trigger.id;
-    const nodeById = new Map((def.nodes || []).map((n) => [n.id, n]));
-    const disabled = new Set((def.nodes || []).filter((n) => n.disabled).map((n) => n.id));
 
-    let context = buildExecutorContext(options.initialContext || {}, triggerId);
+    const plan = buildExecutionPlan(workflowRow.definition);
+    const { entryNodeId, nodeById, edges, executableIds } = plan;
+
+    const context = seedEntryContext(entryNodeId, options.initialContext || {});
+    const snapshot = {};
+    const runStartedAt = new Date();
+
+    snapshot[entryNodeId] = toNodeSnapshot(context[entryNodeId], runStartedAt, runStartedAt);
 
     const run = await db.FlowRun.create({
         uuid: uuidv4(),
@@ -130,37 +95,48 @@ async function runWorkflow(workflowRow, options) {
         userUuid,
         triggerType,
         status: 'running',
-        startedAt: new Date(),
+        startedAt: runStartedAt,
         finishedAt: null,
         initialContext: options.initialContext || {},
-        contextSnapshot: {},
+        contextSnapshot: { ...snapshot },
         error: null
     });
 
     const runUuid = run.uuid;
-    const workflowUuid = workflowRow.uuid;
-    const pending = new Set((def.nodes || []).map((n) => n.id));
-    const executedResults = [];
+    const pending = new Set([...executableIds].filter((id) => id !== entryNodeId));
 
     function isDone(nodeId) {
         const c = context[nodeId];
         return c != null && ['success', 'error', 'skipped'].includes(c.status);
     }
 
+    function incomingEdges(nodeId) {
+        return edges.filter((e) => e.to === nodeId);
+    }
+
     function ready(nodeId) {
-        if (disabled.has(nodeId)) return false;
-        const incoming = (def.edges || []).filter((e) => e.to === nodeId);
+        const nodeDef = nodeById.get(nodeId);
+        if (nodeDef?.disabled) return false;
+
+        const incoming = incomingEdges(nodeId);
         if (incoming.length === 0) {
-            return (def.edges || []).some(
-                (e) => e.to === nodeId && e.from === triggerId && canTraverseEdge(e, context[triggerId], null, triggerId)
+            return edges.some(
+                (e) =>
+                    e.to === nodeId &&
+                    e.from === entryNodeId &&
+                    canTraverseEdge(e, context[entryNodeId], null)
             );
         }
-        return incoming.every((e) => {
-            const fromCtx = e.from === triggerId ? context[triggerId] : context[e.from];
-            const fromDef = e.from === triggerId ? null : nodeById.get(e.from);
-            const srcDone = e.from === triggerId ? context[triggerId] != null : isDone(e.from);
-            if (!srcDone) return false;
-            return canTraverseEdge(e, fromCtx, fromDef, triggerId);
+
+        const relevant = incoming.filter((e) => executableIds.has(e.from));
+        if (relevant.length === 0) return false;
+
+        return relevant.every((e) => {
+            const fromCtx = context[e.from];
+            const fromDef = nodeById.get(e.from);
+            if (!isDone(e.from) && e.from !== entryNodeId) return false;
+            if (e.from === entryNodeId && !context[entryNodeId]) return false;
+            return canTraverseEdge(e, fromCtx, fromDef);
         });
     }
 
@@ -174,90 +150,63 @@ async function runWorkflow(workflowRow, options) {
                 const nodeDef = nodeById.get(nodeId);
                 const startedAtMs = Date.now();
                 const startedAtDate = new Date(startedAtMs);
+                const upstreamNodeId = getUpstreamNodeId(nodeId, edges, executableIds);
+                const resolveOpts = { upstreamNodeId };
 
-                if (disabled.has(nodeId)) {
+                if (nodeDef?.disabled || nodeDef?.type === 'input') {
                     const w = wrapSkipped();
-                    context[nodeId] = w;
-                    await persistRunNode(runUuid, workflowUuid, nodeId, {
-                        status: 'skipped',
-                        selectedOutput: null,
-                        inputContext: JSON.parse(JSON.stringify(context)),
-                        output: null,
-                        meta: {},
-                        error: null,
-                        startedAt: startedAtDate,
-                        finishedAt: new Date(),
-                        durationMs: 0
-                    });
-                    executedResults.push({ nodeId, status: 'skipped' });
+                    recordNodeResult(context, snapshot, nodeId, w, startedAtDate, new Date());
                     continue;
                 }
 
                 const runner = getRunner(nodeDef.type);
                 if (!runner) {
                     const w = wrapError(nodeId, new Error(`Unknown node type: ${nodeDef.type}`), startedAtMs);
-                    context[nodeId] = w;
-                    await persistRunNode(runUuid, workflowUuid, nodeId, {
-                        status: 'error',
-                        selectedOutput: null,
-                        inputContext: JSON.parse(JSON.stringify(context)),
-                        output: {},
-                        meta: w.meta,
-                        error: w.error,
-                        startedAt: startedAtDate,
-                        finishedAt: new Date(),
-                        durationMs: Date.now() - startedAtMs
-                    });
-                    executedResults.push({ nodeId, status: 'error' });
+                    recordNodeResult(context, snapshot, nodeId, w, startedAtDate, new Date());
                     continue;
                 }
 
+                const runnerNode = {
+                    ...nodeDef,
+                    config: getNodeParameters(nodeDef),
+                    _resolveOptions: resolveOpts
+                };
+
                 let wrapped;
-                let selectedOutput = null;
                 try {
                     const r =
                         nodeDef.type === 'publish'
-                            ? await runner(nodeDef, context, dryRun, userUuid)
-                            : await runner(nodeDef, context, dryRun);
+                            ? await runner(runnerNode, context, dryRun, userUuid)
+                            : await runner(runnerNode, context, dryRun);
                     const durationMs = Date.now() - startedAtMs;
-                    const finishedAt = new Date().toISOString();
                     wrapped = {
                         status: 'success',
                         output: r.output != null ? r.output : {},
                         meta: {
                             startedAt: startedAtDate.toISOString(),
-                            finishedAt,
+                            finishedAt: new Date().toISOString(),
                             durationMs,
                             ...(r.meta || {})
                         },
-                        error: null
+                        error: null,
+                        selectedOutput: r.selectedOutput != null ? r.selectedOutput : null
                     };
-                    if (r.selectedOutput != null) selectedOutput = r.selectedOutput;
                 } catch (err) {
                     wrapped = wrapError(nodeId, err, startedAtMs);
-                    if (err.meta) {
-                        wrapped.meta = { ...wrapped.meta, ...err.meta };
-                    }
+                    if (err.meta) wrapped.meta = { ...wrapped.meta, ...err.meta };
                 }
 
-                context[nodeId] = wrapped;
-                await persistRunNode(runUuid, workflowUuid, nodeId, {
-                    status: wrapped.status,
-                    selectedOutput,
-                    inputContext: JSON.parse(JSON.stringify(context)),
-                    output: wrapped.output,
-                    meta: wrapped.meta,
-                    error: wrapped.error,
-                    startedAt: startedAtDate,
-                    finishedAt: new Date(),
-                    durationMs: wrapped.meta?.durationMs || 0
-                });
-                executedResults.push({ nodeId, status: wrapped.status });
+                recordNodeResult(context, snapshot, nodeId, wrapped, startedAtDate, new Date());
             }
         }
 
-        const ranStatuses = (def.nodes || [])
-            .map((n) => context[n.id])
+        for (const nodeId of pending) {
+            const w = wrapSkipped();
+            recordNodeResult(context, snapshot, nodeId, w, new Date(), new Date());
+        }
+
+        const ranStatuses = [...executableIds]
+            .map((id) => snapshot[id])
             .filter(Boolean)
             .map((c) => ({ status: c.status }));
         const finalStatus =
@@ -266,21 +215,27 @@ async function runWorkflow(workflowRow, options) {
         await run.update({
             status: dryRun ? 'success' : finalStatus,
             finishedAt: new Date(),
-            contextSnapshot: JSON.parse(JSON.stringify(context)),
+            contextSnapshot: JSON.parse(JSON.stringify(snapshot)),
             error: null
         });
 
+        const finishedAt = new Date();
+
         return {
             runId: runUuid,
+            workflowUuid: workflowRow.uuid,
             status: dryRun ? 'success' : finalStatus,
-            context
+            nodes: snapshot,
+            startedAt: runStartedAt.toISOString(),
+            finishedAt: finishedAt.toISOString(),
+            error: null
         };
     } catch (e) {
         logger.error('Flow executor error:', e);
         await run.update({
             status: 'failed',
             finishedAt: new Date(),
-            contextSnapshot: JSON.parse(JSON.stringify(context)),
+            contextSnapshot: JSON.parse(JSON.stringify(snapshot)),
             error: { message: e.message || String(e) }
         });
         throw e;
@@ -289,6 +244,6 @@ async function runWorkflow(workflowRow, options) {
 
 module.exports = {
     runWorkflow,
-    buildExecutorContext,
-    canTraverseEdge
+    canTraverseEdge,
+    toNodeSnapshot
 };

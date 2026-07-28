@@ -57,14 +57,7 @@ function initializeDatabaseTransport(db) {
             batchInterval: parseInt(process.env.DB_LOG_BATCH_INTERVAL || '5000')
         });
         
-        transports.push(dbTransport);
-        
-        // Recreate logger with new transports
-        logger.configure({
-            level: process.env.LOG_LEVEL || 'info',
-            format: customFormat,
-            transports: transports
-        });
+        logger.add(dbTransport);
         
         console.log('Database transport initialized successfully');
     } catch (error) {
@@ -77,20 +70,6 @@ const logger = winston.createLogger({
     format: customFormat,
     transports: transports
 });
-
-// Initialize database transport after a delay to ensure models are loaded
-setTimeout(() => {
-    try {
-        const db = require('../models');
-        if (db && db.Log) {
-            initializeDatabaseTransport(db);
-        } else {
-            console.warn('Database transport not initialized: Log model not found');
-        }
-    } catch (error) {
-        console.warn('Failed to initialize database transport:', error.message);
-    }
-}, 5000); // Wait 5 seconds for models to be fully loaded
 
 // Helper function to safely serialize objects (handles circular references)
 function safeStringify(obj) {
@@ -112,6 +91,7 @@ function safeStringify(obj) {
 
 // Export a wrapper with common logging patterns
 module.exports = {
+    initializeDatabaseTransport,
     // Direct logger access
     logger: logger,
     
@@ -133,8 +113,7 @@ module.exports = {
                     status: error.status || error.statusCode,
                     response: error.response ? {
                         status: error.response.status,
-                        statusText: error.response.statusText,
-                        data: error.response.data
+                        statusText: error.response.statusText
                     } : undefined
                 }
             } : {};

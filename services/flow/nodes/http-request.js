@@ -1,12 +1,16 @@
 const axios = require('axios');
 const { resolveDeep } = require('../flow-variable-resolver');
 
+function resolveConfig(nodeDef, context) {
+    return resolveDeep(nodeDef.config || {}, context, nodeDef._resolveOptions || {});
+}
+
 async function runHttpRequest(nodeDef, context, dryRun) {
-    const config = resolveDeep(nodeDef.config || {}, context);
+    const config = resolveConfig(nodeDef, context);
     const method = (config.method || 'GET').toUpperCase();
     const url = config.url;
     const headers = config.headers && typeof config.headers === 'object' ? config.headers : {};
-    const body = config.body;
+    const body = config.body != null ? config.body : config.jsonBody;
     const timeout = Math.min(parseInt(config.timeout, 10) || 10000, 120000);
     const started = Date.now();
 

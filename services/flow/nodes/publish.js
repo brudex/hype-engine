@@ -5,7 +5,7 @@ const PlatformServiceFactory = require('../../platform');
 const { resolveDeep, resolveString } = require('../flow-variable-resolver');
 
 async function runPublish(nodeDef, context, dryRun, userUuid) {
-    const config = resolveDeep(nodeDef.config || {}, context);
+    const config = resolveDeep(nodeDef.config || {}, context, nodeDef._resolveOptions || {});
     const projectUuid = config.projectUuid;
     const accountUuids = Array.isArray(config.accountUuids) ? config.accountUuids : [];
     const contentTemplate = config.content != null ? config.content : '{{ }}';

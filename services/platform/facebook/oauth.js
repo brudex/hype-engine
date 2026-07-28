@@ -104,7 +104,10 @@ async function logTokenDiagnostics(accessToken, appId, appSecret, apiVersion = '
             },
             validateStatus: () => true
         });
-        logger.info('FACEBOOK USER', me.data);
+        logger.info('Facebook token user lookup completed', {
+            ok: me.status >= 200 && me.status < 300,
+            hasUser: !!me.data?.id
+        });
     } catch (err) {
         logger.error('FACEBOOK USER request failed', { message: err.message });
     }
@@ -117,7 +120,10 @@ async function logTokenDiagnostics(accessToken, appId, appSecret, apiVersion = '
             },
             validateStatus: () => true
         });
-        logger.info('TOKEN DEBUG', debug.data);
+        logger.info('Facebook token diagnostics completed', {
+            ok: debug.status >= 200 && debug.status < 300,
+            isValid: debug.data?.data?.is_valid === true
+        });
     } catch (err) {
         logger.error('TOKEN DEBUG request failed', { message: err.message });
     }

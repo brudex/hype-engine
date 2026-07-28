@@ -2,10 +2,14 @@ const express = require('express');
 const router = express.Router();
 const flowApiAuth = require('../middlewares/flow-api.auth.middleware');
 const FlowWorkflowsController = require('../controllers/flow/flow-workflows.controller');
+const FlowNodesController = require('../controllers/flow/flow-nodes.controller');
 
 router.post('/webhooks/:workflowUuid/:secretPath?', FlowWorkflowsController.webhook);
 
 router.use(flowApiAuth);
+
+router.post('/nodes/execute', FlowNodesController.execute);
+router.post('/nodes/:nodeType', FlowNodesController.executeByType);
 
 router.post('/flows/save/:flowUuid', FlowWorkflowsController.saveFlow);
 router.get('/flows/:flowUuid', FlowWorkflowsController.get);

@@ -53,11 +53,6 @@ module.exports = (sequelize, DataTypes) => {
             targetKey: 'uuid',
             as: 'workflow'
         });
-        FlowRun.hasMany(models.FlowRunNode, {
-            foreignKey: 'runUuid',
-            sourceKey: 'uuid',
-            as: 'runNodes'
-        });
     };
 
     return FlowRun;

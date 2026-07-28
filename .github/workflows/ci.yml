@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      DBNAME: hype_engine_ci
+      DBUSER: hype_engine_ci
+      DBPASS: ci-database-password
+      SITEURL: http://127.0.0.1:3000
+      JWT_SECRET: ci-jwt-secret-not-used-outside-this-job
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm audit --omit=dev --audit-level=high
+      - name: Verify flow builder
+        working-directory: social-flow-builder
+        run: |
+          npm ci
+          npm test
+          npm run build:mixpost
+          npm audit --audit-level=high
+      - run: git diff --exit-code -- public/modules/flow-builder
+      - run: find bin config controllers middlewares models routes services utils job-runner seeder migrations -name '*.js' -print0 | xargs -0 -n1 node --check
+      - run: docker compose config --quiet
+      - name: Blank-database and container integration
+        run: |
+          cp .env.example .env
+          docker compose up -d --build
+          for attempt in $(seq 1 24); do
+            web_status=$(docker inspect --format '{{.State.Health.Status}}' hype-engine-web-1 2>/dev/null || true)
+            job_status=$(docker inspect --format '{{.State.Health.Status}}' hype-engine-jobs-1 2>/dev/null || true)
+            if [ "$web_status" = healthy ] && [ "$job_status" = healthy ]; then
+              break
+            fi
+            sleep 5
+          done
+          test "$(docker inspect --format '{{.State.Health.Status}}' hype-engine-web-1)" = healthy
+          test "$(docker inspect --format '{{.State.Health.Status}}' hype-engine-jobs-1)" = healthy
+          curl --fail --silent http://127.0.0.1:3000/health
+          curl --fail --silent http://127.0.0.1:3001/health
+          docker compose exec -T web npm run migrate
+          test "$(docker compose exec -T database sh -lc 'psql -At -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT COUNT(*) FROM schema_migrations"')" = 2
+      - name: Container logs
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Stop containers
+        if: always()
+        run: docker compose down --volumes

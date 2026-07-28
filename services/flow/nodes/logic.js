@@ -1,74 +1,90 @@
-const vm = require('vm');
 const { resolveString } = require('../flow-variable-resolver');
 
-function stripOuterMustache(expr) {
-    if (expr == null) return '';
-    let s = String(expr).trim();
-    if (s.startsWith('{{') && s.endsWith('}}')) {
-        s = s.slice(2, -2).trim();
-    }
+function stripEqualsPrefix(value) {
+    if (value == null) return '';
+    let s = String(value).trim();
+    if (s.startsWith('=')) s = s.slice(1).trim();
     return s;
 }
 
-function evalInContext(expression, context) {
-    const inner = stripOuterMustache(expression);
-    if (!inner) return false;
-    const sandbox = { ...context };
-    vm.createContext(sandbox);
-    const code = `"use strict";\n(() => (${inner}))()`;
-    try {
-        return Boolean(vm.runInContext(code, sandbox, { timeout: 500 }));
-    } catch {
-        return false;
+function evaluateOperator(left, right, operator) {
+    const opType = operator?.type || 'string';
+    const operation = operator?.operation || 'equals';
+    const l = stripEqualsPrefix(left);
+    const r = stripEqualsPrefix(right);
+
+    if (opType === 'number') {
+        const ln = parseFloat(l);
+        const rn = parseFloat(r);
+        switch (operation) {
+            case 'gt':
+                return ln > rn;
+            case 'gte':
+                return ln >= rn;
+            case 'lt':
+                return ln < rn;
+            case 'lte':
+                return ln <= rn;
+            case 'equals':
+            default:
+                return ln === rn;
+        }
+    }
+
+    switch (operation) {
+        case 'contains':
+            return l.includes(r);
+        case 'notEquals':
+            return l !== r;
+        case 'equals':
+        default:
+            return l === r;
     }
 }
 
-function evalResolvedComparison(expr, context) {
-    const resolved = resolveString(expr, context);
-    const s = String(resolved).trim();
-    if (!s) return false;
-    if (s === 'true') return true;
-    if (s === 'false') return false;
-    try {
-        return Boolean(vm.runInNewContext(`"use strict"; (() => (${s}))()`, {}, { timeout: 500 }));
-    } catch {
-        return Boolean(s);
-    }
+function evaluateConditionGroup(group, context, resolveOpts) {
+    if (!group || !group.conditions) return false;
+    const conditions = group.conditions.conditions;
+    if (!Array.isArray(conditions) || conditions.length === 0) return false;
+
+    const combinator = (group.conditions.combinator || 'and').toLowerCase();
+    const results = conditions.map((c) => {
+        const left = resolveString(c.leftValue || '', context, resolveOpts);
+        const right = resolveString(c.rightValue || '', context, resolveOpts);
+        return evaluateOperator(left, right, c.operator || {});
+    });
+
+    if (combinator === 'or') return results.some(Boolean);
+    return results.every(Boolean);
 }
 
 async function runLogic(nodeDef, context, dryRun) {
-    const conditions = nodeDef.config?.conditions;
-    if (!Array.isArray(conditions) || conditions.length === 0) {
+    const resolveOpts = nodeDef._resolveOptions || {};
+    const values = nodeDef.config?.rules?.values || nodeDef.parameters?.rules?.values;
+    if (!Array.isArray(values) || values.length === 0) {
         return {
-            output: { matched: false, conditionId: null },
+            output: { matched: false },
             meta: {},
             selectedOutput: null
         };
     }
 
-    for (const c of conditions) {
-        if (!c || !c.id) continue;
-        const expr = c.expression || '';
-        let ok;
-        if (expr.includes('{{')) {
-            ok = evalResolvedComparison(expr, context);
-        } else {
-            ok = evalInContext(expr, context);
-        }
-        if (ok) {
+    for (let i = 0; i < values.length; i++) {
+        const rule = values[i];
+        if (evaluateConditionGroup(rule, context, resolveOpts)) {
             return {
-                output: { matched: true, conditionId: c.id },
-                meta: { label: c.label },
-                selectedOutput: c.id
+                output: { matched: true, branchIndex: i },
+                meta: { label: rule?.conditions?.conditions?.[0]?.rightValue || `branch_${i}` },
+                selectedOutput: i
             };
         }
     }
 
     return {
-        output: { matched: false, conditionId: null },
+        output: { matched: false },
         meta: {},
         selectedOutput: null
     };
 }
 
-module.exports = { runLogic, evalInContext };
+module.exports = { runLogic };

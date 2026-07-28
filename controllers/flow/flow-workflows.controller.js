@@ -2,8 +2,12 @@ const db = require('../../models');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../utils/logger');
 const { validateWorkflowDefinition, normalizeDefinition } = require('../../services/flow/flow-workflow-validation');
-const { syncWorkflowGraph } = require('../../services/flow/flow-graph-sync.service');
-const { runWorkflow } = require('../../services/flow/flow-executor.service');
+const flowService = require('../../services/flow');
+const {
+    entryTriggerMeta,
+    findEntryPoint,
+    secureTriggerConfig
+} = require('../../services/flow/flow-definition.service');
 
 const FlowWorkflowsController = {};
 
@@ -16,9 +20,10 @@ function flowActorUuid(req) {
     );
 }
 
-async function loadOwnedWorkflow(flowUuid, userUuid) {
+async function loadOwnedWorkflow(flowUuid, userUuid, options = {}) {
     return db.FlowWorkflow.findOne({
-        where: { uuid: flowUuid, userUuid }
+        where: { uuid: flowUuid, userUuid },
+        ...options
     });
 }
 
@@ -40,11 +45,14 @@ FlowWorkflowsController.webhook = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Workflow not found' });
         }
         const cfg = workflow.triggerConfig || {};
-        if (cfg.webhookSecret && cfg.webhookSecret !== secretPath) {
+        if (
+            typeof cfg.webhookSecret !== 'string' ||
+            cfg.webhookSecret.length < 32 ||
+            cfg.webhookSecret !== secretPath
+        ) {
             return res.status(403).json({ success: false, message: 'Forbidden' });
         }
 
-        const triggerId = workflow.definition?.trigger?.id || 'trigger_1';
         const payload = req.body && typeof req.body === 'object' ? req.body : { body: req.body };
 
         const event = await db.FlowTriggerEvent.create({
@@ -53,23 +61,18 @@ FlowWorkflowsController.webhook = async (req, res) => {
             runUuid: null,
             triggerType: 'webhook',
             payload,
-            headers: req.headers || {},
+            headers: {
+                'content-type': req.get('content-type') || null,
+                'user-agent': req.get('user-agent') || null,
+                'x-request-id': req.get('x-request-id') || null
+            },
             status: 'received',
             receivedAt: new Date()
         });
 
-        const initialContext = {
-            [triggerId]: {
-                status: 'success',
-                output: { body: payload },
-                meta: {},
-                error: null
-            }
-        };
-
-        const result = await runWorkflow(workflow, {
+        const result = await flowService.executeFlow(workflow, {
             userUuid: workflow.userUuid,
-            initialContext,
+            initialContext: payload,
             dryRun: false,
             triggerType: 'webhook'
         });
@@ -81,7 +84,8 @@ FlowWorkflowsController.webhook = async (req, res) => {
                 eventId: event.uuid,
                 runId: result.runId,
                 status: result.status,
-                context: result.context
+                nodes: result.nodes,
+                context: result.nodes
             }
         });
     } catch (e) {
@@ -92,7 +96,7 @@ FlowWorkflowsController.webhook = async (req, res) => {
 
 /**
  * POST full definition for an existing flow: `POST /flows/save/:flowUuid`.
- * Create new flows via dashboard `POST /dashboard/api/flows` (or equivalent), then save here.
+ * Appends an immutable FlowWorkflowVersion row on each save.
  */
 FlowWorkflowsController.saveFlow = async (req, res) => {
     const t = await db.sequelize.transaction();
@@ -115,11 +119,43 @@ FlowWorkflowsController.saveFlow = async (req, res) => {
             return res.status(400).json({ success: false, errors: v.errors });
         }
 
-        const wf = await loadOwnedWorkflow(flowUuid, userUuid);
+        const wf = await loadOwnedWorkflow(flowUuid, userUuid, {
+            transaction: t,
+            lock: t.LOCK.UPDATE
+        });
         if (!wf) {
             await t.rollback();
             return res.status(404).json({ success: false, message: 'Not found' });
         }
+
+        const definition = v.definition || normalized;
+        const entry = findEntryPoint(definition);
+        const { triggerType, triggerConfig: rawTriggerConfig } = entry
+            ? entryTriggerMeta(entry, definition)
+            : { triggerType: wf.triggerType, triggerConfig: wf.triggerConfig || {} };
+        const triggerConfig = secureTriggerConfig(
+            triggerType,
+            rawTriggerConfig,
+            wf.triggerConfig || {}
+        );
+
+        const maxVersion = await db.FlowWorkflowVersion.max('versionNumber', {
+            where: { workflowUuid: wf.uuid },
+            transaction: t
+        });
+        const versionNumber = (maxVersion || 0) + 1;
+
+        await db.FlowWorkflowVersion.create(
+            {
+                uuid: uuidv4(),
+                workflowUuid: wf.uuid,
+                versionNumber,
+                name: normalized.name || wf.name,
+                definition,
+                createdBy: userUuid
+            },
+            { transaction: t }
+        );
 
         let nextDescription;
         if (Object.prototype.hasOwnProperty.call(defInput, 'description')) {
@@ -134,26 +170,23 @@ FlowWorkflowsController.saveFlow = async (req, res) => {
 
         await wf.update(
             {
-                name: normalized.name,
                 description: nextDescription,
-                version: normalized.version,
-                triggerType: normalized.trigger?.type || wf.triggerType,
-                triggerConfig: normalized.trigger?.config || {},
-                definition: normalized
+                triggerType,
+                triggerConfig,
+                definition
             },
             { transaction: t }
         );
 
-        await syncWorkflowGraph(wf.uuid, normalized, t);
         await t.commit();
 
-        const payload = {
+        return res.json({
             data: {
                 uuid: wf.uuid,
-                definition: wf.definition
+                versionNumber,
+                definition
             }
-        };
-        return res.json(payload);
+        });
     } catch (e) {
         await t.rollback();
         logger.error('Flow saveFlow error:', e);
@@ -191,20 +224,19 @@ FlowWorkflowsController.delete = async (req, res) => {
     const t = await db.sequelize.transaction();
     try {
         const userUuid = flowActorUuid(req);
-        const wf = await loadOwnedWorkflow(req.params.flowUuid, userUuid);
+        const wf = await loadOwnedWorkflow(req.params.flowUuid, userUuid, {
+            transaction: t,
+            lock: t.LOCK.UPDATE
+        });
         if (!wf) {
             await t.rollback();
             return res.status(404).json({ success: false, message: 'Not found' });
         }
 
         const uuid = wf.uuid;
-        await db.FlowRunNode.destroy({
-            where: { workflowUuid: uuid },
-            transaction: t
-        });
         await db.FlowRun.destroy({ where: { workflowUuid: uuid }, transaction: t });
         await db.FlowTriggerEvent.destroy({ where: { workflowUuid: uuid }, transaction: t });
-        await db.FlowNode.destroy({ where: { workflowUuid: uuid }, transaction: t });
+        await db.FlowWorkflowVersion.destroy({ where: { workflowUuid: uuid }, transaction: t });
         await wf.destroy({ transaction: t });
         await t.commit();
 
@@ -228,7 +260,7 @@ FlowWorkflowsController.run = async (req, res) => {
         const context = req.body?.context && typeof req.body.context === 'object' ? req.body.context : {};
         const dryRun = !!req.body?.dryRun;
 
-        const result = await runWorkflow(wf, {
+        const result = await flowService.executeFlow(wf, {
             userUuid,
             initialContext: context,
             dryRun,
@@ -239,7 +271,8 @@ FlowWorkflowsController.run = async (req, res) => {
             data: {
                 runId: result.runId,
                 status: result.status,
-                context: result.context
+                nodes: result.nodes,
+                context: result.nodes
             }
         });
     } catch (e) {
@@ -290,14 +323,7 @@ FlowWorkflowsController.getRun = async (req, res) => {
                 uuid: req.params.runUuid,
                 workflowUuid: wf.uuid,
                 userUuid
-            },
-            include: [
-                {
-                    model: db.FlowRunNode,
-                    as: 'runNodes',
-                    required: false
-                }
-            ]
+            }
         });
 
         if (!run) {

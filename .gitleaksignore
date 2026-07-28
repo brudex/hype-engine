@@ -1,0 +1,3 @@
+# False positive: the LinkedIn rule matched "initializeUpload" in a source-code
+# comment. The historical line contains no credential.
+0aae00d741f3c05fec0ae35472ee2a530eb24ce9:services/platform/linkedin/service.js:linkedin-client-secret:50

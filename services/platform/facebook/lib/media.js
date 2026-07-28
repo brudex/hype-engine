@@ -1,7 +1,8 @@
 const path = require('path');
 const db = require('../../../../models');
+const config = require('../../../../config/config');
 
-const siteUrl = (process.env.SITEURL || 'https://hypeengine.cachetechs.com').replace(/\/+$/, '');
+const siteUrl = config.siteurl;
 
 /** Load Media records by UUID (preserves order). */
 async function loadMediaByUuids(mediaUuids) {

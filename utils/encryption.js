@@ -6,14 +6,10 @@ const config = require('../config/config');
  * Uses AES-256-GCM encryption similar to Laravel's Crypt
  */
 
-// Get encryption key from environment or config
-// Should be a 32-byte (256-bit) key for AES-256
+// Derive the encryption key from the required JWT_SECRET configuration.
 function getEncryptionKey() {
-    // Use JWT_SECRET as base, or generate a consistent key
-    const baseKey = config.jwtSecret || process.env.JWT_SECRET || 'default-key-change-in-production';
-    
     // Derive a 32-byte key using SHA-256
-    return crypto.createHash('sha256').update(baseKey).digest();
+    return crypto.createHash('sha256').update(config.jwtSecret).digest();
 }
 
 /**
@@ -132,4 +128,3 @@ module.exports = {
     encryptObject,
     decryptObject
 };
-

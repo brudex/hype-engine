@@ -1,0 +1,161 @@
+{
+  "nodes": [
+    {
+      "id": "8f4e1c2a-1a2b-4c3d-9e0f-111111111111",
+      "name": "Product Launch Trigger",
+      "type": "input",
+      "typeVersion": 1,
+      "position": [120, -160],
+      "parameters": {
+        "triggerType": "webhook",
+        "method": "POST",
+        "path": "/launch"
+      },
+      "webhookId": "launch-webhook",
+      "notes": "Entry point: no incoming connection. Trigger config lives in parameters/webhookId."
+    },
+    {
+      "id": "8f4e1c2a-1a2b-4c3d-9e0f-222222222222",
+      "name": "Fetch Trends",
+      "type": "http_request",
+      "typeVersion": 1,
+      "position": [120, 220],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.example.com/trends",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "query": {
+          "productId": "{{$json[\"productId\"]}}"
+        }
+      }
+    },
+    {
+      "id": "8f4e1c2a-1a2b-4c3d-9e0f-333333333333",
+      "name": "Check Trend Length",
+      "type": "logic",
+      "typeVersion": 3.2,
+      "position": [380, 220],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{$json[\"topics\"].length}}",
+                    "rightValue": 0,
+                    "operator": { "type": "number", "operation": "gt" }
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{$json[\"topics\"].length}}",
+                    "rightValue": 0,
+                    "operator": { "type": "number", "operation": "equals" }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "notes": "values[0] = has topics (branch index 0), values[1] = no topics (branch index 1)"
+    },
+    {
+      "id": "8f4e1c2a-1a2b-4c3d-9e0f-444444444444",
+      "name": "Write Caption",
+      "type": "ai_prompt",
+      "typeVersion": 1,
+      "position": [640, 120],
+      "parameters": {
+        "model": "gpt-5.5",
+        "userPrompt": "Write a short social caption for this trend: {{$json[\"topics\"][0][\"name\"]}}",
+        "temperature": 0.7,
+        "maxTokens": 300
+      }
+    },
+    {
+      "id": "8f4e1c2a-1a2b-4c3d-9e0f-555555555555",
+      "name": "No Topics Fallback",
+      "type": "javascript",
+      "typeVersion": 2,
+      "position": [640, 360],
+      "parameters": {
+        "jsCode": "return { caption: 'Stay tuned for something new!', hashtags: '#ComingSoon' };"
+      },
+      "notes": "Reached when Check Trend Length selects branch index 1 (no topics)."
+    },
+    {
+      "id": "8f4e1c2a-1a2b-4c3d-9e0f-666666666666",
+      "name": "Format Output",
+      "type": "javascript",
+      "typeVersion": 2,
+      "position": [900, 120],
+      "parameters": {
+        "jsCode": "return { caption: $input.first().json.text, hashtags: '#Launch #SocialOps' };"
+      }
+    },
+    {
+      "id": "8f4e1c2a-1a2b-4c3d-9e0f-777777777777",
+      "name": "Publish Post",
+      "type": "publish",
+      "typeVersion": 1,
+      "position": [1160, 120],
+      "parameters": {
+        "projectUuid": "{{ \"Product Launch Trigger\".output.body.projectUuid }}",
+        "accountUuids": ["{{ \"Product Launch Trigger\".output.body.accountUuid }}"],
+        "content": "{{$json[\"caption\"]}} {{$json[\"hashtags\"]}}",
+        "media": []
+      }
+    }
+  ],
+
+  "connections": {
+    "Product Launch Trigger": {
+      "main": [
+        [{ "node": "Fetch Trends", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Trends": {
+      "main": [
+        [{ "node": "Check Trend Length", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Trend Length": {
+      "main": [
+        [{ "node": "Write Caption", "type": "main", "index": 0 }],
+        [{ "node": "No Topics Fallback", "type": "main", "index": 0 }]
+      ]
+    },
+    "Write Caption": {
+      "main": [
+        [{ "node": "Format Output", "type": "main", "index": 0 }]
+      ]
+    },
+    "No Topics Fallback": {
+      "main": [
+        [{ "node": "Publish Post", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format Output": {
+      "main": [
+        [{ "node": "Publish Post", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+
+  "pinData": {},
+
+  "meta": {
+    "name": "Social Trend Caption Workflow",
+    "description": "Sample reference flow covering input, http_request, logic (two branches), ai_prompt, javascript, and publish node types in the n8n-compatible Flow-spec.md format."
+  }
+}

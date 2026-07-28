@@ -95,7 +95,7 @@ function buildEndpointLabel(args) {
 }
 
 /**
- * twitter-api-v2 plugin: logs endpoint, request payload, and response JSON for every X call.
+ * twitter-api-v2 plugin: logs only non-sensitive request metadata.
  * @param {{ accountUuid?: string, postUuid?: string }} [context]
  */
 function createXApiLoggerPlugin(context = {}) {
@@ -108,8 +108,7 @@ function createXApiLoggerPlugin(context = {}) {
         return {
             accountUuid: ctx.accountUuid,
             postUuid: ctx.postUuid,
-            endpoint: buildEndpointLabel(args),
-            requestPayload: summarizeRequestPayload(args)
+            endpoint: buildEndpointLabel(args)
         };
     }
 
@@ -117,14 +116,14 @@ function createXApiLoggerPlugin(context = {}) {
         onAfterRequest(args) {
             logX('info', 'X API call succeeded', {
                 ...baseMeta(args),
-                httpStatus: args.response?.code,
-                responseJson: safeSerialize(args.response?.data)
+                httpStatus: args.response?.code
             });
         },
         onResponseError(args) {
             logX('error', 'X API call failed', {
                 ...baseMeta(args),
-                ...serializeTwitterApiError(args.error)
+                errorMessage: args.error?.message || String(args.error),
+                httpStatus: args.error?.code
             });
         },
         onRequestError(args) {

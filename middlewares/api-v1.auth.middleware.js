@@ -10,8 +10,6 @@ const validateApiV1Token = async (req, res, next) => {
     try {
         // Extract Bearer token from Authorization header
         const authHeader = req.headers.authorization;
-        console.log("req.headers >>>> " + JSON.stringify(req.headers));
-        console.log("authHeader >>>> " + authHeader);
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({
                 success: false,
@@ -21,7 +19,6 @@ const validateApiV1Token = async (req, res, next) => {
         }
 
         const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-        console.log("token >>>> " + token);
         if (!token) {
             return res.status(401).json({
                 success: false,
@@ -88,4 +85,3 @@ const validateApiV1Token = async (req, res, next) => {
 };
 
 module.exports = validateApiV1Token;
-

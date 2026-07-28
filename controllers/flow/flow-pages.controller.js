@@ -2,24 +2,30 @@ const db = require('../../models');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../utils/logger');
 const { validateWorkflowDefinition, normalizeDefinition } = require('../../services/flow/flow-workflow-validation');
-const { syncWorkflowGraph } = require('../../services/flow/flow-graph-sync.service');
+const {
+    entryTriggerMeta,
+    findEntryPoint,
+    secureTriggerConfig
+} = require('../../services/flow/flow-definition.service');
 
 const FlowPagesController = {};
 
-function emptyDefinition(name) {
+function emptyDefinition() {
+    const entryId = uuidv4();
     return normalizeDefinition({
-        id: `flow_${uuidv4().replace(/-/g, '').slice(0, 12)}`,
-        name,
-        version: '1.0.0',
-        trigger: {
-            id: 'trigger_1',
-            type: 'manual',
-            name: 'Manual Trigger',
-            config: {},
-            outputSchema: { body: 'object' }
-        },
-        nodes: [],
-        edges: []
+        nodes: [
+            {
+                id: entryId,
+                name: 'Manual Trigger',
+                type: 'input',
+                typeVersion: 1,
+                position: [120, 120],
+                parameters: {}
+            }
+        ],
+        connections: {},
+        pinData: {},
+        meta: {}
     });
 }
 
@@ -94,29 +100,34 @@ FlowPagesController.apiCreate = async (req, res) => {
                 ? String(req.body.description).trim().slice(0, 5000)
                 : '';
 
-        const definition = emptyDefinition(name);
+        const definition = emptyDefinition();
         const v = validateWorkflowDefinition(definition);
         if (!v.ok) {
             await t.rollback();
             return res.status(400).json({ success: false, message: v.errors.join('; ') });
         }
 
+        const entry = findEntryPoint(v.definition || definition);
+        const { triggerType, triggerConfig: rawTriggerConfig } = entry
+            ? entryTriggerMeta(entry, definition)
+            : { triggerType: 'manual', triggerConfig: {} };
+        const triggerConfig = secureTriggerConfig(triggerType, rawTriggerConfig);
+
         const wf = await db.FlowWorkflow.create(
             {
                 uuid: uuidv4(),
                 userUuid,
-                name: definition.name,
+                name,
                 description: description || null,
-                version: definition.version,
-                triggerType: definition.trigger.type,
-                triggerConfig: definition.trigger.config || {},
-                definition,
+                version: '1.0.0',
+                triggerType,
+                triggerConfig,
+                definition: v.definition || definition,
                 status: 0
             },
             { transaction: t }
         );
 
-        await syncWorkflowGraph(wf.uuid, definition, t);
         await t.commit();
 
         return res.status(201).json({
@@ -167,7 +178,7 @@ FlowPagesController.apiUpdate = async (req, res) => {
                   ? String(wf.description).trim().slice(0, 5000)
                   : '';
 
-        const def = { ...wf.definition, name };
+        const def = { ...wf.definition };
         const normalized = normalizeDefinition(def);
         const v = validateWorkflowDefinition(normalized);
         if (!v.ok) {
@@ -184,7 +195,6 @@ FlowPagesController.apiUpdate = async (req, res) => {
             },
             { transaction: t }
         );
-        await syncWorkflowGraph(wf.uuid, normalized, t);
         await t.commit();
 
         return res.json({
@@ -218,10 +228,9 @@ FlowPagesController.apiDelete = async (req, res) => {
         }
 
         const uuid = wf.uuid;
-        await db.FlowRunNode.destroy({ where: { workflowUuid: uuid }, transaction: t });
         await db.FlowRun.destroy({ where: { workflowUuid: uuid }, transaction: t });
         await db.FlowTriggerEvent.destroy({ where: { workflowUuid: uuid }, transaction: t });
-        await db.FlowNode.destroy({ where: { workflowUuid: uuid }, transaction: t });
+        await db.FlowWorkflowVersion.destroy({ where: { workflowUuid: uuid }, transaction: t });
         await wf.destroy({ transaction: t });
         await t.commit();
 

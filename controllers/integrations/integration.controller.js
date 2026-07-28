@@ -2,13 +2,14 @@ const db = require('../../models');
 const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../utils/logger');
+const appConfig = require('../../config/config');
 const { encryptObject } = require('../../utils/encryption');
 const twitterPlatform = require('../../services/platform/twitter');
 const linkedinPlatform = require('../../services/platform/linkedin');
 const facebookPlatform = require('../../services/platform/facebook');
 
 const IntegrationController = {};
-const siteUrl = (process.env.SITEURL || 'https://hypeengine.cachetechs.com').replace(/\/+$/, '');
+const siteUrl = appConfig.siteurl;
 
 /**
  * Handle X (Twitter) OAuth: load config and generate auth link. Does not redirect or create account.
@@ -83,10 +84,6 @@ async function handleLinkedInLinkGeneration(projectUuid) {
     );
     const placeholderProviderId = 'pending-' + state;
     const placeholderName = 'LinkedIn (pending)';
-    console.log('LinkedIn auth link:', url);
-    console.log('LinkedIn state:', state);
-    logger.info('LinkedIn auth link:', { url, state });
-    logger.info('LinkedIn auth link:', { url, state });
     return {
         redirectUrl: url,
         provider: 'linkedin',
@@ -180,7 +177,6 @@ IntegrationController.connectIntegration = async (req, res) => {
             linkResult = await handleFacebookLinkGeneration(projectUuid);
         }
         logger.info('Connect Integration LinkResult >>>>', { linkResult });
-        console.log('Connect Integration LinkResult >>>>', linkResult);
         if (linkResult) {
             const { redirectUrl, provider } = linkResult;
             let placeholderAccount = await db.Account.findOne({
@@ -195,7 +191,6 @@ IntegrationController.connectIntegration = async (req, res) => {
             });
             logger.info('LinkResult Data >>>>', { linkResult });
             
-            console.log('LinkResult Data >>>>', linkResult);
             if (!placeholderAccount) {
                 placeholderAccount = await db.Account.create({
                     uuid: uuidv4(),

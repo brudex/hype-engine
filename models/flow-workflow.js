@@ -51,10 +51,10 @@ module.exports = (sequelize, DataTypes) => {
             targetKey: 'uuid',
             as: 'user'
         });
-        FlowWorkflow.hasMany(models.FlowNode, {
+        FlowWorkflow.hasMany(models.FlowWorkflowVersion, {
             foreignKey: 'workflowUuid',
             sourceKey: 'uuid',
-            as: 'flowNodes'
+            as: 'versions'
         });
         FlowWorkflow.hasMany(models.FlowRun, {
             foreignKey: 'workflowUuid',
