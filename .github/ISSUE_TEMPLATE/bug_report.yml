@@ -1,24 +1,52 @@
 name: Bug report
-description: Report a reproducible problem
+description: Report a reproducible problem with a safe, minimal example
 title: "[Bug]: "
 labels: [bug]
 body:
   - type: markdown
     attributes:
-      value: Do not report security vulnerabilities here; follow SECURITY.md.
+      value: |
+        Thank you for helping improve Hype Engine. Do not report security
+        vulnerabilities here; follow SECURITY.md. Remove tokens, credentials,
+        private URLs, and personal data from every field below.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      description: Choose the closest area so maintainers can triage it.
+      options:
+        - Web application
+        - Background jobs
+        - Social provider integration
+        - Social Flows
+        - Docker or local setup
+        - Documentation
+        - Other or unknown
+    validations:
+      required: true
   - type: textarea
     id: description
     attributes:
-      label: What happened?
-      description: Include expected behavior and actual behavior.
+      label: Expected and actual behavior
+      description: State what you expected, what happened instead, and the user impact.
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
       label: Reproduction steps
+      description: Provide the smallest safe sequence that consistently shows the problem.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
     validations:
       required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs, screenshots, or error message
+      description: Redact secrets and personal data. A screenshot or sanitized stack trace is helpful.
   - type: input
     id: version
     attributes:
@@ -37,3 +65,10 @@ body:
     attributes:
       label: Relevant logs
       description: Remove credentials, tokens, and personal data.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and removed sensitive information.
+          required: true

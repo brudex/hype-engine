@@ -1,22 +1,65 @@
 name: Feature request
-description: Propose a focused improvement
+description: Propose a focused, evidence-based improvement
 title: "[Feature]: "
 labels: [enhancement]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for a specific improvement, not for security reports.
+        Do not include credentials, tokens, or private customer information.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Closest area
+      options:
+        - Web application
+        - Background jobs
+        - Social provider integration
+        - Social Flows
+        - Docker or local setup
+        - Documentation
+        - Other or unknown
+    validations:
+      required: true
   - type: textarea
     id: problem
     attributes:
       label: Problem
-      description: What user problem would this solve?
+      description: Who has this problem, what is difficult today, and how often does it occur?
     validations:
       required: true
   - type: textarea
     id: proposal
     attributes:
       label: Proposed solution
+      description: Describe the smallest useful change. Link related issues or public examples when available.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List observable outcomes that would make this request complete.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
     validations:
       required: true
   - type: textarea
     id: alternatives
     attributes:
       label: Alternatives considered
+      description: Include workarounds, existing tools, or why no alternative is suitable.
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Scope and trade-offs
+      description: Note non-goals, compatibility concerns, provider/API limits, or expected maintenance cost.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and removed sensitive information.
+          required: true
