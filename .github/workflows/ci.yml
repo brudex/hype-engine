@@ -31,7 +31,7 @@ jobs:
         run: |
           npm ci
           npm test
-          npm run build:mixpost
+          npm run build:hype-engine
           npm audit --audit-level=high
       - run: git diff --exit-code -- public/modules/flow-builder
       - run: find bin config controllers middlewares models routes services utils job-runner seeder migrations -name '*.js' -print0 | xargs -0 -n1 node --check
