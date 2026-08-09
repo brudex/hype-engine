@@ -18,7 +18,7 @@ jobs:
       SITEURL: http://127.0.0.1:3000
       JWT_SECRET: ci-jwt-secret-not-used-outside-this-job
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
