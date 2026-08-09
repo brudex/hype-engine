@@ -55,7 +55,7 @@
     "memorystore": "^1.6.6",
     "morgan": "^1.11.0",
     "mustache": "^4.2.0",
-    "nanoid": "^3.3.4",
+    "nanoid": "^3.3.18",
     "node-cron": "^2.0.3",
     "nodemailer": "^9.0.3",
     "number-precision": "^1.5.2",
