@@ -62,7 +62,7 @@ These are proposed operating standards, not a promise of 24/7 support:
 Approval was granted on August 9, 2026. Discussions is enabled and GitHub
 created Announcements, Q&A, Ideas, General, and Show and tell. The approved
 [welcome announcement](https://github.com/brudex/hype-engine/discussions/19)
-was published the same day. GitHub also created its default Polls category;
-category deletion and Discussion pinning are not exposed through the GitHub
-CLI or API used by the automation, so those two optional changes require an
-authenticated web-settings action. No Discord server was created.
+was published and manually pinned the same day. GitHub also created its default
+Polls category; category deletion is not exposed through the GitHub CLI or API
+used by the automation, so removing it requires an authenticated web-settings
+action. No Discord server was created.

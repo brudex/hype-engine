@@ -1143,8 +1143,30 @@
 - GitHub returned Discussion #19 in the Announcements category with the
   approved title and body.
 
-**Remaining UI-only action**
+**Manual owner action completed**
 
-- Discussion pinning is not available through the GitHub CLI/GraphQL API used
-  here. It remains unpinned because the owner asked not to launch an agent
-  browser; it can be pinned manually in the GitHub web interface.
+- The owner pinned Discussion #19 from the GitHub web interface after
+  publication. The visible `Unpin discussion` action confirmed its pinned
+  state.
+
+## 2026-08-09 — Approval 6: Focused X contributor call scheduled
+
+**Work completed**
+
+- Received owner approval for a focused recruitment post linking directly to
+  provider-adapter contract-test issue #12.
+- Scheduled the post to the authorized `@nerdzen369` X account for August 10,
+  2026 at 10:00 Africa/Accra (`2026-08-10T10:00:00Z`).
+- Used idempotency key `contributor-call-x-issue-12-2026-08-10-v1` to prevent
+  duplicate creation or retry publication.
+
+**Verification performed**
+
+- Hype Engine created scheduled post
+  `75621aa0-14bd-480a-97a0-ca41e2aa815f` with status `scheduled`, the approved
+  copy, the Twitter/X provider, and the requested publication time.
+
+**Follow-up**
+
+- Verify the post status and publishing outcome after 10:00 Africa/Accra on
+  August 10 before recording it as published.
