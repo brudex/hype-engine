@@ -1076,3 +1076,37 @@
 
 - Review Approval 3: enable GitHub Discussions and create the five prepared
   community categories.
+
+## 2026-08-09 — Approval 3: GitHub Discussions enabled
+
+**Work completed**
+
+- Received explicit owner approval and enabled GitHub Discussions for
+  `brudex/hype-engine`.
+- Verified the approved Announcements, Q&A, Ideas, General, and Show and tell
+  categories are present; Q&A is configured as answerable.
+- Linked the public Discussions area from the README contributor section.
+
+**Verification performed**
+
+- Queried the repository and category structure through GitHub GraphQL after
+  enabling the feature.
+- Confirmed Discussions is enabled and all five approved categories exist.
+
+**Current metrics**
+
+- GitHub Discussions: enabled (previously disabled).
+- Approved community categories available: 5.
+
+**Blockers**
+
+- GitHub automatically added a sixth default Polls category. Category deletion
+  is not available through the GitHub CLI/API used by the automation; removing
+  it requires an authenticated web-settings action.
+- No welcome discussion was published because Approval 3 did not authorize a
+  post.
+
+**Recommended next action**
+
+- Review Approval 4: finalize the founder story and select the first external
+  soft-launch destinations and posts.

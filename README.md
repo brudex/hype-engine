@@ -73,6 +73,8 @@ For a small, scoped first pull request, browse the
 [`good first issue`](https://github.com/brudex/hype-engine/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22)
 tasks. Larger contributions are listed under
 [`help wanted`](https://github.com/brudex/hype-engine/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22help%20wanted%22).
+Use [GitHub Discussions](https://github.com/brudex/hype-engine/discussions)
+for reusable questions, ideas, project feedback, and sanitized showcases.
 
 ## License
 

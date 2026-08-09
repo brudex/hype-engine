@@ -1,8 +1,7 @@
 # Community home recommendation
 
-Prepared for Day 10 of the 30-day contributor-growth plan. This is a local
-recommendation only; it does not enable GitHub Discussions, create a Discord
-server, or change any external setting.
+Prepared for Day 10 of the 30-day contributor-growth plan. The owner approved
+this recommendation and GitHub Discussions was enabled on August 9, 2026.
 
 ## Recommendation: GitHub Discussions first
 
@@ -11,15 +10,15 @@ a dedicated Discord only after there is sustained conversation that GitHub
 cannot serve well (for example, recurring real-time support needs or an active
 group of regular contributors).
 
-Hype Engine is still establishing its public contributor funnel: the first
-eight contributor-ready issues and the `v0.1.0` release package are prepared
-locally but are not published. GitHub Discussions keeps questions, decisions,
-and contribution context next to the repository, requires no new community
-account or moderation surface, is searchable and linkable from issues and pull
-requests, and lets prospective contributors participate with their existing
-GitHub identities. A Discord server now would split a small early audience,
-require channel and moderation operations before there is demonstrated demand,
-and make useful project knowledge harder to discover from the repository.
+Hype Engine is still establishing its public contributor funnel: eight
+contributor-ready issues and release `v0.1.0` are now public. GitHub Discussions
+keeps questions, decisions, and contribution context next to the repository,
+requires no new community account or moderation surface, is searchable and
+linkable from issues and pull requests, and lets prospective contributors
+participate with their existing GitHub identities. A Discord server now would
+split a small early audience, require channel and moderation operations before
+there is demonstrated demand, and make useful project knowledge harder to
+discover from the repository.
 
 ## Proposed categories
 
@@ -60,12 +59,9 @@ These are proposed operating standards, not a promise of 24/7 support:
 
 ## Owner approval required
 
-Before any external change, approve enabling GitHub Discussions for
-`brudex/hype-engine` and creating exactly the five categories above. This
-approval does **not** authorize Discord creation, publication of a welcome
-post, external replies, or any other repository setting change.
-
-If approval is granted, the first external action should be to enable
-Discussions and create the categories. A welcome post should be drafted and
-separately approved only after the public release and contributor-issue state
-are rechecked.
+Approval was granted on August 9, 2026. Discussions is enabled and GitHub
+created Announcements, Q&A, Ideas, General, and Show and tell. GitHub also
+created its default Polls category; category deletion is not exposed through
+the GitHub CLI or API used by the automation, so removing that extra default
+requires an authenticated web-settings action. No Discord server or welcome
+discussion was created.
