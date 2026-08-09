@@ -15,6 +15,18 @@ automation.
 **Explore it now:** [try the live demo](https://hypeengine.cachetechs.com) or
 [run it locally with Docker](#quick-start).
 
+## Why Hype Engine exists
+
+Hype Engine grew out of a real search for a social publishing tool that was
+easy to use, capable, and affordable. After trying Postiz, reaching the limits
+of Mixpost's free version, and finding that Blotato was becoming too expensive,
+the project's founder decided to build—and open-source—the alternative he had
+been looking for.
+
+The goal is simple: give makers, teams, and businesses a free, self-hosted way
+to automate social posting without surrendering control of their data or
+infrastructure. [Read the full founder story](docs/marketing/founder-story.md).
+
 ## See Hype Engine in action
 
 The [live demo](https://hypeengine.cachetechs.com) is the quickest way to see
@@ -34,8 +46,9 @@ browse the [marketing media gallery](docs/marketing/README.md).
 | Plan and publish | Multi-project social-account management, drafting, scheduling, recurring posts, and publication history. |
 | Organize content | A media library, tags, and calendar views for planning a content schedule. |
 | Review results | Reports and API access for working with publishing data. |
-| Automate workflows | A visual builder with trigger, logic, AI, HTTP, and publish nodes. |
-| Connect channels | Facebook, Instagram, LinkedIn, Mastodon, and X/Twitter integrations. |
+| Automate externally | A project-scoped API that works with tools such as n8n, plus one-time and daily or weekly recurring posts. |
+| Build visual flows | An n8n-inspired drag-and-drop builder with trigger, logic, AI, HTTP, and publish nodes, currently under active development. |
+| Connect channels | Publishing support for Facebook, Instagram, LinkedIn, and X/Twitter, with TikTok on the roadmap. |
 | Keep control | Separate web and background-job processes designed for self-hosting. |
 
 ## Quick start
@@ -56,10 +69,12 @@ For native Node.js setup, database migrations, and troubleshooting, see
 
 ## Project status
 
-Hype Engine is preparing its first public release. Interfaces and migrations
-may evolve before 1.0. Please report security issues privately as described in
-[SECURITY.md](SECURITY.md), and use GitHub issues for reproducible bugs and
-focused feature proposals.
+[Hype Engine v0.1.0](https://github.com/brudex/hype-engine/releases/tag/v0.1.0)
+is now available. It is an early public release: interfaces and migrations may
+evolve before 1.0, and the visual workflow builder and additional provider
+support are still being developed. Please report security issues privately as
+described in [SECURITY.md](SECURITY.md), and use GitHub issues for reproducible
+bugs and focused feature proposals.
 
 ## Contributing
 
