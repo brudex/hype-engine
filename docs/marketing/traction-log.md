@@ -1037,3 +1037,42 @@
 
 - Review Approval 2: creating annotated tag `v0.1.0` and publishing the
   prepared GitHub release package.
+
+## 2026-08-09 — Approval 2: v0.1.0 published
+
+**Work completed**
+
+- Received explicit owner approval for the complete `v0.1.0` release
+  sequence, committed the contributor-growth foundation, and pushed the local
+  API v1 and campaign work to `origin/master`.
+- Corrected the CI default-branch trigger, flow-builder build command,
+  integration-environment ordering, and migration-count invariant found by
+  the release gate.
+- Updated vulnerable Nano ID packages in the root application and flow-builder
+  lockfiles to patched `3.3.18` releases.
+- Created and pushed annotated tag `v0.1.0` at verified commit `e8b3161`, then
+  published <https://github.com/brudex/hype-engine/releases/tag/v0.1.0>.
+
+**Verification performed**
+
+- GitHub Actions run `31323276492` passed the root and flow-builder test
+  suites, production dependency audits, flow-builder build and generated-file
+  check, JavaScript syntax checks, Compose validation, blank-database build,
+  web/job health checks, and all three migrations.
+- Verified `origin/master` and the local release commit matched before tagging.
+- Published the release only after the full remote workflow succeeded.
+
+**Current metrics**
+
+- Published GitHub releases: 1 (previously 0).
+- Published release tags: `v0.1.0`.
+- Open human-authored contributor issues: 8.
+
+**Blockers**
+
+- None for Approval 2.
+
+**Recommended next action**
+
+- Review Approval 3: enable GitHub Discussions and create the five prepared
+  community categories.
