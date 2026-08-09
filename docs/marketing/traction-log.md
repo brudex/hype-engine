@@ -1110,3 +1110,41 @@
 
 - Review Approval 4: finalize the founder story and select the first external
   soft-launch destinations and posts.
+
+## 2026-08-09 — Approval 4: Founder story approved and X launch published
+
+**Work completed**
+
+- Replaced the internal founder-review draft with the owner-confirmed personal
+  progression from Postiz to Mixpost to Blotato and then Hype Engine.
+- Added the origin, external API/n8n use, recurring posts, provider status, and
+  roadmap context to the public README without presenting the unfinished visual
+  builder or TikTok integration as complete.
+- Published the approved concise founder-origin launch post to the authorized
+  `@nerdzen369` X account through Hype Engine itself.
+
+**Verification performed**
+
+- Hype Engine reported post `3f2b86dd-735d-4a62-9de7-87768619ecf2` as
+  published at `2026-08-09T18:10:00.456Z`.
+- LinkedIn publication was deferred by the owner.
+
+## 2026-08-09 — Approval 5: Welcome discussion published
+
+**Work completed**
+
+- Published the approved welcome announcement in GitHub Discussions:
+  <https://github.com/brudex/hype-engine/discussions/19>.
+- The announcement links the demo, Docker quick start, contributor-ready
+  issues, and Discussions entry point.
+
+**Verification performed**
+
+- GitHub returned Discussion #19 in the Announcements category with the
+  approved title and body.
+
+**Remaining UI-only action**
+
+- Discussion pinning is not available through the GitHub CLI/GraphQL API used
+  here. It remains unpinned because the owner asked not to launch an agent
+  browser; it can be pinned manually in the GitHub web interface.
